@@ -1,0 +1,11 @@
+.worktrees/
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.venv/
+.mypy_cache/
+.pytest_cache/
+.python-version
+.coverage
