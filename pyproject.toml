@@ -1,0 +1,28 @@
+[project]
+name = "qutip-trapped-ion-qc"
+version = "0.1.0"
+description = "Lowest-level trapped-ion quantum computer simulator built on QuTiP"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "qutip>=5.2.3",
+    "numpy>=2.0",
+    "scipy>=1.14",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-xdist>=3.5",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tiqs"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
