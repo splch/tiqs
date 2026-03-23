@@ -1,0 +1,71 @@
+"""Cirac-Zoller gate: the original trapped-ion entangling gate (1995)."""
+import numpy as np
+import qutip
+
+from tiqs.gates.single_qubit import GatePulse
+from tiqs.hilbert_space.operators import OperatorFactory
+from tiqs.constants import TWO_PI
+
+
+def cirac_zoller_gate(
+    ops: OperatorFactory,
+    ion_a: int,
+    ion_b: int,
+    mode: int,
+    eta: list[float],
+    rabi_frequency: float = TWO_PI * 100e3,
+) -> list[GatePulse]:
+    """Cirac-Zoller controlled-phase gate using sequential red sideband pulses.
+
+    Three-step sequence:
+    1. Pi pulse on RSB of ion A: maps |up_A, 0> -> -i|down_A, 1>
+    2. 2*Pi pulse on RSB of ion B (to auxiliary level): |down_B, 1> -> -|down_B, 1>
+    3. Reverse pi pulse on RSB of ion A: unmaps motion back to ion A
+
+    REQUIRES the motional mode to be in the ground state |n=0>.
+
+    Parameters
+    ----------
+    ops : OperatorFactory
+    ion_a, ion_b : int
+        Ion indices.
+    mode : int
+        Motional mode index (must be in ground state).
+    eta : list[float]
+        Lamb-Dicke parameters [eta_a, eta_b].
+    rabi_frequency : float
+        Bare Rabi frequency.
+
+    Returns
+    -------
+    list[GatePulse]
+        Three sequential pulses to be applied in order.
+    """
+    sp_a = ops.sigma_plus(ion_a)
+    sm_a = ops.sigma_minus(ion_a)
+    sp_b = ops.sigma_plus(ion_b)
+    sm_b = ops.sigma_minus(ion_b)
+    a = ops.annihilate(mode)
+    ad = ops.create(mode)
+
+    # Step 1: RSB pi-pulse on ion A
+    rsb_rabi_a = eta[0] * rabi_frequency
+    H1 = (rsb_rabi_a / 2) * (a * sp_a + ad * sm_a)
+    t1 = np.pi / rsb_rabi_a
+
+    # Step 2: RSB 2*pi-pulse on ion B (conditional phase)
+    rsb_rabi_b = eta[1] * rabi_frequency
+    H2 = (rsb_rabi_b / 2) * (a * sp_b + ad * sm_b)
+    t2 = TWO_PI / rsb_rabi_b
+
+    # Step 3: Reverse RSB pi-pulse on ion A (with phase shift)
+    H3 = (rsb_rabi_a / 2) * (
+        a * sp_a * np.exp(1j * np.pi) + ad * sm_a * np.exp(-1j * np.pi)
+    )
+    t3 = np.pi / rsb_rabi_a
+
+    return [
+        GatePulse(hamiltonian=H1, duration=t1),
+        GatePulse(hamiltonian=H2, duration=t2),
+        GatePulse(hamiltonian=H3, duration=t3),
+    ]
