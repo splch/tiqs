@@ -1,0 +1,29 @@
+"""Doppler cooling: rate-equation estimate of final motional occupation."""
+from tiqs.constants import TWO_PI
+from tiqs.species.data import IonSpecies
+
+
+def doppler_cooled_nbar(species: IonSpecies, trap_frequency_hz: float) -> float:
+    """Estimate mean phonon number after Doppler cooling.
+
+    n_bar_Doppler = Gamma / (2 * omega_trap)
+
+    where Gamma is the cooling transition linewidth and omega_trap is the
+    secular frequency. This is the weak-binding limit (Gamma >> omega_trap),
+    which is the relevant regime for most trapped-ion experiments.
+
+    Parameters
+    ----------
+    species : IonSpecies
+        Ion species with cooling transition data.
+    trap_frequency_hz : float
+        Trap secular frequency in Hz (not angular frequency).
+
+    Returns
+    -------
+    float
+        Mean phonon number after Doppler cooling.
+    """
+    gamma = species.cooling_transition.linewidth  # rad/s
+    omega_trap = TWO_PI * trap_frequency_hz       # rad/s
+    return gamma / (2 * omega_trap)
