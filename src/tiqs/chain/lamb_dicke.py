@@ -63,6 +63,6 @@ def lamb_dicke_parameters(
         x_zpf = np.sqrt(HBAR / (2 * m * omega_m))
         for ion_idx in range(n_ions):
             b_im = vectors[ion_idx, mode_idx]
-            eta[ion_idx, mode_idx] = abs(k_eff) * abs(b_im) * x_zpf
+            eta[ion_idx, mode_idx] = k_eff * b_im * x_zpf
 
     return eta
