@@ -46,6 +46,7 @@ class IonSpecies:
     repump_transitions: tuple[Transition, ...]
     qubit_t1: float
     metastable_lifetime: Optional[float] = None
+    raman_wavelength: Optional[float] = None
 
     @property
     def mass_kg(self) -> float:
@@ -94,6 +95,7 @@ _register(IonSpecies(
         Transition(name="2F7/2 clearout", wavelength=760.0e-9, linewidth=TWO_PI * 0.05e6),
     ),
     qubit_t1=float('inf'),
+    raman_wavelength=355e-9,
 ))
 
 # Calcium-40: Optical qubit at 729 nm
@@ -137,6 +139,7 @@ _register(IonSpecies(
     ),
     qubit_t1=float('inf'),
     metastable_lifetime=1.168,
+    raman_wavelength=397e-9,
 ))
 
 # Barium-137: Hyperfine qubit with all-visible wavelengths
@@ -158,6 +161,7 @@ _register(IonSpecies(
     ),
     qubit_t1=float('inf'),
     metastable_lifetime=30.14,
+    raman_wavelength=515e-9,
 ))
 
 # Beryllium-9: Lightest ion qubit, hyperfine
@@ -176,6 +180,7 @@ _register(IonSpecies(
     ),
     repump_transitions=(),
     qubit_t1=float('inf'),
+    raman_wavelength=313e-9,
 ))
 
 # Strontium-88: Optical qubit at 674 nm

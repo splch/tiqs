@@ -36,7 +36,14 @@ class SimulationRunner:
         self.ops = OperatorFactory(self.hs)
         self.sf = StateFactory(self.hs)
 
-        k_eff = TWO_PI / (config.species.qubit_wavelength or 400e-9)
+        if config.species.qubit_wavelength is not None:
+            # Optical qubit: single beam, k_eff = 2*pi/lambda
+            k_eff = TWO_PI / config.species.qubit_wavelength
+        elif config.species.raman_wavelength is not None:
+            # Hyperfine qubit with counter-propagating Raman beams: k_eff = 2 * 2*pi/lambda
+            k_eff = 2 * TWO_PI / config.species.raman_wavelength
+        else:
+            k_eff = TWO_PI / 400e-9
         self.eta = lamb_dicke_parameters(self.modes, config.species, k_eff, "axial")
 
         self._c_ops = self._build_collapse_operators()
