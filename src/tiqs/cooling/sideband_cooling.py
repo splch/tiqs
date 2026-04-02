@@ -95,10 +95,16 @@ def sideband_cooling_simulate(
 
     hs = ops.hs
     fock_dim = hs.fock_dim(mode)
-    rho0 = qutip.tensor(
-        qutip.ket2dm(qutip.basis(2, 0)),
-        qutip.thermal_dm(fock_dim, n_bar_initial),
-    )
+    # Build rho0 matching the full Hilbert space dimensions
+    parts = []
+    for i in range(hs.n_ions):
+        parts.append(qutip.ket2dm(qutip.basis(2, 0)))
+    for m in range(hs.n_modes):
+        if m == mode:
+            parts.append(qutip.thermal_dm(hs.fock_dim(m), n_bar_initial))
+        else:
+            parts.append(qutip.ket2dm(qutip.basis(hs.fock_dim(m), 0)))
+    rho0 = qutip.tensor(parts)
 
     t_pi = np.pi / rsb_rabi if rsb_rabi > 0 else 1e-6
     t_pump = 5.0 / optical_pumping_rate
