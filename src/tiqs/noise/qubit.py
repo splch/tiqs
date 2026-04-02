@@ -9,13 +9,14 @@ def qubit_dephasing_op(
     ops: OperatorFactory,
     ion: int,
     t2: float,
+    t1: float = float('inf'),
 ) -> qutip.Qobj:
     """Collapse operator for qubit pure dephasing: L = sqrt(gamma_phi/2) * sigma_z.
 
     gamma_phi = 1/T2 - 1/(2*T1). For hyperfine qubits with T1 ~ inf: gamma_phi = 1/T2.
     Causes exponential decay of off-diagonal density matrix elements.
     """
-    gamma_phi = 1.0 / t2
+    gamma_phi = 1.0 / t2 - 1.0 / (2 * t1)
     return np.sqrt(gamma_phi / 2) * ops.sigma_z(ion)
 
 
