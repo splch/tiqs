@@ -48,19 +48,23 @@ def cirac_zoller_gate(
     a = ops.annihilate(mode)
     ad = ops.create(mode)
 
-    # Step 1: RSB pi-pulse on ion A
+    # RSB coupling: sm*a + sp*ad drives |0,n> <-> |1,n-1>
+    # sm = sigmam = |1><0| takes |0> -> |1>, a removes a phonon
+    # sp = sigmap = |0><1| takes |1> -> |0>, ad adds a phonon (hermitian conjugate)
+
+    # Step 1: RSB pi-pulse on ion A: maps |0_A, n=1> -> |1_A, n=0>
     rsb_rabi_a = eta[0] * rabi_frequency
-    H1 = (rsb_rabi_a / 2) * (a * sp_a + ad * sm_a)
+    H1 = (rsb_rabi_a / 2) * (sm_a * a + sp_a * ad)
     t1 = np.pi / rsb_rabi_a
 
     # Step 2: RSB 2*pi-pulse on ion B (conditional phase)
     rsb_rabi_b = eta[1] * rabi_frequency
-    H2 = (rsb_rabi_b / 2) * (a * sp_b + ad * sm_b)
+    H2 = (rsb_rabi_b / 2) * (sm_b * a + sp_b * ad)
     t2 = TWO_PI / rsb_rabi_b
 
-    # Step 3: Reverse RSB pi-pulse on ion A (with phase shift)
+    # Step 3: Reverse RSB pi-pulse on ion A (with phase shift pi)
     H3 = (rsb_rabi_a / 2) * (
-        a * sp_a * np.exp(1j * np.pi) + ad * sm_a * np.exp(-1j * np.pi)
+        sm_a * a * np.exp(1j * np.pi) + sp_a * ad * np.exp(-1j * np.pi)
     )
     t3 = np.pi / rsb_rabi_a
 
