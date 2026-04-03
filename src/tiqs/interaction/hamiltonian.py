@@ -147,16 +147,19 @@ def full_interaction_hamiltonian(
     H_terms.append([H_bsb_hc, f"exp(-1j*{bsb_det}*t)"])
 
     if lamb_dicke_order >= 2:
-        # Second-order: Debye-Waller factor correction to carrier
-        # and second-sideband terms (Delta_n = +-2)
+        # Second-order Lamb-Dicke corrections from expansion of exp(i*eta*(a+a_dag)):
+        # (i*eta)^2/2! * (a+a_dag)^2 = -eta^2/2 * (a^2 + a_dag^2 + 2n + 1)
         n_op = ops.number(mode)
+        # Debye-Waller factor: carrier Rabi freq is modified by -eta^2*(n+1/2)
+        sigma_phi = sp * np.exp(1j * phase) + sm * np.exp(-1j * phase)
         dw_correction = -(eta**2) * rabi_frequency / 2
-        H_dw = dw_correction * (sp * np.exp(1j * phase) + sm * np.exp(-1j * phase)) * n_op
+        H_dw = dw_correction * sigma_phi * (n_op + 0.5 * ops.identity())
         H_terms.append([H_dw, f"cos({detuning}*t)"])
 
-        # Second red sideband: eta^2 * Omega / (2*sqrt(2)) * a^2 * sm
-        H_2rsb_op = (eta**2 * rabi_frequency / (2 * np.sqrt(2))) * a * a * sm * np.exp(1j * phase)
-        H_2rsb_hc = (eta**2 * rabi_frequency / (2 * np.sqrt(2))) * ad * ad * sp * np.exp(-1j * phase)
+        # Second red sideband: eta^2 * Omega / 4 * a^2 * sm
+        # From: -eta^2/2 (from expansion) * Omega/2 (from Rabi) = eta^2*Omega/4
+        H_2rsb_op = (eta**2 * rabi_frequency / 4) * a * a * sm * np.exp(1j * phase)
+        H_2rsb_hc = (eta**2 * rabi_frequency / 4) * ad * ad * sp * np.exp(-1j * phase)
         rsb2_det = detuning - 2 * mode_frequency
         H_terms.append([H_2rsb_op, f"exp(1j*{rsb2_det}*t)"])
         H_terms.append([H_2rsb_hc, f"exp(-1j*{rsb2_det}*t)"])
