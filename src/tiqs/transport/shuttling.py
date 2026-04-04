@@ -77,13 +77,13 @@ def apply_shuttling_noise(
     if added_quanta <= 0:
         return rho
     ad = ops.create(mode)
-    # Thermal channel: L = sqrt(rate) * a^dag, with rate chosen so that
-    # the mean phonon number increases by added_quanta in the evolution time.
-    # For a heating Lindbladian with L = sqrt(gamma) * a^dag, the mean phonon
-    # number grows as <n>(t) = <n>(0) + gamma*t.
-    # Choose gamma*t = added_quanta with t = 1e-6 s (arbitrary short time).
+    a = ops.annihilate(mode)
+    # With L = sqrt(gamma) * a_dag, the master equation gives
+    # d<n>/dt = gamma * (<n> + 1), so <n>(t) = (<n>(0)+1)*exp(gamma*t) - 1.
+    # To add exactly `added_quanta` phonons starting from vacuum, solve:
+    #   added_quanta = exp(gamma*t) - 1  =>  gamma*t = ln(added_quanta + 1)
     t_evolve = 1e-6
-    rate = added_quanta / t_evolve
+    rate = np.log(added_quanta + 1) / t_evolve
     c_ops = [np.sqrt(rate) * ad]
     H = 0 * ops.identity()
     tlist = [0, t_evolve]
