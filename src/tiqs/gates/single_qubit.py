@@ -95,7 +95,10 @@ def sk1_composite_gate(
       in the `pulses` attribute.
     - duration: total duration of all three pulses.
     """
-    phi1 = np.arccos(-theta / (4 * np.pi))
+    arg = -theta / (4 * np.pi)
+    if abs(arg) > 1:
+        raise ValueError(f"SK1 requires |theta| <= 4*pi, got theta={theta:.4f}")
+    phi1 = np.arccos(arg)
 
     t_theta = abs(theta) / rabi_frequency
     t_2pi = TWO_PI / rabi_frequency
@@ -127,7 +130,10 @@ def bb1_composite_gate(
     BB1(theta) = R_0(theta), R_{phi1}(pi), R_{3*phi1}(2*pi), R_{phi1}(pi)
     where phi1 = arccos(-theta/(4*pi)).
     """
-    phi1 = np.arccos(-theta / (4 * np.pi))
+    arg = -theta / (4 * np.pi)
+    if abs(arg) > 1:
+        raise ValueError(f"BB1 requires |theta| <= 4*pi, got theta={theta:.4f}")
+    phi1 = np.arccos(arg)
 
     t_theta = abs(theta) / rabi_frequency
     t_pi = np.pi / rabi_frequency

@@ -17,6 +17,11 @@ def qubit_dephasing_op(
     Causes exponential decay of off-diagonal density matrix elements.
     """
     gamma_phi = 1.0 / t2 - 1.0 / (2 * t1)
+    if gamma_phi < 0:
+        raise ValueError(
+            f"Pure dephasing rate is negative (T2={t2} > 2*T1={2*t1}). "
+            f"T2 cannot exceed 2*T1."
+        )
     return np.sqrt(gamma_phi / 2) * ops.sigma_z(ion)
 
 
