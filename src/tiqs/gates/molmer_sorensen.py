@@ -43,8 +43,10 @@ def ms_gate_hamiltonian(
     collective spin. After time tau = 2*pi*K/delta, the motion returns to its initial state
     and the spins acquire a geometric phase proportional to the enclosed phase-space area.
 
-    The gate is maximally entangling when eta*Omega = delta / 2 (for symmetric coupling
-    and a single loop).
+    For two identically-coupled ions, the maximally entangling condition is
+    eta*Omega = delta / 4 (single loop). The geometric phase scales as the
+    square of the collective spin eigenvalue, so two ions need half the
+    single-ion drive strength.
 
     Parameters
     ----------
