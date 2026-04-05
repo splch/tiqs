@@ -26,6 +26,10 @@ class HilbertSpace:
     n_fock: Union[int, list[int]] = 10
 
     def __post_init__(self):
+        if self.n_ions < 1:
+            raise ValueError(f"n_ions must be >= 1, got {self.n_ions}")
+        if self.n_modes < 1:
+            raise ValueError(f"n_modes must be >= 1, got {self.n_modes}")
         if isinstance(self.n_fock, int):
             self._fock_dims = [self.n_fock] * self.n_modes
         else:

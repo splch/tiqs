@@ -49,23 +49,34 @@ class TestSidebandSpectroscopy:
     """Validate that red/blue sideband transitions change phonon number correctly."""
 
     def test_red_sideband_rabi_frequency_scales_with_sqrt_n(self):
+        """Simulate RSB dynamics and verify Rabi frequency scales as sqrt(n)."""
         hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=15)
         ops = OperatorFactory(hs)
 
         eta = 0.1
         Omega = TWO_PI * 100e3
+        H = red_sideband_hamiltonian(ops, 0, 0, Omega, eta)
 
-        pi_times = []
-        for n_initial in [1, 4]:
-            H = red_sideband_hamiltonian(ops, 0, 0, Omega, eta)
-            psi0 = qutip.tensor(qutip.basis(2, 0), qutip.basis(15, n_initial))
-            expected_rabi = eta * Omega * np.sqrt(n_initial)
-            t_pi = np.pi / expected_rabi
-            pi_times.append(t_pi)
+        # For n_initial=1: RSB Rabi freq = eta*Omega*sqrt(1)
+        # For n_initial=4: RSB Rabi freq = eta*Omega*sqrt(4) = 2x faster
+        # After a pi-pulse time for n=1, the n=4 case should have completed 2 pi-pulses
+        # (returned to initial state)
+        rsb_rabi_n1 = eta * Omega * np.sqrt(1)
+        t_pi_n1 = np.pi / rsb_rabi_n1
 
-        # t_pi(n=4) / t_pi(n=1) should be 1/2 (since Rabi freq ~ sqrt(n))
-        ratio = pi_times[1] / pi_times[0]
-        assert ratio == pytest.approx(0.5, rel=0.01)
+        # Simulate n=1: after t_pi, should be fully in |1,0>
+        psi0_n1 = qutip.tensor(qutip.basis(2, 0), qutip.basis(15, 1))
+        target_n1 = qutip.tensor(qutip.basis(2, 1), qutip.basis(15, 0))
+        result_n1 = qutip.sesolve(H, psi0_n1, [0, t_pi_n1])
+        fid_n1 = abs(result_n1.states[-1].overlap(target_n1)) ** 2
+        assert fid_n1 > 0.95
+
+        # Simulate n=4: after the same t_pi_n1, should have done 2 full Rabi cycles
+        # (since Rabi freq is 2x faster), ending back near |0,4>
+        psi0_n4 = qutip.tensor(qutip.basis(2, 0), qutip.basis(15, 4))
+        result_n4 = qutip.sesolve(H, psi0_n4, [0, t_pi_n1])
+        fid_return = abs(result_n4.states[-1].overlap(psi0_n4)) ** 2
+        assert fid_return > 0.85  # back near start after 2 full cycles
 
 
 class TestMSGatePhysics:

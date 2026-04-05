@@ -124,6 +124,11 @@ class SimulationRunner:
         giving eta*Omega = delta / (4 * sqrt(K)).
         Hence Omega = delta / (4 * eta_avg * sqrt(K)).
         """
+        if len(ions) != 2:
+            raise ValueError(
+                f"run_ms_gate Rabi calibration is valid for exactly 2 ions, got {len(ions)}. "
+                f"For N > 2 ions, construct the Hamiltonian manually with ms_gate_hamiltonian."
+            )
         eta_ions = [float(self.eta[i, mode]) for i in ions]
         eta_avg = np.mean(eta_ions)
 

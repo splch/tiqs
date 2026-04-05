@@ -204,24 +204,25 @@ class TestLightShiftGate:
         hs, ops, sf = two_ion_system
         eta = 0.1
         delta = TWO_PI * 20e3
-        Omega = delta / (2 * eta)
-        tau = TWO_PI / delta
+        # For ZZ gate with two identically-coupled ions, same geometric phase
+        # condition as MS: eta*Omega = delta/4 for maximally entangling
+        Omega = delta / (4 * eta)
+        tau = ms_gate_duration(delta, loops=1)
 
         H = light_shift_gate_hamiltonian(
             ops, ions=[0, 1], mode=0, eta=[eta, eta],
             rabi_frequency=Omega, detuning=delta,
         )
-        # Start in |++> (both ions in +x eigenstate)
+        # Start in |++> (both ions in +x eigenstate) - ZZ gate entangles sigma_x eigenstates
         plus = (qutip.basis(2, 0) + qutip.basis(2, 1)).unit()
         psi0 = qutip.tensor(plus, plus, qutip.basis(15, 0))
         tlist = np.linspace(0, tau, 500)
         result = qutip.sesolve(H, psi0, tlist, options={"max_step": tau / 100})
         rho_spin = result.states[-1].ptrace([0, 1])
-        # Should not be a product state anymore (entangled)
-        purity = rho_spin.tr()
-        single_qubit_purity = rho_spin.ptrace(0).tr()
-        # If entangled, reduced state has lower purity
-        assert single_qubit_purity < 1.5  # crude check
+        # If entangled, the reduced single-qubit state is mixed: Tr(rho^2) < 1
+        rho_single = rho_spin.ptrace(0)
+        purity = (rho_single * rho_single).tr().real
+        assert purity < 0.95  # mixed state indicates entanglement
 
 
 class TestCiracZollerGate:
