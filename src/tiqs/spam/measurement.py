@@ -45,30 +45,53 @@ def sample_measurement(
     rng: np.random.Generator,
     spam_error: float = 0.0,
 ) -> list[int]:
-    """Sample a projective measurement outcome for each ion.
+    """Sample a projective measurement outcome from the joint qubit distribution.
 
-    Returns 0 (bright/|0>) or 1 (dark/|1>) for each ion, with optional SPAM error.
+    Samples from the full joint probability distribution over all 2^N computational
+    basis states of the measured ions, correctly preserving quantum correlations.
+    For entangled states (e.g., Bell states), correlated outcomes are produced.
 
     Parameters
     ----------
     state : qutip.Qobj
+        Full system state (ket or density matrix).
     ions : list[int]
+        Ion subsystem indices to measure.
     rng : np.random.Generator
     spam_error : float
-        Probability of misidentifying the state.
+        Probability of misidentifying each bit independently.
 
     Returns
     -------
     list[int]
         Measurement outcomes (0 or 1) for each ion.
     """
-    probs = fluorescence_probabilities(state, ions)
-    outcomes = []
-    for p_bright in probs:
-        p = p_bright * (1 - spam_error) + (1 - p_bright) * spam_error
-        bit = 0 if rng.random() < p else 1
-        outcomes.append(bit)
-    return outcomes
+    if state.type == "ket":
+        rho = qutip.ket2dm(state)
+    else:
+        rho = state
+
+    rho_ions = rho.ptrace(ions)
+    n = len(ions)
+    dim = 2**n
+
+    # Extract diagonal of the density matrix in the computational basis
+    # This gives P(bitstring) for each bitstring
+    probs = np.array([rho_ions[i, i].real for i in range(dim)])
+    probs = np.maximum(probs, 0.0)
+    probs /= probs.sum()
+
+    # Sample one bitstring from the joint distribution
+    outcome_idx = rng.choice(dim, p=probs)
+
+    # Convert index to bit list: index 0 -> [0,0,...], index 1 -> [0,0,...,1], etc.
+    bits = [(outcome_idx >> (n - 1 - k)) & 1 for k in range(n)]
+
+    # Apply SPAM error independently to each bit
+    if spam_error > 0:
+        bits = [b if rng.random() > spam_error else (1 - b) for b in bits]
+
+    return bits
 
 
 def measurement_fidelity(
