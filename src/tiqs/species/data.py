@@ -175,7 +175,7 @@ _register(IonSpecies(
     cooling_transition=Transition(
         name="2S1/2 -> 2P3/2",
         wavelength=313e-9,
-        linewidth=TWO_PI * 18e6,
+        linewidth=TWO_PI * 19.4e6,
         branching_ratio=1.0,
     ),
     repump_transitions=(),
