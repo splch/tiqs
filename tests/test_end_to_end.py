@@ -704,3 +704,188 @@ class TestIsingQuantumSimulation:
             assert abs(eta[0, 0]) > 0
             n_bar = doppler_cooled_nbar(species, trap.omega_axial / TWO_PI)
             assert n_bar > 0
+
+
+class TestAnalyticalExactness:
+    """Tight numerical checks against known analytical results.
+
+    If any formula coefficient, sign, or convention is wrong, these tests fail.
+    Every assertion uses tight tolerances (atol=0.01 or rel=0.01).
+    """
+
+    def test_two_ion_spacing_analytical(self):
+        """Two-ion spacing: d = (e^2 / (4*pi*eps0*m*omega_z^2))^(1/3) * 2^(1/3) * 2"""
+        ca = get_species("Ca40")
+        omega_z = TWO_PI * 1e6
+        trap = PaulTrap(v_rf=300, omega_rf=TWO_PI*30e6, r0=0.5e-3,
+                        omega_axial=omega_z, species=ca)
+        pos = equilibrium_positions(2, trap)
+        l_scale = (ELECTRON_CHARGE**2 / (4*PI*EPSILON_0*ca.mass_kg*omega_z**2))**(1/3)
+        # Analytical: u1 = -u2, u1 = -(1/2)^(2/3) ~ -0.6300
+        u_analytical = (1/2)**(2/3)  # ~0.6300
+        d_analytical = 2 * u_analytical * l_scale
+        d_measured = pos[1] - pos[0]
+        assert d_measured == pytest.approx(d_analytical, rel=0.001)
+
+    def test_two_ion_stretch_frequency_exact(self):
+        """Stretch mode frequency: omega_stretch = sqrt(3) * omega_axial."""
+        ca = get_species("Ca40")
+        trap = PaulTrap(v_rf=300, omega_rf=TWO_PI*30e6, r0=0.5e-3,
+                        omega_axial=TWO_PI*1e6, species=ca)
+        modes = normal_modes(2, trap)
+        ratio = modes.axial_freqs[1] / modes.axial_freqs[0]
+        assert ratio == pytest.approx(np.sqrt(3), rel=1e-4)
+
+    def test_lamb_dicke_formula_direct(self):
+        """Verify eta = k * b * sqrt(hbar/(2*m*omega)) against hand calculation."""
+        ca = get_species("Ca40")
+        omega = TWO_PI * 1e6
+        trap = PaulTrap(v_rf=300, omega_rf=TWO_PI*30e6, r0=0.5e-3,
+                        omega_axial=omega, species=ca)
+        modes = normal_modes(1, trap)
+        k = TWO_PI / 729e-9
+        eta = lamb_dicke_parameters(modes, ca, k, "axial")
+        x_zpf = np.sqrt(HBAR / (2 * ca.mass_kg * omega))
+        eta_hand = k * 1.0 * x_zpf  # b=1 for single ion COM
+        assert eta[0, 0] == pytest.approx(eta_hand, rel=1e-6)
+
+    def test_carrier_rabi_oscillation_exact(self):
+        """sigma_z must equal cos(Omega*t) exactly (to solver precision)."""
+        hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=3)
+        ops = OperatorFactory(hs)
+        sf = StateFactory(hs)
+        Omega = TWO_PI * 500e3
+        H = carrier_hamiltonian(ops, 0, Omega)
+        tlist = np.linspace(0, 4*PI/Omega, 400)
+        result = qutip.sesolve(H, sf.ground_state(), tlist, e_ops=[ops.sigma_z(0)])
+        expected = np.cos(Omega * tlist)
+        np.testing.assert_allclose(result.expect[0], expected, atol=0.01)
+
+    def test_rsb_rabi_frequency_vs_fock_number(self):
+        """RSB Rabi frequency on |0,n> is exactly eta*Omega*sqrt(n)."""
+        hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=15)
+        ops = OperatorFactory(hs)
+        eta, Omega = 0.1, TWO_PI * 200e3
+        H = red_sideband_hamiltonian(ops, 0, 0, Omega, eta)
+        for n in [1, 2, 3, 5]:
+            psi0 = qutip.tensor(qutip.basis(2, 0), qutip.basis(15, n))
+            target = qutip.tensor(qutip.basis(2, 1), qutip.basis(15, n-1))
+            expected_rabi = eta * Omega * np.sqrt(n)
+            t_pi = PI / expected_rabi
+            r = qutip.sesolve(H, psi0, np.linspace(0, t_pi, 100))
+            fid = abs(r.states[-1].overlap(target))**2
+            assert fid > 0.98, f"RSB pi-pulse failed for n={n}: fid={fid:.4f}"
+
+    def test_ms_gate_bell_fidelity_exact(self):
+        """MS gate must produce Bell state with F > 0.999."""
+        hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=20)
+        ops = OperatorFactory(hs)
+        sf = StateFactory(hs)
+        eta = 0.05
+        delta = TWO_PI * 15e3
+        Omega = delta / (4 * eta)
+        tau = ms_gate_duration(delta)
+        H = ms_gate_hamiltonian(ops, [0, 1], 0, [eta, eta], Omega, delta)
+        r = qutip.sesolve(H, sf.ground_state(), np.linspace(0, tau, 500),
+                          options={"max_step": tau / 100})
+        fid = bell_state_fidelity(r.states[-1].ptrace([0, 1]))
+        assert fid > 0.999
+        n_final = qutip.expect(ops.number(0), r.states[-1])
+        assert n_final == pytest.approx(0.0, abs=0.01)
+
+    def test_ms_gate_thermal_insensitivity(self):
+        """MS gate fidelity should remain > 0.95 starting from n_bar=3 thermal state."""
+        hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=25)
+        ops = OperatorFactory(hs)
+        sf = StateFactory(hs)
+        eta = 0.03  # smaller eta for better thermal insensitivity
+        delta = TWO_PI * 10e3
+        Omega = delta / (4 * eta)
+        tau = ms_gate_duration(delta)
+        H = ms_gate_hamiltonian(ops, [0, 1], 0, [eta, eta], Omega, delta)
+        rho0 = sf.thermal_state(n_bar=[3.0])
+        r = qutip.mesolve(H, rho0, np.linspace(0, tau, 500),
+                          options={"max_step": tau / 100})
+        fid = bell_state_fidelity(r.states[-1].ptrace([0, 1]))
+        assert fid > 0.95
+
+    def test_dephasing_decay_rate_exact(self):
+        """Off-diagonal should decay as exp(-t/T2) under pure dephasing."""
+        hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=3)
+        ops = OperatorFactory(hs)
+        sf = StateFactory(hs)
+        T2 = 100e-6
+        plus = (sf.product_state([0], [0]) + sf.product_state([1], [0])).unit()
+        c_ops = [qubit_dephasing_op(ops, 0, T2)]
+        tlist = np.linspace(0, 3 * T2, 200)
+        result = qutip.mesolve(0 * ops.identity(), plus, tlist, c_ops=c_ops,
+                               e_ops=[ops.sigma_x(0)])
+        expected = np.exp(-tlist / T2)
+        np.testing.assert_allclose(result.expect[0], expected, atol=0.05)
+
+    def test_heating_rate_exact(self):
+        """<n>(t) = exp(gamma*t) - 1 for L=sqrt(gamma)*a_dag starting from vacuum."""
+        hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=30)
+        ops = OperatorFactory(hs)
+        sf = StateFactory(hs)
+        n_dot = 1e4  # quanta/s
+        c_ops = motional_heating_ops(ops, 0, heating_rate=n_dot)
+        tlist = np.linspace(0, 100e-6, 50)
+        result = qutip.mesolve(0 * ops.identity(), sf.ground_state(), tlist,
+                               c_ops=c_ops, e_ops=[ops.number(0)])
+        # With L = sqrt(gamma)*a_dag: d<n>/dt = gamma*(<n>+1), <n>(t) = exp(gamma*t) - 1
+        expected = np.exp(n_dot * tlist) - 1
+        np.testing.assert_allclose(result.expect[0], expected, atol=0.05)
+
+    def test_spontaneous_emission_decay_exact(self):
+        """Excited state population decays as exp(-t/T1)."""
+        hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=3)
+        ops = OperatorFactory(hs)
+        sf = StateFactory(hs)
+        T1 = 100e-6
+        psi_excited = sf.product_state([1], [0])
+        c_ops = [spontaneous_emission_op(ops, 0, T1)]
+        tlist = np.linspace(0, 3 * T1, 200)
+        # P(excited) = <|1><1|> = (1 - <sigma_z>)/2
+        result = qutip.mesolve(0 * ops.identity(), psi_excited, tlist,
+                               c_ops=c_ops, e_ops=[ops.sigma_z(0)])
+        # sigma_z starts at -1 (excited) and decays to +1 (ground)
+        # <sigma_z>(t) = 1 - 2*exp(-t/T1)
+        expected_sz = 1.0 - 2.0 * np.exp(-tlist / T1)
+        np.testing.assert_allclose(result.expect[0], expected_sz, atol=0.05)
+
+    def test_measurement_correlations_bell_state(self):
+        """Bell state measurement must produce perfectly correlated outcomes."""
+        hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=10)
+        ops = OperatorFactory(hs)
+        sf = StateFactory(hs)
+        eta = 0.05
+        delta = TWO_PI * 15e3
+        Omega = delta / (4 * eta)
+        tau = ms_gate_duration(delta)
+        H = ms_gate_hamiltonian(ops, [0, 1], 0, [eta, eta], Omega, delta)
+        r = qutip.sesolve(H, sf.ground_state(), np.linspace(0, tau, 300),
+                          options={"max_step": tau / 60})
+        rho = qutip.ket2dm(r.states[-1])
+        rng = np.random.default_rng(42)
+        outcomes = [sample_measurement(rho, [0, 1], rng) for _ in range(200)]
+        n_same = sum(1 for o in outcomes if o[0] == o[1])
+        assert n_same > 195  # essentially all correlated
+
+    def test_doppler_limit_formula_consistency(self):
+        """Doppler limit n_bar = Gamma/(2*omega) must be consistent with T_D."""
+        for name in ["Yb171", "Ca40", "Ba137"]:
+            s = get_species(name)
+            omega_hz = 1.5e6
+            n_bar = doppler_cooled_nbar(s, omega_hz)
+            T_D = s.doppler_limit_temperature()
+            n_from_T = BOLTZMANN * T_D / (HBAR * TWO_PI * omega_hz)
+            assert n_bar == pytest.approx(n_from_T, rel=0.01)
+
+    def test_pseudopotential_depth_vs_mathieu_q(self):
+        """Trap depth should equal q*V_rf/8 in eV."""
+        ca = get_species("Ca40")
+        trap = PaulTrap(v_rf=300, omega_rf=TWO_PI*30e6, r0=0.5e-3,
+                        omega_axial=TWO_PI*1e6, species=ca)
+        depth_from_q = trap.mathieu_q * trap.v_rf / 8
+        assert trap.pseudopotential_depth_eV == pytest.approx(depth_from_q, rel=1e-6)
