@@ -1,0 +1,30 @@
+name: docs
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v7
+      - run: uv run --extra docs pdoc src/tiqs -o docs/api
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/api
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
