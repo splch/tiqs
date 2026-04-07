@@ -215,8 +215,8 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Generated docs
-docs/api/
+# Docs
+docs/
 
 # macOS
 .DS_Store
