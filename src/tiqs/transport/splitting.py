@@ -1,4 +1,5 @@
 """Crystal splitting and merging operations."""
+
 import numpy as np
 
 

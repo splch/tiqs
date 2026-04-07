@@ -13,7 +13,10 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    "pytest-cov>=6.0",
     "pytest-xdist>=3.5",
+    "ruff>=0.11",
+    "ty>=0.0.1a0",
 ]
 docs = [
     "pdoc>=15.0",
@@ -25,6 +28,13 @@ pythonpath = ["src"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tiqs"]
+
+[tool.ty.rules]
+unsupported-operator = "ignore"
+no-matching-overload = "ignore"
+not-subscriptable = "ignore"
+invalid-argument-type = "ignore"
+unresolved-attribute = "ignore"
 
 [build-system]
 requires = ["hatchling"]

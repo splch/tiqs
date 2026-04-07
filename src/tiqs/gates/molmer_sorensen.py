@@ -1,6 +1,4 @@
 """Molmer-Sorensen entangling gate Hamiltonian construction."""
-import numpy as np
-import qutip
 
 from tiqs.constants import TWO_PI
 from tiqs.hilbert_space.operators import OperatorFactory

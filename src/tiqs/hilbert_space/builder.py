@@ -1,4 +1,5 @@
 """Composite Hilbert space construction for ion qubits + motional modes."""
+
 from dataclasses import dataclass
 from typing import Union
 
@@ -34,7 +35,9 @@ class HilbertSpace:
             self._fock_dims = [self.n_fock] * self.n_modes
         else:
             if len(self.n_fock) != self.n_modes:
-                raise ValueError(f"n_fock list length {len(self.n_fock)} != n_modes {self.n_modes}")
+                raise ValueError(
+                    f"n_fock list length {len(self.n_fock)} != n_modes {self.n_modes}"
+                )
             self._fock_dims = list(self.n_fock)
 
     @property

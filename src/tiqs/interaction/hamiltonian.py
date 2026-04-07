@@ -1,4 +1,5 @@
 """Laser-ion interaction Hamiltonians: carrier, sidebands, and full interaction."""
+
 import numpy as np
 import qutip
 
@@ -123,7 +124,9 @@ def full_interaction_hamiltonian(
     H_terms = []
 
     # Carrier: (Omega/2) * (sigma+ * e^{i*phi} + sigma- * e^{-i*phi}) * cos(delta*t)
-    H_carrier = (rabi_frequency / 2) * (sp * np.exp(1j * phase) + sm * np.exp(-1j * phase))
+    H_carrier = (rabi_frequency / 2) * (
+        sp * np.exp(1j * phase) + sm * np.exp(-1j * phase)
+    )
     if detuning == 0.0:
         # When on resonance, cos(0*t) = 1, so the carrier is time-independent.
         H_terms.append(H_carrier)

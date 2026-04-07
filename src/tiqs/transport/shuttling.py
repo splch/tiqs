@@ -1,4 +1,5 @@
 """Ion shuttling: motional excitation from linear transport."""
+
 import numpy as np
 import qutip
 
@@ -77,7 +78,6 @@ def apply_shuttling_noise(
     if added_quanta <= 0:
         return rho
     ad = ops.create(mode)
-    a = ops.annihilate(mode)
     # With L = sqrt(gamma) * a_dag, the master equation gives
     # d<n>/dt = gamma * (<n> + 1), so <n>(t) = (<n>(0)+1)*exp(gamma*t) - 1.
     # To add exactly `added_quanta` phonons starting from vacuum, solve:

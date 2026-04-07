@@ -1,6 +1,6 @@
 """Cirac-Zoller gate: the original trapped-ion entangling gate (1995)."""
+
 import numpy as np
-import qutip
 
 from tiqs.gates.single_qubit import GatePulse
 from tiqs.hilbert_space.operators import OperatorFactory

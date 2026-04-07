@@ -1,4 +1,5 @@
 """Laser beam configuration for trapped-ion manipulation."""
+
 from dataclasses import dataclass
 
 from tiqs.constants import TWO_PI

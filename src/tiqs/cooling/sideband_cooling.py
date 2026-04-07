@@ -1,4 +1,5 @@
 """Resolved sideband cooling: analytical and simulated."""
+
 import numpy as np
 import qutip
 
@@ -79,7 +80,7 @@ def sideband_cooling_simulate(
     float
         Final mean phonon number.
     """
-    sp = ops.sigma_plus(ion)   # sigmap = |0><1|
+    sp = ops.sigma_plus(ion)  # sigmap = |0><1|
     sm = ops.sigma_minus(ion)  # sigmam = |1><0|
     a = ops.annihilate(mode)
     ad = ops.create(mode)
@@ -94,7 +95,6 @@ def sideband_cooling_simulate(
     c_ops = [np.sqrt(optical_pumping_rate) * sp]
 
     hs = ops.hs
-    fock_dim = hs.fock_dim(mode)
     # Build rho0 matching the full Hilbert space dimensions
     parts = []
     for i in range(hs.n_ions):

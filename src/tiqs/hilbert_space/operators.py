@@ -1,4 +1,5 @@
 """Factory for constructing operators in the composite Hilbert space."""
+
 import qutip
 
 from tiqs.hilbert_space.builder import HilbertSpace

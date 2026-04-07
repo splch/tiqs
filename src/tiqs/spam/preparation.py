@@ -1,4 +1,5 @@
 """State preparation via optical pumping."""
+
 import numpy as np
 import qutip
 

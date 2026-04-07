@@ -1,7 +1,7 @@
 """Initial state construction for trapped-ion simulations."""
+
 from typing import Optional
 
-import numpy as np
 import qutip
 
 from tiqs.hilbert_space.builder import HilbertSpace
@@ -35,9 +35,13 @@ class StateFactory:
     ) -> qutip.Qobj:
         """Arbitrary product state. qubit_states[i] in {0, 1}, fock_states[m] is phonon number."""
         if len(qubit_states) != self.hs.n_ions:
-            raise ValueError(f"Expected {self.hs.n_ions} qubit states, got {len(qubit_states)}")
+            raise ValueError(
+                f"Expected {self.hs.n_ions} qubit states, got {len(qubit_states)}"
+            )
         if len(fock_states) != self.hs.n_modes:
-            raise ValueError(f"Expected {self.hs.n_modes} fock states, got {len(fock_states)}")
+            raise ValueError(
+                f"Expected {self.hs.n_modes} fock states, got {len(fock_states)}"
+            )
         parts = []
         for i, q in enumerate(qubit_states):
             parts.append(qutip.basis(2, q))
@@ -62,9 +66,13 @@ class StateFactory:
         if qubit_states is None:
             qubit_states = [0] * self.hs.n_ions
         if len(n_bar) != self.hs.n_modes:
-            raise ValueError(f"Expected {self.hs.n_modes} n_bar values, got {len(n_bar)}")
+            raise ValueError(
+                f"Expected {self.hs.n_modes} n_bar values, got {len(n_bar)}"
+            )
         if len(qubit_states) != self.hs.n_ions:
-            raise ValueError(f"Expected {self.hs.n_ions} qubit states, got {len(qubit_states)}")
+            raise ValueError(
+                f"Expected {self.hs.n_ions} qubit states, got {len(qubit_states)}"
+            )
 
         parts = []
         for q in qubit_states:

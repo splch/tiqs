@@ -1,6 +1,4 @@
 """Light-shift (geometric phase) gate: sigma_z-dependent force."""
-import numpy as np
-import qutip
 
 from tiqs.hilbert_space.operators import OperatorFactory
 

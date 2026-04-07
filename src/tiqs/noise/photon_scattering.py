@@ -1,4 +1,5 @@
 """Off-resonant photon scattering during laser-driven gates."""
+
 import numpy as np
 import qutip
 

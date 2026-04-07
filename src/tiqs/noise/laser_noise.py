@@ -1,4 +1,5 @@
 """Laser phase and intensity noise models."""
+
 import numpy as np
 import qutip
 

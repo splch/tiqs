@@ -1,4 +1,5 @@
 """Phase-space analysis: Wigner functions and trajectories."""
+
 import numpy as np
 import qutip
 

@@ -1,5 +1,5 @@
 """Fidelity metrics for trapped-ion quantum operations."""
-import numpy as np
+
 import qutip
 
 

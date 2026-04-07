@@ -1,4 +1,5 @@
 """Normal mode analysis of an ion Coulomb crystal."""
+
 from dataclasses import dataclass
 
 import numpy as np

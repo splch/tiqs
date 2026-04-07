@@ -1,4 +1,5 @@
 """Single-qubit gate implementations: bare rotations and composite pulse sequences."""
+
 from dataclasses import dataclass
 from typing import Union
 

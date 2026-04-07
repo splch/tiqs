@@ -1,4 +1,5 @@
 """Two-photon stimulated Raman transition parameters."""
+
 from dataclasses import dataclass
 
 

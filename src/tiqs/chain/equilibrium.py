@@ -1,4 +1,5 @@
 """Compute equilibrium positions of N ions in a linear Paul trap."""
+
 import numpy as np
 from scipy.optimize import root
 
@@ -33,7 +34,8 @@ def equilibrium_positions(n_ions: int, trap: PaulTrap) -> np.ndarray:
         return np.array([0.0])
 
     length_scale = (
-        ELECTRON_CHARGE**2 / (4 * PI * EPSILON_0 * trap.species.mass_kg * trap.omega_axial**2)
+        ELECTRON_CHARGE**2
+        / (4 * PI * EPSILON_0 * trap.species.mass_kg * trap.omega_axial**2)
     ) ** (1 / 3)
 
     def equations(u):

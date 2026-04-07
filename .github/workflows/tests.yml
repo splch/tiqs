@@ -11,4 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v7
-      - run: uv run --extra dev pytest
+      - run: uv run --extra dev ruff format --check src
+      - run: uv run --extra dev ruff check src
+      - run: uv run --extra dev ty check src
+      - run: uv run --extra dev pytest --cov=tiqs --cov-fail-under=95

@@ -1,5 +1,4 @@
 """Electromagnetically induced transparency (EIT) cooling."""
-import numpy as np
 
 
 def eit_cooling_nbar(

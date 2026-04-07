@@ -1,4 +1,5 @@
 """Atomic transition data for trapped-ion species."""
+
 from dataclasses import dataclass
 
 from tiqs.constants import SPEED_OF_LIGHT, TWO_PI

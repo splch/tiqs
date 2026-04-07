@@ -1,4 +1,5 @@
 """Top-level simulation runner: assembles Hamiltonians, noise, and solvers."""
+
 import numpy as np
 import qutip
 
@@ -62,7 +63,7 @@ class SimulationRunner:
             # Only include spontaneous emission when explicitly requested
             # via t1_qubit. The species default T1 (e.g., 1.168 s for Ca40
             # optical qubit) is not automatically included for sesolve runs.
-            if cfg.t1_qubit is not None and cfg.t1_qubit < float('inf'):
+            if cfg.t1_qubit is not None and cfg.t1_qubit < float("inf"):
                 c_ops.append(spontaneous_emission_op(self.ops, i, cfg.t1_qubit))
 
         return c_ops
@@ -85,7 +86,9 @@ class SimulationRunner:
         if solver == "sesolve" and not self._c_ops:
             return qutip.sesolve(H, psi0, tlist, options=opts)
         elif solver == "mcsolve":
-            return qutip.mcsolve(H, psi0, tlist, c_ops=self._c_ops, ntraj=100, options=opts)
+            return qutip.mcsolve(
+                H, psi0, tlist, c_ops=self._c_ops, ntraj=100, options=opts
+            )
         else:
             return qutip.mesolve(H, psi0, tlist, c_ops=self._c_ops, options=opts)
 
@@ -139,8 +142,12 @@ class SimulationRunner:
         tau = ms_gate_duration(detuning, loops)
 
         H = ms_gate_hamiltonian(
-            self.ops, ions=ions, mode=mode, eta=eta_ions,
-            rabi_frequency=Omega, detuning=detuning,
+            self.ops,
+            ions=ions,
+            mode=mode,
+            eta=eta_ions,
+            rabi_frequency=Omega,
+            detuning=detuning,
         )
         tlist = np.linspace(0, tau, n_steps)
         return self._solve(H, tlist)

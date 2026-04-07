@@ -1,4 +1,5 @@
 """State measurement via fluorescence detection."""
+
 import numpy as np
 import qutip
 
@@ -162,7 +163,6 @@ def mid_circuit_measurement(
         (post-measurement state, measurement outcome 0 or 1).
     """
     dims = ops.hs.dims
-    n_subsystems = len(dims)
 
     # Projectors: P_0 = |0><0|, P_1 = |1><1| on the measured ion
     proj_0_local = qutip.ket2dm(qutip.basis(2, 0))

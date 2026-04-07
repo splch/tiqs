@@ -1,4 +1,5 @@
 """Lamb-Dicke parameter calculation for ion-mode-laser combinations."""
+
 import numpy as np
 
 from tiqs.chain.normal_modes import NormalModeResult

@@ -1,4 +1,5 @@
 """Simulation configuration: approximation levels, solver options, noise parameters."""
+
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -52,4 +53,6 @@ class SimulationConfig:
     t1_qubit: Optional[float] = None
     photon_scattering_rate: Optional[float] = None
     n_bar_initial: float = 0.0
-    solver_options: dict = field(default_factory=lambda: {"max_step": 0.0, "nsteps": 5000})
+    solver_options: dict = field(
+        default_factory=lambda: {"max_step": 0.0, "nsteps": 5000}
+    )

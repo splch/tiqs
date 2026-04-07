@@ -1,4 +1,5 @@
 """Radiofrequency Paul trap physics: Mathieu stability, secular frequencies, pseudopotential."""
+
 from dataclasses import dataclass
 from typing import Optional
 
@@ -50,7 +51,9 @@ class PaulTrap:
         if self.omega_axial is not None and self.u_dc_axial is None:
             self.u_dc_axial = m * self.omega_axial**2 * self.z0**2 / (self.kappa * e)
         elif self.u_dc_axial is not None and self.omega_axial is None:
-            self.omega_axial = np.sqrt(self.kappa * e * self.u_dc_axial / (m * self.z0**2))
+            self.omega_axial = np.sqrt(
+                self.kappa * e * self.u_dc_axial / (m * self.z0**2)
+            )
         elif self.omega_axial is None and self.u_dc_axial is None:
             raise ValueError("Must specify either omega_axial or u_dc_axial")
 
@@ -104,7 +107,9 @@ class PaulTrap:
         Psi_0 = e^2 * V_rf^2 / (4 * m * Omega_rf^2 * r0^2) converted to eV.
         """
         m = self.species.mass_kg
-        depth_J = (ELECTRON_CHARGE**2 * self.v_rf**2) / (4 * m * self.omega_rf**2 * self.r0**2)
+        depth_J = (ELECTRON_CHARGE**2 * self.v_rf**2) / (
+            4 * m * self.omega_rf**2 * self.r0**2
+        )
         return depth_J / ELECTRON_CHARGE
 
     def micromotion_amplitude(self, displacement_from_null: float) -> float:

@@ -1,4 +1,5 @@
 """Motional decoherence: anomalous heating and motional dephasing."""
+
 import numpy as np
 import qutip
 
