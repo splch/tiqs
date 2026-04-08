@@ -43,11 +43,26 @@ def spontaneous_emission_op(
 
     $L = \sqrt{1/T_1}\;\sigma_+$.
 
-    In our convention $|0\rangle$ = ground, $|1\rangle$ = excited, and
-    $\sigma_+ = |0\rangle\langle 1|$ maps $|1\rangle$ to $|0\rangle$,
-    implementing decay from the excited state to the ground state.
+    In our convention $|0\rangle$ = ground, $|1\rangle$ = excited,
+    and $\sigma_+ = |0\rangle\langle 1|$ maps $|1\rangle$ to
+    $|0\rangle$, implementing decay from the excited state to the
+    ground state.
 
-    Relevant for optical qubits (Ca-40 $D_{5/2}$ lifetime ~1.17 s) and
-    off-resonant decay during Raman gates.
+    Relevant for optical qubits (Ca-40 $D_{5/2}$ lifetime ~1.17 s)
+    and off-resonant decay during Raman gates.
+
+    Parameters
+    ----------
+    ops : OperatorFactory
+        Factory for constructing multi-body operators.
+    ion : int
+        Index of the target ion.
+    t1 : float
+        Energy relaxation time $T_1$ in seconds.
+
+    Returns
+    -------
+    qutip.Qobj
+        Collapse operator for spontaneous emission.
     """
     return np.sqrt(1.0 / t1) * ops.sigma_plus(ion)

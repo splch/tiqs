@@ -10,6 +10,18 @@ def state_fidelity(state1: qutip.Qobj, state2: qutip.Qobj) -> float:
 
     $F = |\langle\psi_1|\psi_2\rangle|^2$ for pure states, or $F^2$ from
     ``qutip.fidelity`` for mixed states.
+
+    Parameters
+    ----------
+    state1 : qutip.Qobj
+        First quantum state (ket or density matrix).
+    state2 : qutip.Qobj
+        Second quantum state (ket or density matrix).
+
+    Returns
+    -------
+    float
+        State fidelity in the range [0, 1].
     """
     if state1.isket and state2.isket:
         return abs(state1.overlap(state2)) ** 2

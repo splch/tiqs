@@ -20,6 +20,22 @@ def carrier_hamiltonian(
 
     Drives $|0\rangle \leftrightarrow |1\rangle$ without changing
     the motional state.
+
+    Parameters
+    ----------
+    ops : OperatorFactory
+        Operator factory for the Hilbert space.
+    ion : int
+        Index of the target ion.
+    rabi_frequency : float
+        Rabi frequency $\Omega$ in rad/s.
+    phase : float, optional
+        Laser phase $\phi$ in radians.
+
+    Returns
+    -------
+    qutip.Qobj
+        The carrier Hamiltonian operator.
     """
     sp = ops.sigma_plus(ion)
     sm = ops.sigma_minus(ion)
@@ -51,6 +67,26 @@ def red_sideband_hamiltonian(
     $|0\rangle \to |1\rangle$ (excitation), and
     $a$ removes a phonon, so the coupling term is
     $a\,\sigma_- + \text{h.c.}$
+
+    Parameters
+    ----------
+    ops : OperatorFactory
+        Operator factory for the Hilbert space.
+    ion : int
+        Index of the target ion.
+    mode : int
+        Index of the motional mode.
+    rabi_frequency : float
+        Rabi frequency $\Omega$ in rad/s.
+    eta : float
+        Lamb-Dicke parameter for this ion-mode pair.
+    phase : float, optional
+        Laser phase in radians.
+
+    Returns
+    -------
+    qutip.Qobj
+        The red-sideband Hamiltonian operator.
     """
     sp = ops.sigma_plus(ion)
     sm = ops.sigma_minus(ion)
@@ -85,6 +121,26 @@ def blue_sideband_hamiltonian(
     $a^\dagger$ adds a phonon, so the coupling
     term is
     $a^\dagger\,\sigma_- + \text{h.c.}$
+
+    Parameters
+    ----------
+    ops : OperatorFactory
+        Operator factory for the Hilbert space.
+    ion : int
+        Index of the target ion.
+    mode : int
+        Index of the motional mode.
+    rabi_frequency : float
+        Rabi frequency $\Omega$ in rad/s.
+    eta : float
+        Lamb-Dicke parameter for this ion-mode pair.
+    phase : float, optional
+        Laser phase in radians.
+
+    Returns
+    -------
+    qutip.Qobj
+        The blue-sideband Hamiltonian operator.
     """
     sp = ops.sigma_plus(ion)
     sm = ops.sigma_minus(ion)

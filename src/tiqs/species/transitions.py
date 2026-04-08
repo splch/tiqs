@@ -28,10 +28,22 @@ class Transition:
 
     @property
     def frequency(self) -> float:
-        """Transition frequency in Hz."""
+        r"""Transition frequency in Hz.
+
+        Returns
+        -------
+        float
+            Frequency computed as $c / \lambda$.
+        """
         return SPEED_OF_LIGHT / self.wavelength
 
     @property
     def wavevector(self) -> float:
-        r"""Wavevector magnitude $|k| = 2\pi/\lambda$ in rad/m."""
+        r"""Wavevector magnitude $|k| = 2\pi/\lambda$ in rad/m.
+
+        Returns
+        -------
+        float
+            Wavevector magnitude in rad/m.
+        """
         return TWO_PI / self.wavelength

@@ -17,9 +17,23 @@ def laser_phase_noise_op(
     L = \sqrt{\gamma / 2}\;\sigma_z
     $$
 
-    Phase noise between Raman beams or on a direct optical drive appears as
-    dephasing on the qubit. Rate is the effective linewidth of the
-    beat note / laser.
+    Phase noise between Raman beams or on a direct optical drive
+    appears as dephasing on the qubit. Rate is the effective
+    linewidth of the beat note / laser.
+
+    Parameters
+    ----------
+    ops : OperatorFactory
+        Factory for constructing multi-body operators.
+    ion : int
+        Index of the target ion.
+    rate : float
+        Effective linewidth of the laser or beat note in rad/s.
+
+    Returns
+    -------
+    qutip.Qobj
+        Collapse operator for laser phase noise.
     """
     return np.sqrt(rate / 2) * ops.sigma_z(ion)
 

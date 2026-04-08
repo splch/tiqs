@@ -15,12 +15,16 @@ class StateFactory:
     """
 
     def __init__(self, hilbert_space: HilbertSpace):
+        """Store the Hilbert space specification used to build states."""
         self.hs = hilbert_space
 
     def ground_state(self) -> qutip.Qobj:
         """All qubits in |0> (down), all modes in vacuum |n=0>.
 
-        Returns a ket.
+        Returns
+        -------
+        qutip.Qobj
+            Tensor-product ket in the composite Hilbert space.
         """
         parts = []
         for _ in range(self.hs.n_ions):

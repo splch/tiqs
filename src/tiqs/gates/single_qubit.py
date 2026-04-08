@@ -16,6 +16,17 @@ class GatePulse:
 
     For composite gates, `pulses` contains the sequential
     (Hamiltonian, duration) pairs to be applied in order.
+
+    Attributes
+    ----------
+    hamiltonian : qutip.Qobj or list
+        The Hamiltonian operator for a simple gate, or the
+        representative Hamiltonian for composite gates.
+    duration : float
+        Total gate duration in seconds.
+    pulses : list of tuple or None
+        For composite gates, a list of ``(Hamiltonian, duration)``
+        pairs applied sequentially. ``None`` for simple gates.
     """
 
     hamiltonian: qutip.Qobj | list
@@ -35,6 +46,22 @@ def rx_gate(
     implemented as
     $H = \frac{\Omega}{2}\sigma_x$
     for time $t = \theta / \Omega$.
+
+    Parameters
+    ----------
+    ops : OperatorFactory
+        Operator factory for the Hilbert space.
+    ion : int
+        Index of the target ion.
+    theta : float
+        Rotation angle in radians.
+    rabi_frequency : float, optional
+        Rabi frequency $\Omega$ in rad/s.
+
+    Returns
+    -------
+    GatePulse
+        Gate with the X-rotation Hamiltonian and duration.
     """
     H = (rabi_frequency / 2) * ops.sigma_x(ion)
     duration = abs(theta) / rabi_frequency
@@ -47,8 +74,26 @@ def ry_gate(
     theta: float,
     rabi_frequency: float = TWO_PI * 1e6,
 ) -> GatePulse:
-    r"""Rotation about Y by angle $\theta$:
-    $R_y(\theta) = e^{-i \theta \sigma_y / 2}$."""
+    r"""Rotation about Y by angle $\theta$.
+
+    $R_y(\theta) = e^{-i \theta \sigma_y / 2}$.
+
+    Parameters
+    ----------
+    ops : OperatorFactory
+        Operator factory for the Hilbert space.
+    ion : int
+        Index of the target ion.
+    theta : float
+        Rotation angle in radians.
+    rabi_frequency : float, optional
+        Rabi frequency $\Omega$ in rad/s.
+
+    Returns
+    -------
+    GatePulse
+        Gate with the Y-rotation Hamiltonian and duration.
+    """
     H = (rabi_frequency / 2) * ops.sigma_y(ion)
     duration = abs(theta) / rabi_frequency
     return GatePulse(hamiltonian=H, duration=duration)
@@ -63,6 +108,22 @@ def rz_gate(
     r"""Rotation about Z by angle $\phi$.
 
     $R_z(\phi) = e^{-i \phi \sigma_z / 2}$.
+
+    Parameters
+    ----------
+    ops : OperatorFactory
+        Operator factory for the Hilbert space.
+    ion : int
+        Index of the target ion.
+    phi : float
+        Rotation angle in radians.
+    rabi_frequency : float, optional
+        Rabi frequency $\Omega$ in rad/s.
+
+    Returns
+    -------
+    GatePulse
+        Gate with the Z-rotation Hamiltonian and duration.
     """
     H = (rabi_frequency / 2) * ops.sigma_z(ion)
     duration = abs(phi) / rabi_frequency
@@ -75,8 +136,9 @@ def _rotation_hamiltonian(
     phase: float,
     rabi_frequency: float,
 ) -> qutip.Qobj:
-    r"""Hamiltonian for a rotation about an axis in the x-y plane at
-    angle `phase`.
+    r"""Hamiltonian for a rotation about an axis in the x-y plane.
+
+    The axis is set by the angle `phase`:
 
     $$
     H = \frac{\Omega}{2}
@@ -86,6 +148,23 @@ def _rotation_hamiltonian(
       \bigl(\sigma_x \cos\varphi
       + \sigma_y \sin\varphi\bigr)
     $$
+
+    Parameters
+    ----------
+    ops : OperatorFactory
+        Operator factory for the Hilbert space.
+    ion : int
+        Index of the target ion.
+    phase : float
+        Angle of the rotation axis in the x-y plane
+        (radians).
+    rabi_frequency : float
+        Rabi frequency $\Omega$ in rad/s.
+
+    Returns
+    -------
+    qutip.Qobj
+        The rotation Hamiltonian operator.
     """
     return (rabi_frequency / 2) * (
         ops.sigma_x(ion) * np.cos(phase) + ops.sigma_y(ion) * np.sin(phase)

@@ -49,6 +49,11 @@ class PaulTrap:
     kappa: float = 0.4
 
     def __post_init__(self):
+        """Derive the missing axial parameter.
+
+        If ``omega_axial`` is given, compute ``u_dc_axial``, and
+        vice versa. Raises ``ValueError`` if neither is provided.
+        """
         m = self.species.mass_kg
         e = ELECTRON_CHARGE
         if self.omega_axial is not None and self.u_dc_axial is None:

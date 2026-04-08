@@ -71,8 +71,23 @@ def motional_dephasing_op(
 
     $L = \sqrt{\gamma}\, \hat{n}$.
 
-    Models fluctuations in the trap frequency that cause dephasing of
-    motional superposition states without changing the phonon number.
+    Models fluctuations in the trap frequency that cause dephasing
+    of motional superposition states without changing the phonon
+    number.
+
+    Parameters
+    ----------
+    ops : OperatorFactory
+        Factory for constructing multi-body operators.
+    mode : int
+        Motional mode index.
+    rate : float
+        Motional dephasing rate in rad/s.
+
+    Returns
+    -------
+    qutip.Qobj
+        Collapse operator for motional dephasing.
     """
     return np.sqrt(rate) * ops.number(mode)
 

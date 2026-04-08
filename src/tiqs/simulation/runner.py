@@ -27,6 +27,18 @@ class SimulationRunner:
     """
 
     def __init__(self, config: SimulationConfig):
+        """Initialize the runner from a simulation configuration.
+
+        Computes normal modes, Lamb-Dicke parameters, builds the
+        Hilbert space and operator factories, and pre-builds the
+        list of collapse operators specified by the configuration.
+
+        Parameters
+        ----------
+        config : SimulationConfig
+            Complete description of the physical system, gate
+            parameters, and noise model.
+        """
         self.config = config
 
         self.modes = normal_modes(config.n_ions, config.trap)
@@ -55,6 +67,17 @@ class SimulationRunner:
         self._c_ops = self._build_collapse_operators()
 
     def _build_collapse_operators(self) -> list[qutip.Qobj]:
+        """Assemble collapse operators from the noise configuration.
+
+        Includes motional heating (per mode), qubit dephasing (per
+        ion), and spontaneous emission (per ion) when the
+        corresponding configuration fields are set.
+
+        Returns
+        -------
+        list[qutip.Qobj]
+            Collapse operators for the Lindblad master equation.
+        """
         c_ops = []
         cfg = self.config
 
@@ -78,12 +101,44 @@ class SimulationRunner:
         return c_ops
 
     def _initial_state(self) -> qutip.Qobj:
+        """Build the default initial state.
+
+        Returns a thermal motional state (density matrix) when
+        ``n_bar_initial > 0`` or collapse operators are present,
+        otherwise returns a pure ground state (ket).
+
+        Returns
+        -------
+        qutip.Qobj
+            Initial state for the simulation.
+        """
         n_bar = self.config.n_bar_initial
         if n_bar > 0 or self._c_ops:
             return self.sf.thermal_state(n_bar=[n_bar] * self.config.n_modes)
         return self.sf.ground_state()
 
     def _solve(self, H, tlist, psi0=None):
+        """Dispatch to the appropriate QuTiP solver.
+
+        Selects ``sesolve``, ``mesolve``, or ``mcsolve`` based on
+        the configured solver name and whether collapse operators
+        are present.
+
+        Parameters
+        ----------
+        H : qutip.Qobj or list
+            System Hamiltonian (static or time-dependent).
+        tlist : array_like
+            Times at which to evaluate the state.
+        psi0 : qutip.Qobj or None, optional
+            Initial state. If ``None``, built automatically via
+            ``_initial_state``.
+
+        Returns
+        -------
+        qutip.Result
+            Solver result containing the time-evolved state.
+        """
         if psi0 is None:
             psi0 = self._initial_state()
 
@@ -148,10 +203,10 @@ class SimulationRunner:
     ) -> qutip.Result:
         r"""Run a Molmer-Sorensen entangling gate.
 
-        Uses the time-dependent Hamiltonian from ``ms_gate_hamiltonian`` with
-        Rabi frequency calibrated so that the geometric phase accumulates
-        to $\pi/4$ over the gate duration, producing
-        a maximally entangling gate.
+        Uses the time-dependent Hamiltonian from
+        ``ms_gate_hamiltonian`` with Rabi frequency calibrated so
+        that the geometric phase accumulates to $\pi/4$ over the
+        gate duration, producing a maximally entangling gate.
 
         For the MS gate the geometric phase is
 
@@ -160,8 +215,33 @@ class SimulationRunner:
         $$
 
         where $K$ is the number of loops. For maximally entangling:
-        $\phi = \pi/4$, giving $\eta\,\Omega = \delta / (4\sqrt{K})$.
+        $\phi = \pi/4$, giving
+        $\eta\,\Omega = \delta / (4\sqrt{K})$.
         Hence $\Omega = \delta / (4\,\bar{\eta}\,\sqrt{K})$.
+
+        Parameters
+        ----------
+        ions : list[int]
+            Indices of the two ions to entangle.
+        mode : int, optional
+            Motional mode index (default 0, the COM mode).
+        detuning : float or None, optional
+            Detuning from the motional sideband in rad/s. If
+            ``None``, defaults to ``2*pi * 1 kHz``.
+        loops : int, optional
+            Number of phase-space loops (default 1).
+        n_steps : int, optional
+            Number of time steps for the solver (default 500).
+
+        Returns
+        -------
+        qutip.Result
+            Solver result containing the time-evolved state.
+
+        Raises
+        ------
+        ValueError
+            If ``ions`` does not contain exactly two indices.
         """
         if len(ions) != 2:
             raise ValueError(
