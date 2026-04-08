@@ -28,4 +28,5 @@ class LaserBeam:
 
     @property
     def wavevector(self) -> float:
+        r"""Wavevector magnitude $|k| = 2\pi / \lambda$ in rad/m."""
         return TWO_PI / self.wavelength

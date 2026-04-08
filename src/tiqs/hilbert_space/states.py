@@ -34,9 +34,19 @@ class StateFactory:
         qubit_states: list[int],
         fock_states: list[int],
     ) -> qutip.Qobj:
-        """Arbitrary product state.
+        """Construct an arbitrary product state as a ket.
 
-        qubit_states[i] in {0, 1}, fock_states[m] is phonon number.
+        Parameters
+        ----------
+        qubit_states : list[int]
+            Qubit state for each ion, 0 (down) or 1 (up).
+        fock_states : list[int]
+            Phonon occupation number for each motional mode.
+
+        Returns
+        -------
+        qutip.Qobj
+            Tensor-product ket in the composite Hilbert space.
         """
         if len(qubit_states) != self.hs.n_ions:
             raise ValueError(

@@ -111,7 +111,27 @@ class SimulationRunner:
         duration: float | None = None,
         n_steps: int = 200,
     ) -> qutip.Result:
-        """Run a carrier rotation (single-qubit gate) on the specified ion."""
+        """Run a carrier rotation (single-qubit gate) on the specified ion.
+
+        Parameters
+        ----------
+        ion : int
+            Index of the target ion.
+        theta : float
+            Rotation angle in radians. Used to derive the default duration
+            as ``abs(theta) / rabi_frequency``.
+        rabi_frequency : float, optional
+            Carrier Rabi frequency in rad/s (default 2*pi * 100 kHz).
+        duration : float or None, optional
+            Pulse duration in seconds. If ``None``, computed from *theta*.
+        n_steps : int, optional
+            Number of time steps for the solver (default 200).
+
+        Returns
+        -------
+        qutip.Result
+            Solver result containing the time-evolved state.
+        """
         H = carrier_hamiltonian(self.ops, ion, rabi_frequency, phase=0.0)
         if duration is None:
             duration = abs(theta) / rabi_frequency

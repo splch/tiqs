@@ -232,5 +232,22 @@ _SPECIES_DB: dict[str, IonSpecies] = {
 
 
 def get_species(name: str) -> IonSpecies:
-    """Look up an ion species by name. Raises KeyError if not found."""
+    """Look up an ion species by name.
+
+    Parameters
+    ----------
+    name : str
+        Species identifier. Available names: ``"Yb171"``, ``"Ca40"``,
+        ``"Ca43"``, ``"Ba137"``, ``"Be9"``, ``"Sr88"``.
+
+    Returns
+    -------
+    IonSpecies
+        Atomic data for the requested species.
+
+    Raises
+    ------
+    KeyError
+        If *name* is not in the species database.
+    """
     return _SPECIES_DB[name]
