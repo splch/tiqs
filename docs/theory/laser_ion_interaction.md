@@ -12,9 +12,7 @@ harmonic trap (frequency $\omega_z$) illuminated by a laser (frequency
 $\omega_L$, wavevector $k$, phase $\phi_L$, Rabi frequency $\Omega$):
 
 $$
-H = \frac{\hbar\omega_0}{2}\sigma_z + \hbar\omega_z\, a^\dagger a
-  + \frac{\hbar\Omega}{2}(\sigma_+ + \sigma_-)
-    \left[e^{i(kz - \omega_L t + \phi_L)} + \text{h.c.}\right]
+H = \frac{\hbar\omega_0}{2}\sigma_z + \hbar\omega_z\, a^\dagger a + \frac{\hbar\Omega}{2}(\sigma_+ + \sigma_-)\left[e^{i(kz - \omega_L t + \phi_L)} + \text{h.c.}\right]
 $$
 
 ### Interaction Picture
@@ -22,9 +20,7 @@ $$
 Moving to the interaction picture with respect to the free Hamiltonian:
 
 $$
-H_I(t) = \frac{\hbar\Omega}{2}\, \sigma_+\,
-  \exp\!\Bigl\{i\bigl[\eta(a\,e^{-i\omega_z t} + a^\dagger e^{i\omega_z t})
-  - \delta t + \phi_L\bigr]\Bigr\} + \text{h.c.}
+H_I(t) = \frac{\hbar\Omega}{2}\, \sigma_+\, \exp\!\Bigl\lbrace i\bigl[\eta(a\,e^{-i\omega_z t} + a^\dagger e^{i\omega_z t}) - \delta t + \phi_L\bigr]\Bigr\rbrace + \text{h.c.}
 $$
 
 where $\delta = \omega_L - \omega_0$ is the laser detuning and $\eta$ is the
@@ -40,8 +36,7 @@ In the Lamb-Dicke regime ($\eta\sqrt{2\bar{n}+1} \ll 1$), the exponential
 expands as:
 
 $$
-e^{i\eta(a + a^\dagger)} \approx 1 + i\eta(a + a^\dagger)
-  - \frac{\eta^2}{2}(a + a^\dagger)^2 + \cdots
+e^{i\eta(a + a^\dagger)} \approx 1 + i\eta(a + a^\dagger) - \frac{\eta^2}{2}(a + a^\dagger)^2 + \cdots
 $$
 
 Three resonance conditions emerge:
@@ -92,10 +87,7 @@ For $N$ ions coupled to $M$ motional modes, the interaction picture Hamiltonian
 in the Lamb-Dicke regime is:
 
 $$
-H_I(t) = \sum_{j=1}^{N} \frac{\hbar\Omega_j}{2}\, \sigma_+^{(j)}\,
-  e^{i(-\delta_j t + \phi_j)}
-  \left[1 + i\sum_{p=1}^{M} \eta_{j,p}\bigl(a_p\, e^{-i\omega_p t}
-  + a_p^\dagger e^{i\omega_p t}\bigr)\right] + \text{h.c.}
+H_I(t) = \sum_{j=1}^{N} \frac{\hbar\Omega_j}{2}\, \sigma_+^{(j)}\, e^{i(-\delta_j t + \phi_j)} \left[1 + i\sum_{p=1}^{M} \eta_{j,p}\bigl(a_p\, e^{-i\omega_p t} + a_p^\dagger e^{i\omega_p t}\bigr)\right] + \text{h.c.}
 $$
 
 where $\eta_{j,p} = k\, b_{j,p}\sqrt{\hbar/(2m\omega_p)}$ encodes both the

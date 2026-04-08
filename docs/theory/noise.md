@@ -3,7 +3,7 @@
 All decoherence channels in TIQS are modeled via the Lindblad master equation:
 
 $$
-\frac{d\rho}{dt} = -i[H, \rho] + \sum_k \gamma_k \left(L_k \rho L_k^\dagger - \frac{1}{2}\{L_k^\dagger L_k, \rho\}\right)
+\frac{d\rho}{dt} = -i[H, \rho] + \sum_k \gamma_k \left(L_k \rho L_k^\dagger - \frac{1}{2}\lbrace L_k^\dagger L_k, \rho\rbrace\right)
 $$
 
 where $L_k$ are collapse (jump) operators and $\gamma_k$ are the corresponding
@@ -131,9 +131,5 @@ spillover intensity.
 The total Lindblad superoperator sums all channels:
 
 $$
-\mathcal{D}[\rho] = \sum_p \mathcal{D}_{\text{heat},p}[\rho]
-  + \sum_p \mathcal{D}_{\text{deph},p}[\rho]
-  + \sum_j \mathcal{D}_{\phi,j}[\rho]
-  + \sum_j \mathcal{D}_{\text{decay},j}[\rho]
-  + \sum_j \mathcal{D}_{\text{scatter},j}[\rho]
+\mathcal{D}[\rho] = \sum_p \mathcal{D}_{\text{heat},p}[\rho] + \sum_p \mathcal{D}_{\text{deph},p}[\rho] + \sum_j \mathcal{D}_{\phi,j}[\rho] + \sum_j \mathcal{D}_{\text{decay},j}[\rho] + \sum_j \mathcal{D}_{\text{scatter},j}[\rho]
 $$

@@ -16,14 +16,14 @@ TIQS models the full trapped-ion physics stack from the ground up:
 
 | Layer | Physics | TIQS Package |
 |-------|---------|--------------|
-| **Trapping** | Paul trap confinement, Mathieu equation, pseudopotential | `tiqs.trap` |
+| **Trapping** | Paul trap confinement, Mathieu equation, pseudopotential | `tiqs.trap.PaulTrap` |
 | **Ion chain** | Coulomb crystals, normal modes, Lamb-Dicke parameters | `tiqs.chain` |
 | **Species** | Atomic structure, transitions, qubit encoding | `tiqs.species` |
 | **Cooling** | Doppler, resolved sideband, and EIT cooling | `tiqs.cooling` |
-| **Laser-ion interaction** | Carrier and sideband Hamiltonians, Raman transitions | `tiqs.interaction` |
-| **Gates** | Single-qubit rotations, Molmer-Sorensen, Cirac-Zoller, light-shift | `tiqs.gates` |
-| **Noise** | Motional heating, qubit dephasing, photon scattering, laser noise | `tiqs.noise` |
-| **SPAM** | Optical pumping, fluorescence detection, mid-circuit measurement | `tiqs.spam` |
+| **Laser-ion** | Carrier and sideband Hamiltonians, Raman transitions | `tiqs.interaction` |
+| **Gates** | Single-qubit rotations, MS, CZ, light-shift | `tiqs.gates` |
+| **Noise** | Motional heating, qubit dephasing, photon scattering | `tiqs.noise` |
+| **SPAM** | Optical pumping, fluorescence detection | `tiqs.spam` |
 | **Analysis** | Fidelity metrics, phase-space visualization, error budgets | `tiqs.analysis` |
 
 ### Quick Start
@@ -56,7 +56,7 @@ $\mathcal{H} = \mathcal{H}_\text{qubit}^{\otimes N} \otimes \mathcal{H}_\text{mo
 and integrates the Lindblad master equation using QuTiP:
 
 $$
-\frac{d\rho}{dt} = -i[H(t), \rho] + \sum_k \gamma_k \left( L_k \rho L_k^\dagger - \frac{1}{2}\{L_k^\dagger L_k, \rho\} \right)
+\frac{d\rho}{dt} = -i[H(t), \rho] + \sum_k \gamma_k \left( L_k \rho L_k^\dagger - \frac{1}{2}\lbrace L_k^\dagger L_k, \rho\rbrace \right)
 $$
 
 The Hamiltonian $H(t)$ includes qubit energies, motional mode energies, and

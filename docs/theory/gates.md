@@ -7,8 +7,7 @@ electromagnetic fields. On carrier resonance ($\delta = 0$), the time
 evolution operator for ion $j$ is:
 
 $$
-U_j(\theta, \phi) = \exp\!\left[-i\frac{\theta}{2}\bigl(\cos\phi\;\sigma_x^{(j)}
-  + \sin\phi\;\sigma_y^{(j)}\bigr)\right]
+U_j(\theta, \phi) = \exp\!\left[-i\frac{\theta}{2}\bigl(\cos\phi\;\sigma_x^{(j)} + \sin\phi\;\sigma_y^{(j)}\bigr)\right]
 $$
 
 where $\theta = \Omega_j t$ (set by pulse duration) and $\phi = \phi_L$
@@ -70,8 +69,7 @@ displacements in opposite directions in motional phase space.
 In the interaction picture:
 
 $$
-H_\text{MS}(t) = \sum_{j} \frac{\hbar\eta_{j,p}\Omega_j}{2}\,
-  \sigma_\phi^{(j)} \bigl[a_p\, e^{i\delta t} + a_p^\dagger e^{-i\delta t}\bigr]
+H_\text{MS}(t) = \sum_{j} \frac{\hbar\eta_{j,p}\Omega_j}{2}\, \sigma_\phi^{(j)} \bigl[a_p\, e^{i\delta t} + a_p^\dagger e^{-i\delta t}\bigr]
 $$
 
 where $\sigma_\phi = \cos\phi_s\;\sigma_x + \sin\phi_s\;\sigma_y$ and
@@ -161,8 +159,7 @@ Uses an off-resonant standing wave to create a **state-dependent force**
 proportional to $\sigma_z$ rather than $\sigma_\phi$:
 
 $$
-H_\text{LS}(t) = \sum_j \frac{\hbar\eta_{j,p}\Omega_{\text{LS},j}}{2}\,
-  \sigma_z^{(j)} \bigl[a_p\, e^{i\delta_g t} + a_p^\dagger e^{-i\delta_g t}\bigr]
+H_\text{LS}(t) = \sum_j \frac{\hbar\eta_{j,p}\Omega_{\text{LS},j}}{2}\, \sigma_z^{(j)} \bigl[a_p\, e^{i\delta_g t} + a_p^\dagger e^{-i\delta_g t}\bigr]
 $$
 
 The mathematical structure is **identical** to the MS gate with

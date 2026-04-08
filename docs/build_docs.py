@@ -14,29 +14,18 @@ import tiqs
 pdoc.render.configure(
     docformat="numpy",
     math=True,
-    mermaid=True,
     template_directory=Path("docs/templates"),
     footer_text="TIQS - Trapped Ion Quantum Simulator",
 )
 
-# Collect only subpackage names (not leaf modules, which pdoc
-# auto-discovers from the parent package).
-subpackages = [
-    modname
-    for _importer, modname, ispkg in pkgutil.walk_packages(
-        tiqs.__path__, prefix="tiqs."
-    )
-    if ispkg
-]
-
-# Pass each subpackage plus standalone modules so pdoc generates
-# a separate page per subpackage with its theory docstring visible.
-modules = [
-    "tiqs",
-    *subpackages,
-    "tiqs.constants",
-    "tiqs.trap",
-    "tiqs.transport",
-]
+# pdoc collapses all submodules into the top-level page unless
+# subpackages are passed explicitly. Discover them automatically
+# so each subpackage gets its own page with theory docstrings.
+modules = ["tiqs"]
+for _importer, modname, ispkg in pkgutil.walk_packages(
+    tiqs.__path__, prefix="tiqs."
+):
+    if ispkg:
+        modules.append(modname)
 
 pdoc.pdoc(*modules, output_directory=Path("docs/api"))

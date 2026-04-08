@@ -23,4 +23,3 @@ This package provides tools for characterizing simulation results:
   dephasing, scattering, crosstalk) into a total gate infidelity estimate.
 """
 
-__docformat__ = "numpy"

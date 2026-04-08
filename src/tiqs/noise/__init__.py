@@ -4,4 +4,3 @@ photon scattering, and crosstalk.
 .. include:: ../../../docs/theory/noise.md
 """
 
-__docformat__ = "numpy"

@@ -4,4 +4,3 @@ Cirac-Zoller, and light-shift.
 .. include:: ../../../docs/theory/gates.md
 """
 
-__docformat__ = "numpy"
