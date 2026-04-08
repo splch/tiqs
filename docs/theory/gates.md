@@ -115,7 +115,7 @@ $$
 U_\text{MS} = \exp\left(-i\frac{\pi}{4}\, \sigma_x^{(1)} \sigma_x^{(2)}\right)
 $$
 
-Applied to $|gg\rangle$: $U_\text{MS}|gg\rangle = (|gg\rangle - i|ee\rangle)/\sqrt{2}$ -- a Bell state.
+Applied to $|gg\rangle$: $U_\text{MS}|gg\rangle = (|gg\rangle - i|ee\rangle)/\sqrt{2}$, a Bell state.
 
 #### Why It's Insensitive to Temperature
 
@@ -140,7 +140,7 @@ phonons are only virtually excited and the Hamiltonian reduces to an effective
 Ising model:
 
 $$
-H_\text{eff} = \sum_{j<k} J_{j,k}\, \sigma_\phi^{(j)}\, \sigma_\phi^{(k)}
+H_\text{eff} = \sum_{j \lt k} J_{j,k}\, \sigma_\phi^{(j)}\, \sigma_\phi^{(k)}
 $$
 
 where the coupling matrix is:

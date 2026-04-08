@@ -24,7 +24,7 @@ $$
 $$
 
 For typical trap frequencies $\omega_z / 2\pi \sim 1$-$3$ MHz and
-$\Gamma/2\pi \sim 20$ MHz, this gives $\bar{n} \approx 5$-$20$ -- cooled
+$\Gamma/2\pi \sim 20$ MHz, this gives $\bar{n} \approx 5$-$20$, cooled
 significantly but far from the motional ground state.
 
 ### Resolved Sideband Cooling
@@ -89,7 +89,7 @@ $$
 **Bandwidth advantage**: Unlike RSC (which cools one mode at a time), EIT
 cooling provides broad cooling bandwidth ($\sim \Omega_p$). By choosing
 $\Omega_p$ appropriately, all transverse modes of an $N$-ion chain can be
-cooled simultaneously -- demonstrated for 40+ ions in $< 300\;\mu$s.
+cooled simultaneously, demonstrated for 40+ ions in $< 300\;\mu$s.
 
 ### Sympathetic Cooling
 

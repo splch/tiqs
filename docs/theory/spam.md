@@ -2,7 +2,7 @@
 
 ### State Preparation via Optical Pumping
 
-Qubits are initialized into a known state via **optical pumping** -- a
+Qubits are initialized into a known state via **optical pumping**, a
 dissipative process where polarized laser light drives the ion into a target
 "dark state" that is decoupled from the pump field.
 

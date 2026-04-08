@@ -1,7 +1,7 @@
 ## Paul Trap Physics
 
 A Paul trap confines charged particles using oscillating electric fields that
-create a time-averaged restoring force -- a **pseudopotential**. Static electric
+create a time-averaged restoring force, the **pseudopotential**. Static electric
 fields cannot create a three-dimensional potential minimum for a charged particle
 (Earnshaw's theorem), so RF fields at radio frequencies are used instead.
 
@@ -44,7 +44,7 @@ $q \approx 0.1$-$0.4$, well below the stability boundary at $q = 0.908$.
 In the pseudopotential approximation (valid for $q \ll 1$), the ion's motion
 decomposes into two components:
 
-**Secular motion** -- slow harmonic oscillation at the secular frequency:
+**Secular motion**: slow harmonic oscillation at the secular frequency:
 
 $$
 \omega_\text{rad} = \frac{q\, \Omega_\text{RF}}{2\sqrt{2}}
@@ -53,7 +53,7 @@ $$
 This is the "useful" oscillatory motion that serves as the quantum bus, with
 typical values $\omega_\text{sec}/2\pi \sim 1$-$5$ MHz.
 
-**Micromotion** -- fast, driven oscillation at $\Omega_\text{RF}$, with
+**Micromotion**: fast, driven oscillation at $\Omega_\text{RF}$, with
 amplitude proportional to the ion's displacement from the RF null. At the exact
 trap center, micromotion vanishes. Stray DC fields push ions off-center,
 causing "excess micromotion" that broadens spectral lines and degrades gate

@@ -53,7 +53,7 @@ $1.5 \times 10^{-7}$ with microwave-driven gates. Only 0.135% natural
 abundance requires isotope-selective loading. Used by Oxford Ionics / IonQ.
 
 **${}^{137}\text{Ba}^+$** ($I = 3/2$): All primary wavelengths in the visible
-spectrum -- cooling at 493 nm, repumping at 650 nm. The $5D_{5/2}$ metastable
+spectrum: cooling at 493 nm, repumping at 650 nm. The $5D_{5/2}$ metastable
 state has $\sim 30$ s lifetime for high-fidelity electron shelving. Quantinuum's
 Helios processor (2025) was the first commercial system using ${}^{137}\text{Ba}^+$.
 

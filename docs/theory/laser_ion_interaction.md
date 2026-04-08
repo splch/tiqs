@@ -1,7 +1,7 @@
 ## Laser-Ion Interaction
 
 The interface between a qubit and its motional mode is the **sideband
-transition** -- the fundamental mechanism enabling both cooling and entangling
+transition**, the fundamental mechanism enabling both cooling and entangling
 gates. A laser beam couples the ion's internal electronic state to its
 quantized motion through the momentum kick of photon absorption and emission.
 

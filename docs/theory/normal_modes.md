@@ -1,6 +1,6 @@
 ## Ion Chain Physics
 
-Multiple trapped ions form **Coulomb crystals** -- in a linear trap, ions line
+Multiple trapped ions form **Coulomb crystals**: in a linear trap, ions line
 up into a chain with collective small oscillations that decompose into quantized
 **normal modes**. These modes serve as the quantum bus for entangling gates.
 
@@ -10,7 +10,7 @@ For $N$ ions of mass $m$ and charge $e$ in a harmonic axial potential with
 frequency $\omega_z$, the total potential energy is:
 
 $$
-V = \sum_{i=1}^{N} \frac{1}{2} m \omega_z^2 z_i^2 + \sum_{i<j} \frac{e^2}{4\pi\epsilon_0 |z_i - z_j|}
+V = \sum_{i=1}^{N} \frac{1}{2} m \omega_z^2 z_i^2 + \sum_{i \lt j} \frac{e^2}{4\pi\epsilon_0 |z_i - z_j|}
 $$
 
 Defining the characteristic length scale $l_0 = \left(\frac{e^2}{4\pi\epsilon_0\, m\, \omega_z^2}\right)^{1/3}$
