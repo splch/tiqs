@@ -8,47 +8,79 @@ Prepare a Bell state on two Ca-40 ions and measure it:
 
 ```python
 import numpy as np
-from tiqs import get_species, PaulTrap, normal_modes, lamb_dicke_parameters
-from tiqs import HilbertSpace, OperatorFactory, StateFactory, SimulationRunner, SimulationConfig
+
+from tiqs import (
+    PaulTrap,
+    SimulationConfig,
+    SimulationRunner,
+    get_species,
+)
+from tiqs.analysis.fidelity import bell_state_fidelity
 
 TWO_PI = 2 * np.pi
 
 # Physical setup: Ca-40 ions in a linear Paul trap
 species = get_species("Ca40")
-trap = PaulTrap(v_rf=300, omega_rf=TWO_PI * 30e6, r0=0.5e-3,
-                omega_axial=TWO_PI * 1e6, species=species)
+trap = PaulTrap(
+    v_rf=300,
+    omega_rf=TWO_PI * 30e6,
+    r0=0.5e-3,
+    omega_axial=TWO_PI * 1e6,
+    species=species,
+)
 
-# Simulate an MS entangling gate through the full pipeline
-config = SimulationConfig(species=species, trap=trap, n_ions=2, n_modes=1, n_fock=15)
+# Simulate an MS entangling gate
+config = SimulationConfig(
+    species=species,
+    trap=trap,
+    n_ions=2,
+    n_modes=1,
+    n_fock=15,
+)
 runner = SimulationRunner(config)
 result = runner.run_ms_gate(ions=[0, 1])
 
 # Verify Bell state
-from tiqs.analysis.fidelity import bell_state_fidelity
-fid = bell_state_fidelity(result.states[-1].ptrace([0, 1]))
+rho_spin = result.states[-1].ptrace([0, 1])
+fid = bell_state_fidelity(rho_spin)
 print(f"Bell state fidelity: {fid:.4f}")  # 1.0000
 ```
 
 Or build the Hamiltonian yourself for full control:
 
 ```python
-from tiqs.gates.molmer_sorensen import ms_gate_hamiltonian, ms_gate_duration
+import numpy as np
 import qutip
+
+from tiqs import HilbertSpace, OperatorFactory, StateFactory
+from tiqs.gates.molmer_sorensen import (
+    ms_gate_duration,
+    ms_gate_hamiltonian,
+)
+
+TWO_PI = 2 * np.pi
 
 hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=20)
 ops = OperatorFactory(hs)
 sf = StateFactory(hs)
 
 # MS gate parameters
-eta = 0.05                          # Lamb-Dicke parameter
-delta = TWO_PI * 15e3               # sideband detuning
-Omega = delta / (4 * eta)           # maximally entangling condition
-tau = ms_gate_duration(delta)       # gate time = 2*pi/delta
+eta = 0.05  # Lamb-Dicke parameter
+delta = TWO_PI * 15e3  # sideband detuning
+Omega = delta / (4 * eta)  # maximally entangling condition
+tau = ms_gate_duration(delta)
 
 # Construct the time-dependent Hamiltonian and solve
-H = ms_gate_hamiltonian(ops, ions=[0, 1], mode=0, eta=[eta, eta],
-                        rabi_frequency=Omega, detuning=delta)
-result = qutip.sesolve(H, sf.ground_state(), np.linspace(0, tau, 500))
+H = ms_gate_hamiltonian(
+    ops,
+    ions=[0, 1],
+    mode=0,
+    eta=[eta, eta],
+    rabi_frequency=Omega,
+    detuning=delta,
+)
+psi0 = sf.ground_state()
+result = qutip.sesolve(H, psi0, np.linspace(0, tau, 500))
 ```
 
 ## What you can simulate
@@ -74,10 +106,10 @@ TIQS models every layer of a trapped-ion quantum computer:
 Requires Python 3.14+.
 
 ```bash
-pip install -e ".[dev]"
+uv pip install -e ".[dev]"
 ```
 
-Dependencies: [QuTiP](https://qutip.org) >= 5.2.3, NumPy, SciPy.
+The only direct dependency is [QuTiP](https://qutip.org) >= 5.2.3 (which brings in NumPy and SciPy).
 
 ## Adding noise
 
@@ -88,11 +120,11 @@ from tiqs.noise.motional import motional_heating_ops
 from tiqs.noise.qubit import qubit_dephasing_op
 from tiqs.noise.photon_scattering import rayleigh_scattering_op
 
-c_ops = (
-    motional_heating_ops(ops, mode=0, heating_rate=1e4)           # 10^4 quanta/s
-    + [qubit_dephasing_op(ops, ion=0, t2=1e-3)]                  # T2 = 1 ms
-    + [rayleigh_scattering_op(ops, ion=0, rate=500)]              # elastic scattering
-)
+c_ops = [
+    *motional_heating_ops(ops, mode=0, heating_rate=1e4),  # 10^4 quanta/s
+    qubit_dephasing_op(ops, ion=0, t2=1e-3),  # T2 = 1 ms
+    rayleigh_scattering_op(ops, ion=0, rate=500),  # elastic scattering
+]
 
 result = qutip.mesolve(H, initial_state, tlist, c_ops=c_ops)
 ```
@@ -102,7 +134,7 @@ result = qutip.mesolve(H, initial_state, tlist, c_ops=c_ops)
 ```
 src/tiqs/
     species/       Ion species database (6 species with full atomic data)
-    trap/          Paul trap physics (Mathieu equation, secular frequencies)
+    trap.py        Paul trap physics (Mathieu equation, secular frequencies)
     chain/         Coulomb crystal equilibrium, normal modes, Lamb-Dicke parameters
     hilbert_space/ Composite tensor-product space, operator/state factories
     interaction/   Laser-ion Hamiltonians (carrier, sidebands, Raman transitions)
@@ -110,7 +142,7 @@ src/tiqs/
     cooling/       Doppler, resolved sideband, EIT cooling
     noise/         All decoherence channels as Lindblad operators
     spam/          State preparation (optical pumping) and measurement (fluorescence)
-    transport/     QCCD shuttling and crystal splitting
+    transport.py   QCCD shuttling and crystal splitting
     simulation/    SimulationRunner orchestrating the full pipeline
     analysis/      Fidelity metrics, Wigner functions, error budgets
 ```
