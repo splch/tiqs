@@ -116,7 +116,7 @@ class OperatorFactory:
         return self._full_operator(qutip.sigmaz(), self._ion_index(ion))
 
     def sigma_plus(self, ion: int) -> qutip.Qobj:
-        r"""Raising operator $\sigma_+ = |1\rangle\langle 0|$ on the given ion.
+        r"""Raising operator $\sigma_+ = |0\rangle\langle 1|$ on the given ion.
 
         Parameters
         ----------
@@ -133,7 +133,7 @@ class OperatorFactory:
 
     def sigma_minus(self, ion: int) -> qutip.Qobj:
         r"""Lowering operator
-        $\sigma_- = |0\rangle\langle 1|$ on the given ion.
+        $\sigma_- = |1\rangle\langle 0|$ on the given ion.
 
         Parameters
         ----------
