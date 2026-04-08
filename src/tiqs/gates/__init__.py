@@ -3,4 +3,3 @@ Cirac-Zoller, and light-shift.
 
 .. include:: ../../../docs/theory/gates.md
 """
-

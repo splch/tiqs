@@ -5,7 +5,6 @@ Lowest-level trapped-ion quantum computing simulation built on QuTiP.
 .. include:: ../../docs/theory/overview.md
 """
 
-
 from tiqs.chain.equilibrium import equilibrium_positions
 from tiqs.chain.lamb_dicke import lamb_dicke_parameters
 from tiqs.chain.normal_modes import NormalModeResult, normal_modes

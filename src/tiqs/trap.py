@@ -4,7 +4,6 @@ pseudopotential.
 .. include:: ../../docs/theory/trapping.md
 """
 
-
 from dataclasses import dataclass
 
 import numpy as np

@@ -3,4 +3,3 @@ and fluorescence detection.
 
 .. include:: ../../../docs/theory/spam.md
 """
-

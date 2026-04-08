@@ -18,4 +18,3 @@ Time-dependent Hamiltonians for laser pulses and gates
 are assembled from the `tiqs.interaction` and `tiqs.gates` modules, while
 collapse operators are constructed from `tiqs.noise`.
 """
-

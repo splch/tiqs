@@ -22,4 +22,3 @@ This package provides tools for characterizing simulation results:
 - **Error budgets**: Aggregation of individual error contributions (heating,
   dephasing, scattering, crosstalk) into a total gate infidelity estimate.
 """
-
