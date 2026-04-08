@@ -1,17 +1,18 @@
 {% extends "default/module.html.jinja2" %}
 
 {% block nav_title %}
-<h2><a href="{{ "../" * module.fullname.count(".") }}tiqs.html">TIQS</a></h2>
+<h2><a href="{{ "../" * module.modulename.count(".") }}tiqs.html">TIQS</a></h2>
 <p style="font-size: 0.85em; opacity: 0.8; margin: 0;">
 Trapped Ion Quantum Simulator
 </p>
-<nav class="tiqs-nav">
-<ul style="list-style: none; padding: 0; margin: 0.5rem 0; font-size: 0.85em;">
+{% endblock %}
+
+{% block nav_submodules %}
+<ul>
 {% for mod in all_modules.values() | sort(attribute="fullname") %}
 {% if mod.fullname.startswith("tiqs.") and mod.fullname.count(".") == 1 %}
-  <li><a href="{{ "../" * module.fullname.count(".") }}tiqs/{{ mod.name }}.html">{{ mod.name }}</a></li>
+  <li><a href="{{ "../" * module.modulename.count(".") }}tiqs/{{ mod.name }}.html">{{ mod.name }}</a></li>
 {% endif %}
 {% endfor %}
 </ul>
-</nav>
 {% endblock %}

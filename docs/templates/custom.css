@@ -47,23 +47,3 @@
     background: var(--accent2);
     border-radius: 0 4px 4px 0;
 }
-
-.tiqs-nav {
-    border-top: 1px solid #ddd;
-    padding-top: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.tiqs-nav ul li {
-    padding: 0.15rem 0;
-}
-
-.tiqs-nav ul li a {
-    text-decoration: none;
-    opacity: 0.85;
-}
-
-.tiqs-nav ul li a:hover {
-    opacity: 1;
-    text-decoration: underline;
-}
