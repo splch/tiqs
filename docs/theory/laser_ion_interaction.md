@@ -20,7 +20,7 @@ $$
 Moving to the interaction picture with respect to the free Hamiltonian:
 
 $$
-H_I(t) = \frac{\hbar\Omega}{2}\, \sigma_+\, \exp\!\Bigl\lbrace i\bigl[\eta(a\,e^{-i\omega_z t} + a^\dagger e^{i\omega_z t}) - \delta t + \phi_L\bigr]\Bigr\rbrace + \text{h.c.}
+H_I(t) = \frac{\hbar\Omega}{2}\, \sigma_+\, \exp\Bigl\lbrace i\bigl[\eta(a\,e^{-i\omega_z t} + a^\dagger e^{i\omega_z t}) - \delta t + \phi_L\bigr]\Bigr\rbrace + \text{h.c.}
 $$
 
 where $\delta = \omega_L - \omega_0$ is the laser detuning and $\eta$ is the

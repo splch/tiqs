@@ -5,11 +5,12 @@ r"""Simulation orchestration: configuration and top-level runner.
 `SimulationRunner` integrates the Lindblad master equation
 
 $$
-\dot\rho = -i[H(t), \rho]
+\dot\rho = -i[H, \rho]
   {} + \sum_k \gamma_k \bigl(
   L_k \rho L_k^\dagger
-  - \tfrac{1}{2}\lbrace L_k^\dagger L_k, \rho
-  \rbrace\bigr)
+  {} - \tfrac{1}{2}
+  \lbrace L_k^\dagger L_k, \rho\rbrace
+  \bigr)
 $$
 
 using QuTiP's `mesolve` (density-matrix solver) or

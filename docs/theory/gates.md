@@ -7,7 +7,7 @@ electromagnetic fields. On carrier resonance ($\delta = 0$), the time
 evolution operator for ion $j$ is:
 
 $$
-U_j(\theta, \phi) = \exp\!\left[-i\frac{\theta}{2}\bigl(\cos\phi\;\sigma_x^{(j)} + \sin\phi\;\sigma_y^{(j)}\bigr)\right]
+U_j(\theta, \phi) = \exp\left[-i\frac{\theta}{2}\bigl(\cos\phi\;\sigma_x^{(j)} + \sin\phi\;\sigma_y^{(j)}\bigr)\right]
 $$
 
 where $\theta = \Omega_j t$ (set by pulse duration) and $\phi = \phi_L$
@@ -112,7 +112,7 @@ $$
 For a maximally entangling gate: $\chi_{1,2} = \pi/4$, producing
 
 $$
-U_\text{MS} = \exp\!\left(-i\frac{\pi}{4}\, \sigma_x^{(1)} \sigma_x^{(2)}\right)
+U_\text{MS} = \exp\left(-i\frac{\pi}{4}\, \sigma_x^{(1)} \sigma_x^{(2)}\right)
 $$
 
 Applied to $|gg\rangle$: $U_\text{MS}|gg\rangle = (|gg\rangle - i|ee\rangle)/\sqrt{2}$ -- a Bell state.
@@ -166,7 +166,7 @@ The mathematical structure is **identical** to the MS gate with
 $\sigma_\phi \to \sigma_z$. The resulting gate is:
 
 $$
-U_\text{LS} = \exp\!\left(-i\chi_{1,2}\, \sigma_z^{(1)}\, \sigma_z^{(2)}\right)
+U_\text{LS} = \exp\left(-i\chi_{1,2}\, \sigma_z^{(1)}\, \sigma_z^{(2)}\right)
 $$
 
 **Key advantage**: Since $\sigma_z$ commutes with the free qubit Hamiltonian,
