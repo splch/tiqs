@@ -1,4 +1,4 @@
-"""State preparation via optical pumping."""
+r"""State preparation via optical pumping."""
 
 import numpy as np
 import qutip
@@ -11,15 +11,15 @@ def optical_pumping_ops(
     ion: int,
     pumping_rate: float,
 ) -> list[qutip.Qobj]:
-    """Collapse operators modeling optical pumping to |0>
+    r"""Collapse operators modeling optical pumping to $|0\rangle$
     (ground/bright state).
 
-    Optical pumping drives |1> -> |0> dissipatively via a cycling
-    transition. Modeled as spontaneous decay from |1> to |0> at the
-    pumping rate.
+    Optical pumping drives $|1\rangle \to |0\rangle$ dissipatively via a
+    cycling transition. Modeled as spontaneous decay from $|1\rangle$ to
+    $|0\rangle$ at the pumping rate.
 
-    QuTiP convention: sigmap() = |0><1| drives |1> -> |0>
-    (spontaneous emission).
+    QuTiP convention: ``sigmap()`` $= |0\rangle\langle 1|$ drives
+    $|1\rangle \to |0\rangle$ (spontaneous emission).
 
     Parameters
     ----------
@@ -44,7 +44,7 @@ def prepare_qubit(
     pumping_rate: float,
     duration: float,
 ) -> qutip.Qobj:
-    """Simulate optical pumping to prepare a qubit in |0>.
+    r"""Simulate optical pumping to prepare a qubit in $|0\rangle$.
 
     Parameters
     ----------

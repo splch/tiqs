@@ -15,15 +15,18 @@ def cirac_zoller_gate(
     eta: list[float],
     rabi_frequency: float = TWO_PI * 100e3,
 ) -> list[GatePulse]:
-    """Cirac-Zoller controlled-phase gate using sequential red sideband pulses.
+    r"""Cirac-Zoller controlled-phase gate using sequential
+    red sideband pulses.
 
     Three-step sequence:
-    1. Pi pulse on RSB of ion A: maps |up_A, 0> -> -i|down_A, 1>
-    2. 2*Pi pulse on RSB of ion B (to auxiliary level):
-       |down_B, 1> -> -|down_B, 1>
-    3. Reverse pi pulse on RSB of ion A: unmaps motion back to ion A
+    1. $\pi$ pulse on RSB of ion A: maps
+       $|\!\uparrow_A, 0\rangle
+       \to -i|\!\downarrow_A, 1\rangle$
+    2. $2\pi$ pulse on RSB of ion B (to auxiliary level):
+       $|\!\downarrow_B, 1\rangle \to -|\!\downarrow_B, 1\rangle$
+    3. Reverse $\pi$ pulse on RSB of ion A: unmaps motion back to ion A
 
-    REQUIRES the motional mode to be in the ground state |n=0>.
+    REQUIRES the motional mode to be in the ground state $|n=0\rangle$.
 
     Parameters
     ----------
@@ -33,7 +36,7 @@ def cirac_zoller_gate(
     mode : int
         Motional mode index (must be in ground state).
     eta : list[float]
-        Lamb-Dicke parameters [eta_a, eta_b].
+        Lamb-Dicke parameters $[\eta_a, \eta_b]$.
     rabi_frequency : float
         Bare Rabi frequency.
 

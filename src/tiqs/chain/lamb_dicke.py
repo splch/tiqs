@@ -13,13 +13,18 @@ def lamb_dicke_parameters(
     k_eff: float,
     direction: str = "axial",
 ) -> np.ndarray:
-    """Compute Lamb-Dicke parameters eta_{i,m} for each ion i and mode m.
+    r"""Compute Lamb-Dicke parameters $\eta_{i,m}$
+    for each ion $i$ and mode $m$.
 
-    eta_{i,m} = k_eff * b_{i,m} * sqrt(hbar / (2 * M * omega_m))
+    $$
+    \eta_{i,m} = k_\mathrm{eff} \, b_{i,m} \sqrt{\frac{\hbar}{2 M \omega_m}}
+    $$
 
-    where b_{i,m} is the participation of ion i in mode m, M is the ion mass,
-    omega_m is the mode frequency, and k_eff is the effective laser wavevector
-    component along the mode direction.
+    where $b_{i,m}$ is the participation of ion $i$
+    in mode $m$, $M$ is the ion mass,
+    $\omega_m$ is the mode frequency, and
+    $k_\mathrm{eff}$ is the effective laser
+    wavevector component along the mode direction.
 
     Parameters
     ----------
@@ -29,17 +34,21 @@ def lamb_dicke_parameters(
         Ion species (for mass).
     k_eff : float
         Effective laser wavevector magnitude along the mode direction (rad/m).
-        For counter-propagating Raman beams: k_eff = 2 * k_laser.
-        For co-propagating: k_eff ~ 0 (no motional coupling).
-        For single beam on optical qubit: k_eff = k_laser * cos(theta).
+        For counter-propagating Raman beams:
+        $k_\mathrm{eff} = 2 k_\mathrm{laser}$.
+        For co-propagating:
+        $k_\mathrm{eff} \approx 0$ (no motional
+        coupling). For single beam on optical qubit:
+        $k_\mathrm{eff} = k_\mathrm{laser} \cos\theta$.
     direction : str
         Which modes to compute for: "axial", "radial_x", or "radial_y".
 
     Returns
     -------
     np.ndarray
-        Matrix of Lamb-Dicke parameters, shape (N_ions, N_modes).
-        eta[i, m] is the Lamb-Dicke parameter for ion i and mode m.
+        Matrix of Lamb-Dicke parameters, shape
+        $(N_\mathrm{ions}, N_\mathrm{modes})$.
+        $\eta[i, m]$ is the Lamb-Dicke parameter for ion $i$ and mode $m$.
     """
     direction_map = {
         "axial": (modes.axial_freqs, modes.axial_vectors),

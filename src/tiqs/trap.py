@@ -1,5 +1,9 @@
-"""Radiofrequency Paul trap physics: Mathieu stability, secular frequencies,
-pseudopotential."""
+r"""Radiofrequency Paul trap physics: Mathieu stability, secular frequencies,
+pseudopotential.
+
+.. include:: ../../docs/theory/trapping.md
+"""
+__docformat__ = "numpy"
 
 from dataclasses import dataclass
 
@@ -61,9 +65,11 @@ class PaulTrap:
 
     @property
     def mathieu_q(self) -> float:
-        """Dimensionless Mathieu q parameter.
+        r"""Dimensionless Mathieu q parameter.
 
-        q = 2*e*V_rf / (m * Omega_rf^2 * r0^2)
+        $$
+        q = \frac{2 e V_\mathrm{rf}}{m \Omega_\mathrm{rf}^2 r_0^2}
+        $$
         """
         m = self.species.mass_kg
         return (
@@ -75,20 +81,28 @@ class PaulTrap:
 
     @property
     def mathieu_a(self) -> float:
-        """Dimensionless Mathieu a parameter from DC axial confinement.
+        r"""Dimensionless Mathieu a parameter from DC axial confinement.
 
         The axial DC field also modifies the radial potential. For a
         linear trap:
-        a = -4 * e * kappa * U_dc / (m * Omega_rf^2 * r0^2) * (r0/z0)^2
+
+        $$
+        a = \frac{-4 e \kappa U_\mathrm{dc}}{m \Omega_\mathrm{rf}^2 r_0^2}
+        \left(\frac{r_0}{z_0}\right)^2
+        $$
+
         In practice we use a simplified model:
-        a ~ -2 * omega_axial^2 / omega_rf^2
+
+        $$
+        a \approx \frac{-2 \omega_\mathrm{axial}^2}{\Omega_\mathrm{rf}^2}
+        $$
         """
         return -2 * self.omega_axial**2 / self.omega_rf**2
 
     def is_stable(self) -> bool:
-        """Check if (a, q) falls within the first Mathieu stability region.
+        r"""Check if $(a, q)$ falls within the first Mathieu stability region.
 
-        Approximate boundary: q < 0.908 and |a| < q^2/2 for the
+        Approximate boundary: $q < 0.908$ and $|a| < q^2/2$ for the
         lowest region. More precisely, we check the secular frequency
         remains real and positive.
         """
@@ -101,11 +115,18 @@ class PaulTrap:
 
     @property
     def omega_radial(self) -> float:
-        """Radial secular angular frequency in the pseudopotential
+        r"""Radial secular angular frequency in the pseudopotential
         approximation.
 
-        omega_r = (Omega_rf / 2) * sqrt(a + q^2/2)
-        For |a| << q: omega_r ~ q * Omega_rf / (2*sqrt(2))
+        $$
+        \omega_r = \frac{\Omega_\mathrm{rf}}{2} \sqrt{a + \frac{q^2}{2}}
+        $$
+
+        For $|a| \ll q$:
+
+        $$
+        \omega_r \approx \frac{q \, \Omega_\mathrm{rf}}{2\sqrt{2}}
+        $$
 
         """
         q = self.mathieu_q
@@ -117,9 +138,12 @@ class PaulTrap:
 
     @property
     def pseudopotential_depth_eV(self) -> float:
-        """Pseudopotential well depth in electron-volts.
+        r"""Pseudopotential well depth in electron-volts.
 
-        Psi_0 = e^2 * V_rf^2 / (4 * m * Omega_rf^2 * r0^2)
+        $$
+        \Psi_0 = \frac{e^2 V_\mathrm{rf}^2}{4 m \Omega_\mathrm{rf}^2 r_0^2}
+        $$
+
         converted to eV.
         """
         m = self.species.mass_kg
@@ -129,16 +153,19 @@ class PaulTrap:
         return depth_J / ELECTRON_CHARGE
 
     def micromotion_amplitude(self, displacement_from_null: float) -> float:
-        """Peak micromotion amplitude for an ion displaced from the RF null.
+        r"""Peak micromotion amplitude for an ion displaced from the RF null.
 
-        x_mm = (q/2) * displacement, valid for q << 1.
+        $x_\mathrm{mm} = (q/2) \cdot x_\mathrm{displacement}$,
+        valid for $q \ll 1$.
         """
         return (self.mathieu_q / 2) * abs(displacement_from_null)
 
     def stray_field_displacement(self, stray_E_field: float) -> float:
-        """Static displacement of ion from RF null due to a stray DC field.
+        r"""Static displacement of ion from RF null due to a stray DC field.
 
-        displacement = e * E / (m * omega_r^2)
+        $$
+        x_\mathrm{displacement} = \frac{e E}{m \omega_r^2}
+        $$
         """
         m = self.species.mass_kg
         return (

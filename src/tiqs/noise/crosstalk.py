@@ -1,4 +1,4 @@
-"""Addressing crosstalk between neighboring ions."""
+r"""Addressing crosstalk between neighboring ions."""
 
 import numpy as np
 import qutip
@@ -14,15 +14,18 @@ def crosstalk_hamiltonian(
     rabi_frequency: float,
     phase: float = 0.0,
 ) -> qutip.Qobj:
-    """Spurious Hamiltonian on neighbor ion from imperfect beam focusing.
+    r"""Spurious Hamiltonian on neighbor ion from imperfect beam focusing.
 
-    When addressing target_ion with Rabi frequency Omega, the neighbor_ion
-    sees a fraction epsilon of the light: Omega_neighbor = epsilon * Omega.
+    When addressing target ion with Rabi frequency $\Omega$, the neighbor ion
+    sees a fraction $\epsilon$ of the light:
+    $\Omega_\text{neighbor} = \epsilon\,\Omega$.
 
-    H_crosstalk = (epsilon * Omega / 2) * sigma_x_neighbor
+    $$
+    H_\text{crosstalk} = \frac{\epsilon\,\Omega}{2}\;\sigma_x^\text{neighbor}
+    $$
 
-    Typical crosstalk: epsilon ~ 10^{-3} to 10^{-2} for ~2 um beam waist
-    and ~5 um ion spacing.
+    Typical crosstalk: $\epsilon \sim 10^{-3}$ to $10^{-2}$ for ~2 um beam
+    waist and ~5 um ion spacing.
 
     Parameters
     ----------

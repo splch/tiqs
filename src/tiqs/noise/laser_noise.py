@@ -1,4 +1,4 @@
-"""Laser phase and intensity noise models."""
+r"""Laser phase and intensity noise models."""
 
 import numpy as np
 import qutip
@@ -11,9 +11,11 @@ def laser_phase_noise_op(
     ion: int,
     rate: float,
 ) -> qutip.Qobj:
-    """Effective collapse operator for laser phase noise.
+    r"""Effective collapse operator for laser phase noise.
 
-    L = sqrt(rate/2) * sigma_z.
+    $$
+    L = \sqrt{\gamma / 2}\;\sigma_z
+    $$
 
     Phase noise between Raman beams or on a direct optical drive appears as
     dephasing on the qubit. Rate is the effective linewidth of the
@@ -28,10 +30,13 @@ def laser_intensity_noise_op(
     fractional_rms: float,
     rabi_frequency: float,
 ) -> qutip.Qobj:
-    """Hamiltonian perturbation from laser intensity noise.
+    r"""Hamiltonian perturbation from laser intensity noise.
 
-    Intensity fluctuations delta_I/I cause Rabi frequency errors:
-    delta_Omega/Omega = (1/2) * delta_I/I
+    Intensity fluctuations $\delta I / I$ cause Rabi frequency errors:
+
+    $$
+    \frac{\delta\Omega}{\Omega} = \frac{1}{2}\,\frac{\delta I}{I}
+    $$
 
     This returns the systematic Hamiltonian shift; for stochastic modeling,
     use this operator as a collapse operator with appropriate rate.
@@ -41,7 +46,7 @@ def laser_intensity_noise_op(
     ops : OperatorFactory
     ion : int
     fractional_rms : float
-        RMS fractional intensity fluctuation (delta_I / I).
+        RMS fractional intensity fluctuation ($\delta I / I$).
     rabi_frequency : float
         Nominal Rabi frequency (rad/s).
 

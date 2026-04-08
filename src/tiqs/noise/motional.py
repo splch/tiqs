@@ -1,4 +1,4 @@
-"""Motional decoherence: anomalous heating and motional dephasing."""
+r"""Motional decoherence: anomalous heating and motional dephasing."""
 
 import numpy as np
 import qutip
@@ -13,16 +13,29 @@ def motional_heating_ops(
     heating_rate: float,
     n_bar_env: float = 0.0,
 ) -> list[qutip.Qobj]:
-    """Lindblad collapse operators for motional heating of a single mode.
+    r"""Lindblad collapse operators for motional heating of a single mode.
 
-    Models a thermal bath that adds phonons at rate n_dot (quanta/s).
-    For a zero-temperature bath (n_bar_env=0): only phonon creation.
-    For finite temperature: both creation (rate ~ n_bar+1) and
-    destruction (rate ~ n_bar).
+    Models a thermal bath that adds phonons at rate
+    $\dot{\bar{n}}$ (quanta/s).
+    For a zero-temperature bath
+    ($\bar{n}_\text{env} = 0$): only phonon creation.
+    For finite temperature: both creation
+    (rate $\propto \bar{n}+1$) and
+    destruction (rate $\propto \bar{n}$).
 
     The collapse operators are:
-        L_up   = sqrt(heating_rate * (n_bar_env + 1)) * a^dag  (phonon gain)
-        L_down = sqrt(heating_rate * n_bar_env) * a             (phonon loss)
+
+    $$
+    L_\uparrow
+        = \sqrt{\dot{\bar{n}}\,(\bar{n}_\text{env} + 1)}
+        \; a^\dagger \quad\text{(phonon gain)}
+    $$
+
+    $$
+    L_\downarrow
+        = \sqrt{\dot{\bar{n}}\,\bar{n}_\text{env}}
+        \; a \quad\text{(phonon loss)}
+    $$
 
     Parameters
     ----------
@@ -30,7 +43,7 @@ def motional_heating_ops(
     mode : int
         Motional mode index.
     heating_rate : float
-        Heating rate in quanta/second (n_dot).
+        Heating rate in quanta/second ($\dot{\bar{n}}$).
     n_bar_env : float
         Mean phonon number of the thermal environment.
 
@@ -54,7 +67,9 @@ def motional_dephasing_op(
     mode: int,
     rate: float,
 ) -> qutip.Qobj:
-    """Collapse operator for motional dephasing: L = sqrt(rate) * n_mode.
+    r"""Collapse operator for motional dephasing.
+
+    $L = \sqrt{\gamma}\, \hat{n}$.
 
     Models fluctuations in the trap frequency that cause dephasing of
     motional superposition states without changing the phonon number.
@@ -71,17 +86,20 @@ def heating_rate_from_noise(
     reference_distance: float = 100e-6,
     reference_frequency: float = 1e6,
 ) -> float:
-    """Estimate heating rate from electric field noise spectral density.
+    r"""Estimate heating rate from electric field noise spectral density.
 
-    n_dot = e^2 * S_E(omega) / (4 * m * hbar * omega)
+    $$
+    \dot{\bar{n}} = \frac{e^2 \, S_E(\omega)}{4 m \hbar \omega}
+    $$
 
-    where S_E scales as d^{-4} with distance and f^{-alpha} with frequency.
+    where $S_E$ scales as $d^{-4}$ with distance and
+    $f^{-\alpha}$ with frequency.
 
     Parameters
     ----------
     spectral_density : float
-        Electric field noise spectral density S_E at reference
-        distance and frequency in V^2 m^-2 Hz^-1.
+        Electric field noise spectral density $S_E$ at reference
+        distance and frequency in $\text{V}^2\,\text{m}^{-2}\,\text{Hz}^{-1}$.
     distance : float
         Ion-electrode distance in meters.
     frequency : float
@@ -89,7 +107,7 @@ def heating_rate_from_noise(
     mass_kg : float
         Ion mass in kg.
     alpha : float
-        Frequency scaling exponent (typically 1-2 for 1/f noise).
+        Frequency scaling exponent (typically 1--2 for $1/f$ noise).
     reference_distance : float
         Reference distance for the spectral density.
     reference_frequency : float

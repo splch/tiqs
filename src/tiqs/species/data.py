@@ -57,14 +57,21 @@ class IonSpecies:
         return self.mass_amu * AMU
 
     def doppler_limit_temperature(self) -> float:
-        """Doppler cooling limit temperature in Kelvin.
+        r"""Doppler cooling limit temperature in Kelvin.
 
-        T_D = hbar * Gamma / (2 * k_B)
+        $$
+        T_D = \frac{\hbar\,\Gamma}{2\,k_B}
+        $$
         """
         return HBAR * self.cooling_transition.linewidth / (2 * BOLTZMANN)
 
     def doppler_limit_nbar(self, trap_frequency_hz: float) -> float:
-        """Mean phonon number at Doppler limit for the given trap frequency."""
+        r"""Mean phonon number at the Doppler limit.
+
+        $$
+        \bar{n}_D = \Gamma / (2\omega_\text{trap})
+        $$
+        """
         gamma = self.cooling_transition.linewidth
         omega_trap = TWO_PI * trap_frequency_hz
         return gamma / (2 * omega_trap)

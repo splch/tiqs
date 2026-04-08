@@ -1,4 +1,4 @@
-"""QCCD transport: ion shuttling and crystal splitting."""
+r"""QCCD transport: ion shuttling and crystal splitting."""
 
 import numpy as np
 import qutip
@@ -11,12 +11,15 @@ def shuttle_motional_excitation(
     duration: float,
     trap_frequency: float,
 ) -> float:
-    """Estimate motional excitation from linear ion shuttling.
+    r"""Estimate motional excitation from linear ion shuttling.
 
     For an optimized waveform, the residual excitation after
     shuttling scales as:
 
-    delta_n ~ (distance / x_zpf)^2 * exp(-pi * omega_trap * duration)
+    $$
+    \Delta\bar{n} \sim \left(\frac{d}{x_\text{zpf}}\right)^2
+        \exp(-\pi\,\omega_\text{trap}\,T)
+    $$
 
     This is the adiabaticity criterion: longer duration relative to
     the trap period means less excitation. Modern optimized waveforms
@@ -24,8 +27,12 @@ def shuttle_motional_excitation(
     trap frequencies.
 
     The simplified model:
-    delta_n ~ A * (distance / duration)^2 / omega_trap^2
-    where A is a geometry-dependent constant (order 1 for optimized
+
+    $$
+    \Delta\bar{n} \sim A\,\frac{d^2}{T^2\,\omega_\text{trap}^2}
+    $$
+
+    where $A$ is a geometry-dependent constant (order 1 for optimized
     waveforms).
 
     Parameters

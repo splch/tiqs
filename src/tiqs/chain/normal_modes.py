@@ -11,25 +11,27 @@ from tiqs.trap import PaulTrap
 
 @dataclass
 class NormalModeResult:
-    """Results of normal mode analysis.
+    r"""Results of normal mode analysis.
 
     Attributes
     ----------
     positions : np.ndarray
-        Equilibrium positions in meters, shape (N,).
+        Equilibrium positions in meters, shape $(N,)$.
     axial_freqs : np.ndarray
-        Axial mode angular frequencies in rad/s, shape (N,), sorted ascending.
+        Axial mode angular frequencies in rad/s,
+        shape $(N,)$, sorted ascending.
     axial_vectors : np.ndarray
-        Axial mode eigenvectors, shape (N, N). Column m is the participation
-        vector for mode m: axial_vectors[i, m] = b_{i,m}.
+        Axial mode eigenvectors, shape $(N, N)$.
+        Column $m$ is the participation vector for
+        mode $m$: ``axial_vectors[i, m]`` $= b_{i,m}$.
     radial_x_freqs : np.ndarray
-        Radial-x mode angular frequencies, shape (N,), sorted ascending.
+        Radial-x mode angular frequencies, shape $(N,)$, sorted ascending.
     radial_x_vectors : np.ndarray
-        Radial-x mode eigenvectors, shape (N, N).
+        Radial-x mode eigenvectors, shape $(N, N)$.
     radial_y_freqs : np.ndarray
-        Radial-y mode angular frequencies, shape (N,), sorted ascending.
+        Radial-y mode angular frequencies, shape $(N,)$, sorted ascending.
     radial_y_vectors : np.ndarray
-        Radial-y mode eigenvectors, shape (N, N).
+        Radial-y mode eigenvectors, shape $(N, N)$.
     """
 
     positions: np.ndarray

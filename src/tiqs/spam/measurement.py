@@ -1,4 +1,4 @@
-"""State measurement via fluorescence detection."""
+r"""State measurement via fluorescence detection."""
 
 import numpy as np
 import qutip
@@ -10,10 +10,12 @@ def fluorescence_probabilities(
     state: qutip.Qobj,
     ions: list[int],
 ) -> list[float]:
-    """Compute probability of each ion being in the bright (|0>) state.
+    r"""Compute probability of each ion being bright.
 
-    In the standard convention: |0> (basis(2,0)) is the bright state that
-    fluoresces, |1> (basis(2,1)) is the dark state.
+    Bright state is $|0\rangle$.
+
+    In the standard convention: $|0\rangle$ (``basis(2,0)``) is the bright
+    state that fluoresces, $|1\rangle$ (``basis(2,1)``) is the dark state.
 
     Parameters
     ----------
@@ -25,7 +27,7 @@ def fluorescence_probabilities(
     Returns
     -------
     list[float]
-        Probability of bright (|0>) for each ion.
+        Probability of bright ($|0\rangle$) for each ion.
     """
     if state.isket:
         rho = qutip.ket2dm(state)
@@ -46,11 +48,11 @@ def sample_measurement(
     rng: np.random.Generator,
     spam_error: float = 0.0,
 ) -> list[int]:
-    """Sample a projective measurement outcome from the joint qubit
+    r"""Sample a projective measurement outcome from the joint qubit
     distribution.
 
     Samples from the full joint probability distribution over all
-    2^N computational basis states of the measured ions, correctly
+    $2^N$ computational basis states of the measured ions, correctly
     preserving quantum correlations. For entangled states (e.g.,
     Bell states), correlated outcomes are produced.
 
@@ -148,12 +150,12 @@ def mid_circuit_measurement(
     ion: int,
     rng: np.random.Generator,
 ) -> tuple[qutip.Qobj, int]:
-    """Perform a mid-circuit measurement on one ion, projecting and
+    r"""Perform a mid-circuit measurement on one ion, projecting and
     renormalizing.
 
     This models the measurement backaction: the state is projected
-    onto |0> or |1> for the measured ion while preserving the rest
-    of the system.
+    onto $|0\rangle$ or $|1\rangle$ for the measured ion while preserving
+    the rest of the system.
 
     Parameters
     ----------

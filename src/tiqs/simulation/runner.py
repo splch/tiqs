@@ -126,17 +126,22 @@ class SimulationRunner:
         loops: int = 1,
         n_steps: int = 500,
     ) -> qutip.Result:
-        """Run a Molmer-Sorensen entangling gate.
+        r"""Run a Molmer-Sorensen entangling gate.
 
-        Uses the time-dependent Hamiltonian from ms_gate_hamiltonian with
+        Uses the time-dependent Hamiltonian from ``ms_gate_hamiltonian`` with
         Rabi frequency calibrated so that the geometric phase accumulates
-        to pi/4 over the gate duration, producing a maximally entangling gate.
+        to $\pi/4$ over the gate duration, producing
+        a maximally entangling gate.
 
-        For the MS gate: the geometric phase is
-            phi = 2*pi * (eta*Omega/delta)^2 * K
-        where K is the number of loops. For maximally entangling: phi = pi/4,
-        giving eta*Omega = delta / (4 * sqrt(K)).
-        Hence Omega = delta / (4 * eta_avg * sqrt(K)).
+        For the MS gate the geometric phase is
+
+        $$
+        \phi = 2\pi\left(\frac{\eta\,\Omega}{\delta}\right)^2 K
+        $$
+
+        where $K$ is the number of loops. For maximally entangling:
+        $\phi = \pi/4$, giving $\eta\,\Omega = \delta / (4\sqrt{K})$.
+        Hence $\Omega = \delta / (4\,\bar{\eta}\,\sqrt{K})$.
         """
         if len(ions) != 2:
             raise ValueError(

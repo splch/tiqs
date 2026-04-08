@@ -1,4 +1,4 @@
-"""Qubit decoherence: dephasing and spontaneous emission."""
+r"""Qubit decoherence: dephasing and spontaneous emission."""
 
 import math
 
@@ -14,12 +14,14 @@ def qubit_dephasing_op(
     t2: float,
     t1: float = math.inf,
 ) -> qutip.Qobj:
-    """Collapse operator for qubit pure dephasing.
+    r"""Collapse operator for qubit pure dephasing.
 
-    L = sqrt(gamma_phi/2) * sigma_z.
+    $$
+    L = \sqrt{\gamma_\phi / 2}\;\sigma_z
+    $$
 
-    gamma_phi = 1/T2 - 1/(2*T1). For hyperfine qubits with
-    T1 ~ inf: gamma_phi = 1/T2.
+    $\gamma_\phi = 1/T_2 - 1/(2 T_1)$. For hyperfine qubits with
+    $T_1 \to \infty$: $\gamma_\phi = 1/T_2$.
     Causes exponential decay of off-diagonal density matrix elements.
     """
     gamma_phi = 1.0 / t2 - 1.0 / (2 * t1)
@@ -37,13 +39,15 @@ def spontaneous_emission_op(
     ion: int,
     t1: float,
 ) -> qutip.Qobj:
-    """Collapse operator for spontaneous emission: L = sqrt(1/T1) * sigma_plus.
+    r"""Collapse operator for spontaneous emission.
 
-    In our convention |0>=ground, |1>=excited, and sigma_plus = |0><1|
-    maps |1> to |0>, implementing decay from the excited state to the
-    ground state.
+    $L = \sqrt{1/T_1}\;\sigma_+$.
 
-    Relevant for optical qubits (Ca40 D5/2 lifetime ~1.17 s) and
+    In our convention $|0\rangle$ = ground, $|1\rangle$ = excited, and
+    $\sigma_+ = |0\rangle\langle 1|$ maps $|1\rangle$ to $|0\rangle$,
+    implementing decay from the excited state to the ground state.
+
+    Relevant for optical qubits (Ca-40 $D_{5/2}$ lifetime ~1.17 s) and
     off-resonant decay during Raman gates.
     """
     return np.sqrt(1.0 / t1) * ops.sigma_plus(ion)

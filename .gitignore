@@ -35,7 +35,9 @@ venv/
 .ruff_cache/
 
 # Ignore all documentation
-docs/
+docs/*
+!docs/theory/
+!docs/templates/
 
 # macOS
 .DS_Store

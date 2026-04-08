@@ -11,16 +11,22 @@ def light_shift_gate_hamiltonian(
     rabi_frequency: float,
     detuning: float,
 ) -> list:
-    """Construct the light-shift (sigma_z x sigma_z) gate Hamiltonian.
+    r"""Construct the light-shift gate Hamiltonian.
+
+    Uses a $\sigma_z \otimes \sigma_z$ interaction.
 
     Uses a state-dependent optical dipole force from off-resonant Raman beams.
-    The AC Stark shift creates a sigma_z-dependent force:
+    The AC Stark shift creates a $\sigma_z$-dependent force:
 
-    H_LS(t) = sum_j eta_j * F_j * sigma_z_j
-              * (a^dag * e^{i*delta*t} + a * e^{-i*delta*t})
+    $$
+    H_\mathrm{LS}(t) = \sum_j \eta_j \, F_j \, \sigma_{z,j}
+    \left( a^\dagger e^{i \delta t} + a \, e^{-i \delta t} \right)
+    $$
 
-    where F_j = eta_j * Omega is the effective force strength. This generates
-    a sigma_z tensor sigma_z interaction (ZZ coupling), which is inherently
+    where $F_j = \eta_j \, \Omega$ is the effective force
+    strength. This generates a
+    $\sigma_z \otimes \sigma_z$ interaction (ZZ coupling),
+    which is inherently
     insensitive to the optical phase of the laser beams.
 
     Parameters

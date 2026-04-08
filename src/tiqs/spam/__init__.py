@@ -1,3 +1,6 @@
-"""State preparation and measurement: optical pumping
+r"""State preparation and measurement: optical pumping
 and fluorescence detection.
+
+.. include:: ../../../docs/theory/spam.md
 """
+__docformat__ = "numpy"

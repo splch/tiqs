@@ -1,3 +1,6 @@
-"""Ion species database: atomic properties, transitions,
+r"""Ion species database: atomic properties, transitions,
 and level structure.
+
+.. include:: ../../../docs/theory/species.md
 """
+__docformat__ = "numpy"

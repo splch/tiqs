@@ -29,9 +29,12 @@ def rx_gate(
     theta: float,
     rabi_frequency: float = TWO_PI * 1e6,
 ) -> GatePulse:
-    """Rotation about X by angle theta: R_x(theta) = exp(-i*theta*sigma_x/2).
+    r"""Rotation about X by angle $\theta$.
 
-    Implemented as H = (Omega/2) * sigma_x for time t = theta/Omega.
+    $R_x(\theta) = e^{-i \theta \sigma_x / 2}$,
+    implemented as
+    $H = \frac{\Omega}{2}\sigma_x$
+    for time $t = \theta / \Omega$.
     """
     H = (rabi_frequency / 2) * ops.sigma_x(ion)
     duration = abs(theta) / rabi_frequency
@@ -44,8 +47,8 @@ def ry_gate(
     theta: float,
     rabi_frequency: float = TWO_PI * 1e6,
 ) -> GatePulse:
-    """Rotation about Y by angle theta:
-    R_y(theta) = exp(-i*theta*sigma_y/2)."""
+    r"""Rotation about Y by angle $\theta$:
+    $R_y(\theta) = e^{-i \theta \sigma_y / 2}$."""
     H = (rabi_frequency / 2) * ops.sigma_y(ion)
     duration = abs(theta) / rabi_frequency
     return GatePulse(hamiltonian=H, duration=duration)
@@ -57,7 +60,10 @@ def rz_gate(
     phi: float,
     rabi_frequency: float = TWO_PI * 1e6,
 ) -> GatePulse:
-    """Rotation about Z by angle phi: R_z(phi) = exp(-i*phi*sigma_z/2)."""
+    r"""Rotation about Z by angle $\phi$.
+
+    $R_z(\phi) = e^{-i \phi \sigma_z / 2}$.
+    """
     H = (rabi_frequency / 2) * ops.sigma_z(ion)
     duration = abs(phi) / rabi_frequency
     return GatePulse(hamiltonian=H, duration=duration)
@@ -69,11 +75,17 @@ def _rotation_hamiltonian(
     phase: float,
     rabi_frequency: float,
 ) -> qutip.Qobj:
-    """Hamiltonian for a rotation about an axis in the x-y plane at
+    r"""Hamiltonian for a rotation about an axis in the x-y plane at
     angle `phase`.
 
-    H = (Omega/2) * (sigma_+ * e^{i*phase} + sigma_- * e^{-i*phase})
-      = (Omega/2) * (sigma_x * cos(phase) + sigma_y * sin(phase))
+    $$
+    H = \frac{\Omega}{2}
+      \bigl(\sigma_+ e^{i\varphi}
+      + \sigma_- e^{-i\varphi}\bigr)
+      = \frac{\Omega}{2}
+      \bigl(\sigma_x \cos\varphi
+      + \sigma_y \sin\varphi\bigr)
+    $$
     """
     return (rabi_frequency / 2) * (
         ops.sigma_x(ion) * np.cos(phase) + ops.sigma_y(ion) * np.sin(phase)
@@ -86,17 +98,19 @@ def sk1_composite_gate(
     theta: float,
     rabi_frequency: float = TWO_PI * 1e6,
 ) -> GatePulse:
-    """SK1 composite pulse sequence that compensates amplitude errors to
+    r"""SK1 composite pulse sequence that compensates amplitude errors to
     first order.
 
-    SK1(theta) = R_0(theta), then R_{phi1}(2*pi), then R_{-phi1}(2*pi)
+    $$
+    \mathrm{SK1}(\theta) = R_0(\theta),\; R_{\phi_1}(2\pi),\; R_{-\phi_1}(2\pi)
+    $$
 
-    where phi1 = arccos(-theta/(4*pi)).
+    where $\phi_1 = \arccos\!\left( -\theta / 4\pi \right)$.
     The three rotations are all about axes in the x-y plane but at
     different phases.
 
     The returned GatePulse has:
-    - hamiltonian: the Hamiltonian for the first segment (R_0), used as
+    - hamiltonian: the Hamiltonian for the first segment ($R_0$), used as
       the "representative" Hamiltonian. The actual composite sequence is
       stored in the `pulses` attribute.
     - duration: total duration of all three pulses.
@@ -129,11 +143,17 @@ def bb1_composite_gate(
     theta: float,
     rabi_frequency: float = TWO_PI * 1e6,
 ) -> GatePulse:
-    """BB1 (Broadband-1) composite pulse: compensates amplitude errors to
+    r"""BB1 (Broadband-1) composite pulse: compensates amplitude errors to
     second order.
 
-    BB1(theta) = R_0(theta), R_{phi1}(pi), R_{3*phi1}(2*pi), R_{phi1}(pi)
-    where phi1 = arccos(-theta/(4*pi)).
+    $$
+    \mathrm{BB1}(\theta) = R_0(\theta),\;
+      R_{\phi_1}(\pi),\;
+      R_{3\phi_1}(2\pi),\;
+      R_{\phi_1}(\pi)
+    $$
+
+    where $\phi_1 = \arccos\!\left( -\theta / 4\pi \right)$.
     """
     arg = -theta / (4 * np.pi)
     if abs(arg) > 1:

@@ -1,15 +1,15 @@
-"""Fidelity metrics for trapped-ion quantum operations."""
+r"""Fidelity metrics for trapped-ion quantum operations."""
 
 import qutip
 
 
 def state_fidelity(state1: qutip.Qobj, state2: qutip.Qobj) -> float:
-    """Compute state fidelity between two quantum states.
+    r"""Compute state fidelity between two quantum states.
 
     Accepts kets or density matrices.
 
-    F = |<psi1|psi2>|^2 for pure states, or F^2 from
-    qutip.fidelity for mixed states.
+    $F = |\langle\psi_1|\psi_2\rangle|^2$ for pure states, or $F^2$ from
+    ``qutip.fidelity`` for mixed states.
     """
     if state1.isket and state2.isket:
         return abs(state1.overlap(state2)) ** 2
@@ -50,7 +50,8 @@ def gate_fidelity(
 
 
 def bell_state_fidelity(rho_spin: qutip.Qobj) -> float:
-    """Compute fidelity with the (|00> + i|11>)/sqrt(2) Bell state.
+    r"""Compute fidelity with the Bell state
+    $(|00\rangle + i|11\rangle)/\sqrt{2}$.
 
     This is the standard target state for an MS gate.
 

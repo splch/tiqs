@@ -8,15 +8,21 @@ from tiqs.trap import PaulTrap
 
 
 def equilibrium_positions(n_ions: int, trap: PaulTrap) -> np.ndarray:
-    """Find the axial equilibrium positions of N ions in a linear trap.
+    r"""Find the axial equilibrium positions of N ions in a linear trap.
 
     Solves for a harmonic trap with Coulomb repulsion.
 
-    Solves the dimensionless equilibrium equation for each ion i:
-        u_i - sum_{j != i} sign(u_i - u_j) / (u_i - u_j)^2 = 0
+    Solves the dimensionless equilibrium equation for each ion $i$:
+
+    $$
+    u_i - \sum_{j \neq i} \frac{\mathrm{sign}(u_i - u_j)}{(u_i - u_j)^2} = 0
+    $$
 
     Then rescales to physical units using the length scale:
-        l = (e^2 / (4*pi*eps0 * m * omega_z^2))^(1/3)
+
+    $$
+    \ell = \left( \frac{e^2}{4\pi\epsilon_0\, m\, \omega_z^2} \right)^{1/3}
+    $$
 
     Parameters
     ----------
@@ -41,9 +47,14 @@ def equilibrium_positions(n_ions: int, trap: PaulTrap) -> np.ndarray:
     ) ** (1 / 3)
 
     def equations(u):
-        """Dimensionless force balance.
+        r"""Dimensionless force balance.
 
-        d/du_i [ sum_i u_i^2/2 + sum_{i<j} 1/|u_i-u_j| ] = 0
+        $$
+        \frac{\partial}{\partial u_i} \left[
+        \sum_i \frac{u_i^2}{2}
+        + \sum_{i<j} \frac{1}{|u_i - u_j|}
+        \right] = 0
+        $$
         """
         f = np.zeros(n_ions)
         for i in range(n_ions):

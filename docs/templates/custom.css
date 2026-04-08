@@ -1,0 +1,49 @@
+:root {
+    --accent: #4a90d9;
+    --accent2: #e8f0fe;
+}
+
+.pdoc .modulename {
+    font-weight: 700;
+}
+
+.pdoc .docstring h2 {
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 0.3rem;
+    margin-top: 2rem;
+}
+
+.pdoc .docstring h3 {
+    color: var(--accent);
+    margin-top: 1.5rem;
+}
+
+.pdoc .docstring table {
+    border-collapse: collapse;
+    margin: 1em 0;
+    font-size: 0.9em;
+}
+
+.pdoc .docstring th,
+.pdoc .docstring td {
+    border: 1px solid #ddd;
+    padding: 0.5em 0.75em;
+    text-align: left;
+}
+
+.pdoc .docstring th {
+    background-color: var(--accent2);
+    font-weight: 600;
+}
+
+.pdoc .docstring .MathJax {
+    font-size: 1.05em;
+}
+
+.pdoc .docstring .admonition {
+    border-left: 4px solid var(--accent);
+    padding: 0.75em 1em;
+    margin: 1em 0;
+    background: var(--accent2);
+    border-radius: 0 4px 4px 0;
+}

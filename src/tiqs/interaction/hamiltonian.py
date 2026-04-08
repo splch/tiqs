@@ -12,11 +12,14 @@ def carrier_hamiltonian(
     rabi_frequency: float,
     phase: float = 0.0,
 ) -> qutip.Qobj:
-    """Carrier transition Hamiltonian.
+    r"""Carrier transition Hamiltonian.
 
-    H = (Omega/2)(sigma+ e^{i*phi} + sigma- e^{-i*phi})
+    $$
+    H = \frac{\Omega}{2}\bigl(\sigma_+ e^{i\phi} + \sigma_- e^{-i\phi}\bigr)
+    $$
 
-    Drives |0> <-> |1> without changing the motional state.
+    Drives $|0\rangle \leftrightarrow |1\rangle$ without changing
+    the motional state.
     """
     sp = ops.sigma_plus(ion)
     sm = ops.sigma_minus(ion)
@@ -33,16 +36,21 @@ def red_sideband_hamiltonian(
     eta: float,
     phase: float = 0.0,
 ) -> qutip.Qobj:
-    """Red sideband Hamiltonian.
+    r"""Red sideband Hamiltonian.
 
-    H = (eta*Omega/2)(a * sigma_- + a_dag * sigma_+)
+    $$
+    H = \frac{\eta\,\Omega}{2}\bigl(a\,\sigma_- + a^\dagger\,\sigma_+\bigr)
+    $$
 
-    Drives |0,n> <-> |1,n-1>: excites the qubit while removing one
-    phonon.
+    Drives
+    $|0,n\rangle \leftrightarrow |1,n-1\rangle$:
+    excites the qubit while removing one phonon.
 
-    In QuTiP's convention sigma_- = |1><0| takes |0> -> |1>
-    (excitation), and a removes a phonon, so the coupling term is
-    a * sm + h.c.
+    In QuTiP's convention
+    $\sigma_- = |1\rangle\langle 0|$ takes
+    $|0\rangle \to |1\rangle$ (excitation), and
+    $a$ removes a phonon, so the coupling term is
+    $a\,\sigma_- + \text{h.c.}$
     """
     sp = ops.sigma_plus(ion)
     sm = ops.sigma_minus(ion)
@@ -61,15 +69,22 @@ def blue_sideband_hamiltonian(
     eta: float,
     phase: float = 0.0,
 ) -> qutip.Qobj:
-    """Blue sideband Hamiltonian.
+    r"""Blue sideband Hamiltonian.
 
-    H = (eta*Omega/2)(a_dag * sigma_- + a * sigma_+)
+    $$
+    H = \frac{\eta\,\Omega}{2}\bigl(a^\dagger\,\sigma_- + a\,\sigma_+\bigr)
+    $$
 
-    Drives |0,n> <-> |1,n+1>: excites the qubit while adding one phonon.
+    Drives
+    $|0,n\rangle \leftrightarrow |1,n+1\rangle$:
+    excites the qubit while adding one phonon.
 
-    In QuTiP's convention sigma_- = |1><0| takes |0> -> |1>
-    (excitation), and a_dag adds a phonon, so the coupling term is
-    ad * sm + h.c.
+    In QuTiP's convention
+    $\sigma_- = |1\rangle\langle 0|$ takes
+    $|0\rangle \to |1\rangle$ (excitation), and
+    $a^\dagger$ adds a phonon, so the coupling
+    term is
+    $a^\dagger\,\sigma_- + \text{h.c.}$
     """
     sp = ops.sigma_plus(ion)
     sm = ops.sigma_minus(ion)
@@ -91,7 +106,7 @@ def full_interaction_hamiltonian(
     phase: float = 0.0,
     lamb_dicke_order: int = 1,
 ) -> list:
-    """Full laser-ion interaction in the interaction picture.
+    r"""Full laser-ion interaction in the interaction picture.
 
     Returns the Hamiltonian in QuTiP list format.
 
@@ -99,11 +114,13 @@ def full_interaction_hamiltonian(
     free evolution, the Hamiltonian becomes time-dependent. For
     first-order Lamb-Dicke:
 
-    H(t) = (Omega/2) * sigma_x * cos(delta*t + phi)  [carrier]
-        + (eta*Omega/2) * (a*sigma+ + a_dag*sigma-)
-          * e^{-i*omega_m*t}                          [RSB]
-        + (eta*Omega/2) * (a_dag*sigma+ + a*sigma-)
-          * e^{+i*omega_m*t}                          [BSB]
+    $$
+    H(t) = \frac{\Omega}{2}\,\sigma_x\cos(\delta t + \phi)
+        + \frac{\eta\,\Omega}{2}\bigl(a\,\sigma_+ + a^\dagger\,\sigma_-\bigr)
+          e^{-i\omega_m t}
+        + \frac{\eta\,\Omega}{2}\bigl(a^\dagger\,\sigma_+ + a\,\sigma_-\bigr)
+          e^{+i\omega_m t}
+    $$
 
     For the interaction picture w.r.t. the free Hamiltonian,
     returns:
@@ -117,13 +134,13 @@ def full_interaction_hamiltonian(
     ion : int
     mode : int
     rabi_frequency : float
-        Rabi frequency Omega (rad/s).
+        Rabi frequency $\Omega$ (rad/s).
     eta : float
         Lamb-Dicke parameter for this ion-mode pair.
     detuning : float
-        Laser detuning from qubit resonance delta (rad/s).
+        Laser detuning from qubit resonance $\delta$ (rad/s).
     mode_frequency : float
-        Motional mode frequency omega_m (rad/s).
+        Motional mode frequency $\omega_m$ (rad/s).
     phase : float
         Laser phase.
     lamb_dicke_order : int

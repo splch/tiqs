@@ -33,5 +33,5 @@ class Transition:
 
     @property
     def wavevector(self) -> float:
-        """Wavevector magnitude |k| = 2*pi/lambda in rad/m."""
+        r"""Wavevector magnitude $|k| = 2\pi/\lambda$ in rad/m."""
         return TWO_PI / self.wavelength

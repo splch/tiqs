@@ -5,15 +5,15 @@ from tiqs.hilbert_space.operators import OperatorFactory
 
 
 def ms_gate_duration(detuning: float, loops: int = 1) -> float:
-    """Gate time for the MS gate: tau = 2*pi*K / delta where K is the
+    r"""Gate time for the MS gate: $\tau = 2\pi K / \delta$ where $K$ is the
     number of loops.
 
     Parameters
     ----------
     detuning : float
-        Sideband detuning delta (rad/s).
+        Sideband detuning $\delta$ (rad/s).
     loops : int
-        Number of phase-space loops (K). More loops = slower but more
+        Number of phase-space loops ($K$). More loops = slower but more
         robust.
 
     Returns
@@ -32,22 +32,24 @@ def ms_gate_hamiltonian(
     rabi_frequency: float,
     detuning: float,
 ) -> list:
-    """Construct the Molmer-Sorensen gate Hamiltonian in the interaction
+    r"""Construct the Molmer-Sorensen gate Hamiltonian in the interaction
     picture.
 
     The MS Hamiltonian for two ions coupled to one motional mode:
 
-    ``H_MS(t) = sum_j eta_j * Omega * sigma_x_j
-    * (a^dag * e^{i*delta*t} + a * e^{-i*delta*t})``
+    $$
+    H_\mathrm{MS}(t) = \sum_j \eta_j \, \Omega \, \sigma_{x,j}
+    \left( a^\dagger e^{i \delta t} + a \, e^{-i \delta t} \right)
+    $$
 
     This is a spin-dependent force that displaces the motional state
     conditioned on the collective spin. After time
-    ``tau = 2*pi*K/delta``, the motion returns to its initial state and
+    $\tau = 2\pi K / \delta$, the motion returns to its initial state and
     the spins acquire a geometric phase proportional to the enclosed
     phase-space area.
 
     For two identically-coupled ions, the maximally entangling condition is
-    ``eta*Omega = delta / 4`` (single loop). The geometric phase scales as the
+    $\eta \Omega = \delta / 4$ (single loop). The geometric phase scales as the
     square of the collective spin eigenvalue, so two ions need half the
     single-ion drive strength.
 
@@ -62,9 +64,9 @@ def ms_gate_hamiltonian(
     eta : list[float]
         Lamb-Dicke parameters for each ion on this mode.
     rabi_frequency : float
-        Rabi frequency Omega (rad/s) of the bichromatic drive on each ion.
+        Rabi frequency $\Omega$ (rad/s) of the bichromatic drive on each ion.
     detuning : float
-        Detuning delta (rad/s) from the motional sideband.
+        Detuning $\delta$ (rad/s) from the motional sideband.
 
     Returns
     -------

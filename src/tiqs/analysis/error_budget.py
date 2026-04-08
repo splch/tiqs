@@ -11,10 +11,10 @@ def compute_error_budget(
     laser_noise_error: float = 0.0,
     motional_dephasing_error: float = 0.0,
 ) -> dict[str, float]:
-    """Aggregate error contributions into a total error budget.
+    r"""Aggregate error contributions into a total error budget.
 
     For small errors, the total gate infidelity is approximately additive:
-    epsilon_total ~ sum of individual error contributions.
+    $\epsilon_\text{total} \approx \sum_i \epsilon_i$.
 
     Parameters
     ----------

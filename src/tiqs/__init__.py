@@ -1,7 +1,10 @@
-"""TIQS: Trapped Ion Quantum Simulator.
+r"""TIQS: Trapped Ion Quantum Simulator.
 
-Lowest-level trapped-ion QC simulation with QuTiP.
+Lowest-level trapped-ion quantum computing simulation built on QuTiP.
+
+.. include:: ../../docs/theory/overview.md
 """
+__docformat__ = "numpy"
 
 from tiqs.chain.equilibrium import equilibrium_positions
 from tiqs.chain.lamb_dicke import lamb_dicke_parameters

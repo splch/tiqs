@@ -10,12 +10,17 @@ def sideband_cooling_nbar(
     gamma_eff: float,
     trap_frequency: float,
 ) -> float:
-    """Analytical steady-state phonon number from resolved sideband cooling.
+    r"""Analytical steady-state phonon number from resolved sideband cooling.
 
-    n_bar_final ~ (Gamma_eff / (2 * omega_trap))^2
+    $$
+    \bar{n}_\text{final} \sim
+        \left(\frac{\Gamma_\text{eff}}
+             {2\omega_\text{trap}}\right)^2
+    $$
 
-    where Gamma_eff is the effective cooling rate (optical pumping rate
-    or Raman transition linewidth).
+    where $\Gamma_\text{eff}$ is the effective cooling
+    rate (optical pumping rate or Raman transition
+    linewidth).
 
     Parameters
     ----------
@@ -42,11 +47,15 @@ def sideband_cooling_simulate(
     optical_pumping_rate: float,
     n_cycles: int,
 ) -> float:
-    """Simulate resolved sideband cooling as RSB pulses + optical pumping.
+    r"""Simulate resolved sideband cooling as RSB pulses + optical pumping.
 
     Each cycle:
-    1. Red sideband pi-pulse: |0, n> -> |1, n-1> (removes one phonon)
-    2. Optical pumping: |1> -> |0> via spontaneous emission (resets spin)
+    1. Red sideband $\pi$-pulse:
+       $|0, n\rangle \to |1, n-1\rangle$
+       (removes one phonon)
+    2. Optical pumping:
+       $|1\rangle \to |0\rangle$ via spontaneous
+       emission (resets spin)
 
     We model this as a master equation with:
     - H = RSB Hamiltonian
@@ -55,11 +64,12 @@ def sideband_cooling_simulate(
     QuTiP conventions:
     - basis(2,0) = ground = bright state, basis(2,1) = excited = dark
       state
-    - sigmap() = |0><1| (decay from excited to ground)
-    - sigmam() = |1><0| (excitation from ground to excited)
-    - RSB: sigmam * a + sigmap * a_dag  (|0,n> -> |1,n-1>)
-    - Optical pumping to |0>: collapse = sqrt(rate) * sigmap
-      (|1> -> |0>)
+    - sigmap() = $|0\rangle\langle 1|$ (decay from excited to ground)
+    - sigmam() = $|1\rangle\langle 0|$ (excitation from ground to excited)
+    - RSB: $\sigma_-\,a + \sigma_+\,a^\dagger$
+      ($|0,n\rangle \to |1,n-1\rangle$)
+    - Optical pumping to $|0\rangle$: collapse = $\sqrt{\text{rate}}\;\sigma_+$
+      ($|1\rangle \to |0\rangle$)
 
     Parameters
     ----------
