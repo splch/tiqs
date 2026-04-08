@@ -34,11 +34,8 @@ venv/
 # Ruff
 .ruff_cache/
 
-# Ignore all documentation
-docs/*
-!docs/theory/
-!docs/templates/
-!docs/build_docs.py
+# Generated documentation
+docs/api/
 
 # macOS
 .DS_Store
