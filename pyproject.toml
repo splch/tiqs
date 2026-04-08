@@ -30,6 +30,10 @@ addopts = ["-x", "--tb=short"]
 target-version = "py314"
 line-length = 79 # https://peps.python.org/pep-0008/#maximum-line-length
 
+[tool.ruff.format]
+docstring-code-format = true
+preview = true
+
 [tool.ruff.lint]
 select = [
     "E",   # pycodestyle errors

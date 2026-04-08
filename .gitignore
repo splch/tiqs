@@ -38,6 +38,7 @@ venv/
 docs/*
 !docs/theory/
 !docs/templates/
+!docs/build_docs.py
 
 # macOS
 .DS_Store

@@ -3,4 +3,5 @@ and Lamb-Dicke parameters.
 
 .. include:: ../../../docs/theory/normal_modes.md
 """
+
 __docformat__ = "numpy"

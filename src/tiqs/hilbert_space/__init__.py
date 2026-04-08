@@ -25,4 +25,5 @@ $$
 
 where $\sigma_x$ acts on the $j$-th qubit.
 """
+
 __docformat__ = "numpy"

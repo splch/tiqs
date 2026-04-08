@@ -3,4 +3,5 @@ and Raman transitions.
 
 .. include:: ../../../docs/theory/laser_ion_interaction.md
 """
+
 __docformat__ = "numpy"

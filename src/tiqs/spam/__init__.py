@@ -3,4 +3,5 @@ and fluorescence detection.
 
 .. include:: ../../../docs/theory/spam.md
 """
+
 __docformat__ = "numpy"

@@ -4,6 +4,7 @@ Lowest-level trapped-ion quantum computing simulation built on QuTiP.
 
 .. include:: ../../docs/theory/overview.md
 """
+
 __docformat__ = "numpy"
 
 from tiqs.chain.equilibrium import equilibrium_positions

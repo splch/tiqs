@@ -3,6 +3,7 @@ pseudopotential.
 
 .. include:: ../../docs/theory/trapping.md
 """
+
 __docformat__ = "numpy"
 
 from dataclasses import dataclass
