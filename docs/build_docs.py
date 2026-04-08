@@ -32,6 +32,7 @@ subpackages = [
 # Pass each subpackage plus standalone modules so pdoc generates
 # a separate page per subpackage with its theory docstring visible.
 modules = [
+    "tiqs",
     *subpackages,
     "tiqs.constants",
     "tiqs.trap",
