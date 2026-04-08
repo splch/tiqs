@@ -2,16 +2,16 @@ import numpy as np
 import pytest
 import qutip
 
-from tiqs.spam.preparation import optical_pumping_ops, prepare_qubit
-from tiqs.spam.measurement import (
-    fluorescence_probabilities,
-    sample_measurement,
-    measurement_fidelity,
-    mid_circuit_measurement,
-)
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
+from tiqs.spam.measurement import (
+    fluorescence_probabilities,
+    measurement_fidelity,
+    mid_circuit_measurement,
+    sample_measurement,
+)
+from tiqs.spam.preparation import optical_pumping_ops, prepare_qubit
 
 
 @pytest.fixture
@@ -31,7 +31,9 @@ class TestPreparation:
     def test_prepare_qubit_returns_ground(self, system):
         hs, ops, sf = system
         rho0 = sf.thermal_state(n_bar=[0.0], qubit_states=[1, 0])
-        rho_prepared = prepare_qubit(ops, ion=0, initial_state=rho0, pumping_rate=1e7, duration=10e-6)
+        rho_prepared = prepare_qubit(
+            ops, ion=0, initial_state=rho0, pumping_rate=1e7, duration=10e-6
+        )
         rho_qubit = rho_prepared.ptrace(0)
         p_ground = rho_qubit[0, 0].real
         assert p_ground > 0.95
@@ -57,7 +59,9 @@ class TestMeasurement:
     def test_sample_measurement_returns_bits(self, system):
         hs, ops, sf = system
         psi = sf.ground_state()
-        bits = sample_measurement(psi, ions=[0, 1], rng=np.random.default_rng(42))
+        bits = sample_measurement(
+            psi, ions=[0, 1], rng=np.random.default_rng(42)
+        )
         assert len(bits) == 2
         assert all(b in [0, 1] for b in bits)
 
@@ -72,9 +76,14 @@ class TestMeasurement:
 
     def test_mid_circuit_projects(self, system):
         hs, ops, sf = system
-        plus = (sf.product_state([0, 0], [0]) + sf.product_state([1, 0], [0])).unit()
+        plus = (
+            sf.product_state([0, 0], [0]) + sf.product_state([1, 0], [0])
+        ).unit()
         rho_out, outcome = mid_circuit_measurement(
-            qutip.ket2dm(plus), ops, ion=0, rng=np.random.default_rng(42),
+            qutip.ket2dm(plus),
+            ops,
+            ion=0,
+            rng=np.random.default_rng(42),
         )
         # After measurement, ion 0 should be in a definite state
         rho_q = rho_out.ptrace(0)

@@ -31,7 +31,7 @@ def motional_wigner(
     if xvec is None:
         xvec = np.linspace(-5, 5, 100)
 
-    if state.type == "ket":
+    if state.isket:
         rho = qutip.ket2dm(state)
     else:
         rho = state
@@ -74,7 +74,7 @@ def phase_space_trajectory(
     subsystem_index = n_qubits + mode_index
 
     for state in states:
-        rho = qutip.ket2dm(state) if state.type == "ket" else state
+        rho = qutip.ket2dm(state) if state.isket else state
         rho_mode = rho.ptrace(subsystem_index)
         dim = rho_mode.shape[0]
         a = qutip.destroy(dim)

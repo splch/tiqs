@@ -1,14 +1,13 @@
-import numpy as np
-import pytest
-import qutip
-
+from tiqs.constants import TWO_PI
 from tiqs.cooling.doppler import doppler_cooled_nbar
-from tiqs.cooling.sideband_cooling import sideband_cooling_nbar, sideband_cooling_simulate
 from tiqs.cooling.eit_cooling import eit_cooling_nbar
-from tiqs.species.data import get_species
+from tiqs.cooling.sideband_cooling import (
+    sideband_cooling_nbar,
+    sideband_cooling_simulate,
+)
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
-from tiqs.constants import TWO_PI
+from tiqs.species.data import get_species
 
 
 class TestDopplerCooling:
@@ -38,12 +37,15 @@ class TestSidebandCooling:
         assert n_bar < 0.1
 
     def test_sbc_simulation_cools(self):
-        """Resolved sideband cooling should bring a thermal state close to ground."""
+        """Resolved sideband cooling should bring a thermal state
+        close to ground."""
         hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=20)
         ops = OperatorFactory(hs)
         n_bar_initial = 5.0
         n_bar_final = sideband_cooling_simulate(
-            ops, ion=0, mode=0,
+            ops,
+            ion=0,
+            mode=0,
             n_bar_initial=n_bar_initial,
             eta=0.1,
             rabi_frequency=TWO_PI * 100e3,

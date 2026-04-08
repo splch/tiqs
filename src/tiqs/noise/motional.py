@@ -17,7 +17,8 @@ def motional_heating_ops(
 
     Models a thermal bath that adds phonons at rate n_dot (quanta/s).
     For a zero-temperature bath (n_bar_env=0): only phonon creation.
-    For finite temperature: both creation (rate ~ n_bar+1) and destruction (rate ~ n_bar).
+    For finite temperature: both creation (rate ~ n_bar+1) and
+    destruction (rate ~ n_bar).
 
     The collapse operators are:
         L_up   = sqrt(heating_rate * (n_bar_env + 1)) * a^dag  (phonon gain)
@@ -79,8 +80,8 @@ def heating_rate_from_noise(
     Parameters
     ----------
     spectral_density : float
-        Electric field noise spectral density S_E at reference distance and frequency
-        in V^2 m^-2 Hz^-1.
+        Electric field noise spectral density S_E at reference
+        distance and frequency in V^2 m^-2 Hz^-1.
     distance : float
         Ion-electrode distance in meters.
     frequency : float

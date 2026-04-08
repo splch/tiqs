@@ -4,11 +4,13 @@ import numpy as np
 from scipy.optimize import root
 
 from tiqs.constants import ELECTRON_CHARGE, EPSILON_0, PI
-from tiqs.trap.paul_trap import PaulTrap
+from tiqs.trap import PaulTrap
 
 
 def equilibrium_positions(n_ions: int, trap: PaulTrap) -> np.ndarray:
-    """Find the axial equilibrium positions of N ions in a harmonic trap with Coulomb repulsion.
+    """Find the axial equilibrium positions of N ions in a linear trap.
+
+    Solves for a harmonic trap with Coulomb repulsion.
 
     Solves the dimensionless equilibrium equation for each ion i:
         u_i - sum_{j != i} sign(u_i - u_j) / (u_i - u_j)^2 = 0
@@ -39,7 +41,10 @@ def equilibrium_positions(n_ions: int, trap: PaulTrap) -> np.ndarray:
     ) ** (1 / 3)
 
     def equations(u):
-        """Dimensionless force balance: d/du_i [ sum_i u_i^2/2 + sum_{i<j} 1/|u_i-u_j| ] = 0."""
+        """Dimensionless force balance.
+
+        d/du_i [ sum_i u_i^2/2 + sum_{i<j} 1/|u_i-u_j| ] = 0
+        """
         f = np.zeros(n_ions)
         for i in range(n_ions):
             f[i] = u[i]
@@ -53,7 +58,9 @@ def equilibrium_positions(n_ions: int, trap: PaulTrap) -> np.ndarray:
     sol = root(equations, u0, method="hybr", tol=1e-12)
     residual = np.max(np.abs(equations(sol.x)))
     if not sol.success and residual > 1e-10:
-        raise RuntimeError(f"Failed to find equilibrium positions: {sol.message}")
+        raise RuntimeError(
+            f"Failed to find equilibrium positions: {sol.message}"
+        )
 
     u_sorted = np.sort(sol.x)
     return u_sorted * length_scale

@@ -11,12 +11,15 @@ def optical_pumping_ops(
     ion: int,
     pumping_rate: float,
 ) -> list[qutip.Qobj]:
-    """Collapse operators modeling optical pumping to |0> (ground/bright state).
+    """Collapse operators modeling optical pumping to |0>
+    (ground/bright state).
 
-    Optical pumping drives |1> -> |0> dissipatively via a cycling transition.
-    Modeled as spontaneous decay from |1> to |0> at the pumping rate.
+    Optical pumping drives |1> -> |0> dissipatively via a cycling
+    transition. Modeled as spontaneous decay from |1> to |0> at the
+    pumping rate.
 
-    QuTiP convention: sigmap() = |0><1| drives |1> -> |0> (spontaneous emission).
+    QuTiP convention: sigmap() = |0><1| drives |1> -> |0>
+    (spontaneous emission).
 
     Parameters
     ----------

@@ -3,17 +3,17 @@ import numpy as np
 import pytest
 import qutip
 
-from tiqs.interaction.laser import LaserBeam
-from tiqs.interaction.hamiltonian import (
-    carrier_hamiltonian,
-    red_sideband_hamiltonian,
-    blue_sideband_hamiltonian,
-    full_interaction_hamiltonian,
-)
-from tiqs.interaction.raman import RamanPair
+from tiqs.constants import TWO_PI
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
-from tiqs.constants import TWO_PI
+from tiqs.interaction.hamiltonian import (
+    blue_sideband_hamiltonian,
+    carrier_hamiltonian,
+    full_interaction_hamiltonian,
+    red_sideband_hamiltonian,
+)
+from tiqs.interaction.laser import LaserBeam
+from tiqs.interaction.raman import RamanPair
 
 
 @pytest.fixture
@@ -54,7 +54,14 @@ class TestCarrierHamiltonian:
         t_pi = np.pi / Omega
         result = qutip.sesolve(H, psi0, [0, t_pi])
         final = result.states[-1]
-        p_excited = abs(final.overlap(qutip.tensor(qutip.basis(2, 1), qutip.basis(15, 0)))) ** 2
+        p_excited = (
+            abs(
+                final.overlap(
+                    qutip.tensor(qutip.basis(2, 1), qutip.basis(15, 0))
+                )
+            )
+            ** 2
+        )
         assert p_excited == pytest.approx(1.0, abs=0.01)
 
 
@@ -64,7 +71,9 @@ class TestSidebandHamiltonians:
         hs, ops = simple_system
         eta = 0.1
         Omega = TWO_PI * 100e3
-        H = red_sideband_hamiltonian(ops, ion=0, mode=0, rabi_frequency=Omega, eta=eta, phase=0.0)
+        H = red_sideband_hamiltonian(
+            ops, ion=0, mode=0, rabi_frequency=Omega, eta=eta, phase=0.0
+        )
         psi0 = qutip.tensor(qutip.basis(2, 0), qutip.basis(15, 1))
         rsb_rabi = eta * Omega * np.sqrt(1)
         t_pi = np.pi / rsb_rabi
@@ -79,7 +88,9 @@ class TestSidebandHamiltonians:
         hs, ops = simple_system
         eta = 0.1
         Omega = TWO_PI * 100e3
-        H = blue_sideband_hamiltonian(ops, ion=0, mode=0, rabi_frequency=Omega, eta=eta, phase=0.0)
+        H = blue_sideband_hamiltonian(
+            ops, ion=0, mode=0, rabi_frequency=Omega, eta=eta, phase=0.0
+        )
         psi0 = qutip.tensor(qutip.basis(2, 0), qutip.basis(15, 0))
         bsb_rabi = eta * Omega * np.sqrt(1)
         t_pi = np.pi / bsb_rabi
@@ -91,12 +102,16 @@ class TestSidebandHamiltonians:
 
     def test_rsb_hermitian(self, simple_system):
         hs, ops = simple_system
-        H = red_sideband_hamiltonian(ops, ion=0, mode=0, rabi_frequency=1.0, eta=0.1)
+        H = red_sideband_hamiltonian(
+            ops, ion=0, mode=0, rabi_frequency=1.0, eta=0.1
+        )
         assert H.isherm
 
     def test_bsb_hermitian(self, simple_system):
         hs, ops = simple_system
-        H = blue_sideband_hamiltonian(ops, ion=0, mode=0, rabi_frequency=1.0, eta=0.1)
+        H = blue_sideband_hamiltonian(
+            ops, ion=0, mode=0, rabi_frequency=1.0, eta=0.1
+        )
         assert H.isherm
 
 
@@ -117,7 +132,8 @@ class TestFullInteractionHamiltonian:
         assert len(H) >= 1
 
     def test_resonant_drive_matches_carrier(self, simple_system):
-        """On resonance with detuning=0, the full Hamiltonian should behave as a carrier.
+        """On resonance with detuning=0, the full Hamiltonian should
+        behave as a carrier.
 
         A carrier pi-pulse flips |0> -> |1>. In QuTiP's convention,
         |0> has <sigma_z> = +1 and |1> has <sigma_z> = -1, so after
@@ -127,8 +143,14 @@ class TestFullInteractionHamiltonian:
         Omega = TWO_PI * 100e3
         omega_mode = TWO_PI * 1e6
         H = full_interaction_hamiltonian(
-            ops, ion=0, mode=0, rabi_frequency=Omega, eta=0.1,
-            detuning=0.0, mode_frequency=omega_mode, phase=0.0,
+            ops,
+            ion=0,
+            mode=0,
+            rabi_frequency=Omega,
+            eta=0.1,
+            detuning=0.0,
+            mode_frequency=omega_mode,
+            phase=0.0,
         )
         psi0 = qutip.tensor(qutip.basis(2, 0), qutip.basis(15, 0))
         t_pi = np.pi / Omega

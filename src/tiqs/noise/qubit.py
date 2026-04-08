@@ -1,5 +1,7 @@
 """Qubit decoherence: dephasing and spontaneous emission."""
 
+import math
+
 import numpy as np
 import qutip
 
@@ -10,17 +12,21 @@ def qubit_dephasing_op(
     ops: OperatorFactory,
     ion: int,
     t2: float,
-    t1: float = float("inf"),
+    t1: float = math.inf,
 ) -> qutip.Qobj:
-    """Collapse operator for qubit pure dephasing: L = sqrt(gamma_phi/2) * sigma_z.
+    """Collapse operator for qubit pure dephasing.
 
-    gamma_phi = 1/T2 - 1/(2*T1). For hyperfine qubits with T1 ~ inf: gamma_phi = 1/T2.
+    L = sqrt(gamma_phi/2) * sigma_z.
+
+    gamma_phi = 1/T2 - 1/(2*T1). For hyperfine qubits with
+    T1 ~ inf: gamma_phi = 1/T2.
     Causes exponential decay of off-diagonal density matrix elements.
     """
     gamma_phi = 1.0 / t2 - 1.0 / (2 * t1)
     if gamma_phi < 0:
         raise ValueError(
-            f"Pure dephasing rate is negative (T2={t2} > 2*T1={2 * t1}). "
+            f"Pure dephasing rate is negative "
+            f"(T2={t2} > 2*T1={2 * t1}). "
             f"T2 cannot exceed 2*T1."
         )
     return np.sqrt(gamma_phi / 2) * ops.sigma_z(ion)

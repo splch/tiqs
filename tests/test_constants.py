@@ -1,4 +1,11 @@
-from tiqs.constants import HBAR, ELECTRON_CHARGE, BOLTZMANN, SPEED_OF_LIGHT, AMU, EPSILON_0
+from tiqs.constants import (
+    AMU,
+    BOLTZMANN,
+    ELECTRON_CHARGE,
+    EPSILON_0,
+    HBAR,
+    SPEED_OF_LIGHT,
+)
 
 
 def test_hbar_value():

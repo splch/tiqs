@@ -17,13 +17,16 @@ class OperatorFactory:
     def __init__(self, hilbert_space: HilbertSpace):
         self.hs = hilbert_space
 
-    def _full_operator(self, op: qutip.Qobj, subsystem_index: int) -> qutip.Qobj:
-        """Tensor an operator on one subsystem with identities on all others."""
+    def _full_operator(
+        self, op: qutip.Qobj, subsystem_index: int
+    ) -> qutip.Qobj:
+        """Tensor an operator on one subsystem with identities on others."""
         dims = self.hs.dims
         n_subsystems = len(dims)
         if subsystem_index < 0 or subsystem_index >= n_subsystems:
             raise IndexError(
-                f"Subsystem index {subsystem_index} out of range [0, {n_subsystems})"
+                f"Subsystem index {subsystem_index} out of range"
+                f" [0, {n_subsystems})"
             )
         op_list = [qutip.qeye(d) for d in dims]
         op_list[subsystem_index] = op
@@ -31,12 +34,16 @@ class OperatorFactory:
 
     def _ion_index(self, ion: int) -> int:
         if ion < 0 or ion >= self.hs.n_ions:
-            raise IndexError(f"Ion index {ion} out of range [0, {self.hs.n_ions})")
+            raise IndexError(
+                f"Ion index {ion} out of range [0, {self.hs.n_ions})"
+            )
         return ion
 
     def _mode_index(self, mode: int) -> int:
         if mode < 0 or mode >= self.hs.n_modes:
-            raise IndexError(f"Mode index {mode} out of range [0, {self.hs.n_modes})")
+            raise IndexError(
+                f"Mode index {mode} out of range [0, {self.hs.n_modes})"
+            )
         return self.hs.n_ions + mode
 
     def sigma_x(self, ion: int) -> qutip.Qobj:

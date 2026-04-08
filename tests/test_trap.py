@@ -2,14 +2,15 @@
 import numpy as np
 import pytest
 
-from tiqs.trap.paul_trap import PaulTrap
 from tiqs.species.data import get_species
+from tiqs.trap import PaulTrap
 
 
 class TestPaulTrap:
     @pytest.fixture
     def yb_trap(self):
-        """Standard Yb171 trap: V_rf=1000V, Omega_rf=2pi*30MHz, r0=0.5mm, U_dc for 1MHz axial."""
+        """Standard Yb171 trap: V_rf=1000V, Omega_rf=2pi*30MHz,
+        r0=0.5mm, U_dc for 1MHz axial."""
         return PaulTrap(
             v_rf=1000.0,
             omega_rf=2 * np.pi * 30e6,
@@ -60,11 +61,14 @@ class TestPaulTrap:
         assert yb_trap.omega_radial > yb_trap.omega_axial
 
     def test_micromotion_amplitude(self, yb_trap):
-        """Intrinsic micromotion amplitude at a displacement of 1 um from RF null."""
+        """Intrinsic micromotion amplitude at a displacement of 1 um
+        from RF null."""
         displacement = 1e-6
         amp = yb_trap.micromotion_amplitude(displacement)
         assert amp > 0
-        assert amp < displacement  # micromotion amplitude is smaller than displacement for q < 1
+        assert (
+            amp < displacement
+        )  # micromotion amplitude is smaller than displacement for q < 1
 
     def test_excess_micromotion_from_stray_field(self, yb_trap):
         """Stray field of 1 V/m displaces ion from RF null."""

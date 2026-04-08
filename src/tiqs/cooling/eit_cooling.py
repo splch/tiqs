@@ -8,18 +8,21 @@ def eit_cooling_nbar(
 ) -> float:
     """Estimate final phonon number from EIT cooling.
 
-    EIT cooling uses a narrow absorption resonance (Fano profile) tuned to the red
-    sideband while suppressing carrier absorption via the dark state. The cooling limit:
+    EIT cooling uses a narrow absorption resonance (Fano profile) tuned to
+    the red sideband while suppressing carrier absorption via the dark
+    state. The cooling limit:
 
     n_bar ~ carrier_suppression * (gamma_eit / (2 * trap_frequency))
 
-    The advantage over resolved sideband cooling is broader bandwidth: EIT cooling
-    can simultaneously cool multiple modes within the EIT linewidth.
+    The advantage over resolved sideband cooling is broader bandwidth:
+    EIT cooling can simultaneously cool multiple modes within the EIT
+    linewidth.
 
     Parameters
     ----------
     gamma_eit : float
-        Effective EIT linewidth (rad/s) - width of the Fano absorption feature.
+        Effective EIT linewidth (rad/s) - width of the Fano absorption
+        feature.
     trap_frequency : float
         Motional mode frequency (rad/s).
     carrier_suppression : float

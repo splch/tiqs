@@ -41,29 +41,19 @@ def lamb_dicke_parameters(
         Matrix of Lamb-Dicke parameters, shape (N_ions, N_modes).
         eta[i, m] is the Lamb-Dicke parameter for ion i and mode m.
     """
-    if direction == "axial":
-        freqs = modes.axial_freqs
-        vectors = modes.axial_vectors
-    elif direction == "radial_x":
-        freqs = modes.radial_x_freqs
-        vectors = modes.radial_x_vectors
-    elif direction == "radial_y":
-        freqs = modes.radial_y_freqs
-        vectors = modes.radial_y_vectors
-    else:
+    direction_map = {
+        "axial": (modes.axial_freqs, modes.axial_vectors),
+        "radial_x": (modes.radial_x_freqs, modes.radial_x_vectors),
+        "radial_y": (modes.radial_y_freqs, modes.radial_y_vectors),
+    }
+    if direction not in direction_map:
         raise ValueError(f"Unknown direction: {direction}")
+    freqs, vectors = direction_map[direction]
 
     m = species.mass_kg
-    n_ions = len(freqs)
-    eta = np.zeros((n_ions, n_ions))
-
-    for mode_idx in range(n_ions):
-        omega_m = freqs[mode_idx]
-        if omega_m <= 0:
-            continue
-        x_zpf = np.sqrt(HBAR / (2 * m * omega_m))
-        for ion_idx in range(n_ions):
-            b_im = vectors[ion_idx, mode_idx]
-            eta[ion_idx, mode_idx] = k_eff * b_im * x_zpf
-
-    return eta
+    # Zero-point fluctuation x_zpf_m = sqrt(hbar / (2*M*omega_m)) for each mode
+    x_zpf = np.zeros_like(freqs)
+    mask = freqs > 0
+    x_zpf[mask] = np.sqrt(HBAR / (2 * m * freqs[mask]))
+    # eta[i,m] = k_eff * b_{i,m} * x_zpf_m via broadcasting over ions (axis 0)
+    return k_eff * vectors * x_zpf

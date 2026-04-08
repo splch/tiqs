@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v7
-      - run: uv run --extra docs pdoc src/tiqs -o docs/api
+      - run: uv run --extra docs pdoc --math src/tiqs -o docs/api
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/api

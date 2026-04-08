@@ -1,4 +1,5 @@
 """Shared test fixtures for TIQS test suite."""
+
 import numpy as np
 import pytest
 

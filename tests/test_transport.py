@@ -2,14 +2,14 @@ import numpy as np
 import pytest
 import qutip
 
-from tiqs.transport.shuttling import (
-    shuttle_motional_excitation,
-    apply_shuttling_noise,
-)
-from tiqs.transport.splitting import split_crystal_excitation
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
+from tiqs.transport import (
+    apply_shuttling_noise,
+    shuttle_motional_excitation,
+    split_crystal_excitation,
+)
 
 
 @pytest.fixture

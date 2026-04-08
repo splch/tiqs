@@ -2,9 +2,13 @@ import numpy as np
 import pytest
 import qutip
 
-from tiqs.analysis.fidelity import gate_fidelity, state_fidelity, bell_state_fidelity
-from tiqs.analysis.phase_space import motional_wigner, phase_space_trajectory
 from tiqs.analysis.error_budget import compute_error_budget
+from tiqs.analysis.fidelity import (
+    bell_state_fidelity,
+    gate_fidelity,
+    state_fidelity,
+)
+from tiqs.analysis.phase_space import motional_wigner
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
@@ -46,7 +50,9 @@ class TestFidelity:
         hs, ops, sf = two_qubit_system
         psi = sf.ground_state()
         rho_full = qutip.ket2dm(psi)
-        target = qutip.ket2dm(qutip.tensor(qutip.basis(2, 0), qutip.basis(2, 0)))
+        target = qutip.ket2dm(
+            qutip.tensor(qutip.basis(2, 0), qutip.basis(2, 0))
+        )
         fid = gate_fidelity(rho_full, target, qubit_indices=[0, 1])
         assert fid == pytest.approx(1.0, abs=0.01)
 

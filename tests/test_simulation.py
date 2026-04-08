@@ -2,11 +2,11 @@ import numpy as np
 import pytest
 import qutip
 
+from tiqs.constants import TWO_PI
 from tiqs.simulation.config import SimulationConfig
 from tiqs.simulation.runner import SimulationRunner
 from tiqs.species.data import get_species
-from tiqs.trap.paul_trap import PaulTrap
-from tiqs.constants import TWO_PI
+from tiqs.trap import PaulTrap
 
 
 @pytest.fixture
@@ -35,8 +35,11 @@ class TestSimulationConfig:
 
     def test_config_with_noise(self):
         trap = PaulTrap(
-            v_rf=300.0, omega_rf=TWO_PI * 30e6, r0=0.5e-3,
-            omega_axial=TWO_PI * 1e6, species=get_species("Ca40"),
+            v_rf=300.0,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1e6,
+            species=get_species("Ca40"),
         )
         config = SimulationConfig(
             species=get_species("Ca40"),
@@ -71,13 +74,18 @@ class TestSimulationRunner:
 
     def test_runner_with_noise(self):
         trap = PaulTrap(
-            v_rf=300.0, omega_rf=TWO_PI * 30e6, r0=0.5e-3,
-            omega_axial=TWO_PI * 1e6, species=get_species("Ca40"),
+            v_rf=300.0,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1e6,
+            species=get_species("Ca40"),
         )
         config = SimulationConfig(
             species=get_species("Ca40"),
             trap=trap,
-            n_ions=1, n_modes=1, n_fock=10,
+            n_ions=1,
+            n_modes=1,
+            n_fock=10,
             solver="mesolve",
             heating_rate=1e4,
             t2_qubit=1e-3,

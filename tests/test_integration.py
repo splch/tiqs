@@ -1,27 +1,30 @@
 """End-to-end integration tests validating known trapped-ion physics."""
+
 import numpy as np
 import pytest
 import qutip
 
-from tiqs.species.data import get_species
-from tiqs.trap.paul_trap import PaulTrap
-from tiqs.chain.normal_modes import normal_modes
-from tiqs.chain.lamb_dicke import lamb_dicke_parameters
+from tiqs.analysis.fidelity import bell_state_fidelity
+from tiqs.constants import TWO_PI
+from tiqs.gates.molmer_sorensen import ms_gate_duration, ms_gate_hamiltonian
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
-from tiqs.interaction.hamiltonian import carrier_hamiltonian, red_sideband_hamiltonian
-from tiqs.gates.molmer_sorensen import ms_gate_hamiltonian, ms_gate_duration
+from tiqs.interaction.hamiltonian import (
+    carrier_hamiltonian,
+    red_sideband_hamiltonian,
+)
 from tiqs.noise.motional import motional_heating_ops
 from tiqs.noise.qubit import qubit_dephasing_op
-from tiqs.analysis.fidelity import state_fidelity, bell_state_fidelity
 from tiqs.simulation.config import SimulationConfig
 from tiqs.simulation.runner import SimulationRunner
-from tiqs.constants import TWO_PI
+from tiqs.species.data import get_species
+from tiqs.trap import PaulTrap
 
 
 class TestRabiOscillations:
-    """Validate carrier Rabi oscillations: population should oscillate sinusoidally."""
+    """Validate carrier Rabi oscillations: population should oscillate
+    sinusoidally."""
 
     def test_rabi_frequency_correct(self):
         hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=5)
@@ -46,10 +49,12 @@ class TestRabiOscillations:
 
 
 class TestSidebandSpectroscopy:
-    """Validate that red/blue sideband transitions change phonon number correctly."""
+    """Validate that red/blue sideband transitions change phonon number
+    correctly."""
 
     def test_red_sideband_rabi_frequency_scales_with_sqrt_n(self):
-        """Simulate RSB dynamics and verify Rabi frequency scales as sqrt(n)."""
+        """Simulate RSB dynamics and verify Rabi frequency scales as
+        sqrt(n)."""
         hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=15)
         ops = OperatorFactory(hs)
 
@@ -59,8 +64,8 @@ class TestSidebandSpectroscopy:
 
         # For n_initial=1: RSB Rabi freq = eta*Omega*sqrt(1)
         # For n_initial=4: RSB Rabi freq = eta*Omega*sqrt(4) = 2x faster
-        # After a pi-pulse time for n=1, the n=4 case should have completed 2 pi-pulses
-        # (returned to initial state)
+        # After a pi-pulse time for n=1, the n=4 case should have
+        # completed 2 pi-pulses (returned to initial state)
         rsb_rabi_n1 = eta * Omega * np.sqrt(1)
         t_pi_n1 = np.pi / rsb_rabi_n1
 
@@ -71,8 +76,8 @@ class TestSidebandSpectroscopy:
         fid_n1 = abs(result_n1.states[-1].overlap(target_n1)) ** 2
         assert fid_n1 > 0.95
 
-        # Simulate n=4: after the same t_pi_n1, should have done 2 full Rabi cycles
-        # (since Rabi freq is 2x faster), ending back near |0,4>
+        # Simulate n=4: after the same t_pi_n1, should have done 2 full
+        # Rabi cycles (since Rabi freq is 2x faster), ending back near |0,4>
         psi0_n4 = qutip.tensor(qutip.basis(2, 0), qutip.basis(15, 4))
         result_n4 = qutip.sesolve(H, psi0_n4, [0, t_pi_n1])
         fid_return = abs(result_n4.states[-1].overlap(psi0_n4)) ** 2
@@ -83,7 +88,8 @@ class TestMSGatePhysics:
     """Validate Molmer-Sorensen gate against known analytical results."""
 
     def test_ms_bell_state_high_fidelity(self):
-        """Full MS gate simulation should produce a Bell state with >95% fidelity."""
+        """Full MS gate simulation should produce a Bell state with
+        >95% fidelity."""
         hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=20)
         ops = OperatorFactory(hs)
         sf = StateFactory(hs)
@@ -106,7 +112,8 @@ class TestMSGatePhysics:
         assert fid > 0.95
 
     def test_ms_gate_motional_disentanglement(self):
-        """After a complete MS gate, the motion should return to its initial state."""
+        """After a complete MS gate, the motion should return to its
+        initial state."""
         hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=20)
         ops = OperatorFactory(hs)
         sf = StateFactory(hs)
@@ -130,7 +137,8 @@ class TestNoiseEffects:
     """Validate that noise degrades fidelity in the expected direction."""
 
     def test_heating_degrades_ms_gate(self):
-        """Motional heating during an MS gate should reduce Bell state fidelity."""
+        """Motional heating during an MS gate should reduce Bell state
+        fidelity."""
         hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=20)
         ops = OperatorFactory(hs)
         sf = StateFactory(hs)
@@ -144,12 +152,16 @@ class TestNoiseEffects:
         tlist = np.linspace(0, tau, 500)
 
         # Without noise
-        r_clean = qutip.sesolve(H, psi0, tlist, options={"max_step": tau / 100})
+        r_clean = qutip.sesolve(
+            H, psi0, tlist, options={"max_step": tau / 100}
+        )
         fid_clean = bell_state_fidelity(r_clean.states[-1].ptrace([0, 1]))
 
         # With heating
         c_ops = motional_heating_ops(ops, 0, heating_rate=1e5)
-        r_noisy = qutip.mesolve(H, psi0, tlist, c_ops=c_ops, options={"max_step": tau / 100})
+        r_noisy = qutip.mesolve(
+            H, psi0, tlist, c_ops=c_ops, options={"max_step": tau / 100}
+        )
         fid_noisy = bell_state_fidelity(r_noisy.states[-1].ptrace([0, 1]))
 
         assert fid_noisy < fid_clean
@@ -171,8 +183,12 @@ class TestNoiseEffects:
         result = qutip.mesolve(H, psi0, tlist, c_ops=c_ops, e_ops=[sz])
 
         # Oscillation amplitude should decay over time
-        early_amplitude = max(result.expect[0][:50]) - min(result.expect[0][:50])
-        late_amplitude = max(result.expect[0][-50:]) - min(result.expect[0][-50:])
+        early_amplitude = max(result.expect[0][:50]) - min(
+            result.expect[0][:50]
+        )
+        late_amplitude = max(result.expect[0][-50:]) - min(
+            result.expect[0][-50:]
+        )
         assert late_amplitude < early_amplitude
 
 

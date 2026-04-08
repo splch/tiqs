@@ -2,9 +2,9 @@
 
 import numpy as np
 
+from tiqs.constants import TWO_PI
 from tiqs.gates.single_qubit import GatePulse
 from tiqs.hilbert_space.operators import OperatorFactory
-from tiqs.constants import TWO_PI
 
 
 def cirac_zoller_gate(
@@ -19,7 +19,8 @@ def cirac_zoller_gate(
 
     Three-step sequence:
     1. Pi pulse on RSB of ion A: maps |up_A, 0> -> -i|down_A, 1>
-    2. 2*Pi pulse on RSB of ion B (to auxiliary level): |down_B, 1> -> -|down_B, 1>
+    2. 2*Pi pulse on RSB of ion B (to auxiliary level):
+       |down_B, 1> -> -|down_B, 1>
     3. Reverse pi pulse on RSB of ion A: unmaps motion back to ion A
 
     REQUIRES the motional mode to be in the ground state |n=0>.
@@ -50,7 +51,8 @@ def cirac_zoller_gate(
 
     # RSB coupling: sm*a + sp*ad drives |0,n> <-> |1,n-1>
     # sm = sigmam = |1><0| takes |0> -> |1>, a removes a phonon
-    # sp = sigmap = |0><1| takes |1> -> |0>, ad adds a phonon (hermitian conjugate)
+    # sp = sigmap = |0><1| takes |1> -> |0>, ad adds a phonon
+    # (hermitian conjugate)
 
     # Step 1: RSB pi-pulse on ion A: maps |0_A, n=1> -> |1_A, n=0>
     rsb_rabi_a = eta[0] * rabi_frequency

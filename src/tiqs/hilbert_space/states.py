@@ -1,7 +1,5 @@
 """Initial state construction for trapped-ion simulations."""
 
-from typing import Optional
-
 import qutip
 
 from tiqs.hilbert_space.builder import HilbertSpace
@@ -20,7 +18,10 @@ class StateFactory:
         self.hs = hilbert_space
 
     def ground_state(self) -> qutip.Qobj:
-        """All qubits in |0> (down), all modes in vacuum |n=0>. Returns a ket."""
+        """All qubits in |0> (down), all modes in vacuum |n=0>.
+
+        Returns a ket.
+        """
         parts = []
         for _ in range(self.hs.n_ions):
             parts.append(qutip.basis(2, 0))
@@ -33,17 +34,22 @@ class StateFactory:
         qubit_states: list[int],
         fock_states: list[int],
     ) -> qutip.Qobj:
-        """Arbitrary product state. qubit_states[i] in {0, 1}, fock_states[m] is phonon number."""
+        """Arbitrary product state.
+
+        qubit_states[i] in {0, 1}, fock_states[m] is phonon number.
+        """
         if len(qubit_states) != self.hs.n_ions:
             raise ValueError(
-                f"Expected {self.hs.n_ions} qubit states, got {len(qubit_states)}"
+                f"Expected {self.hs.n_ions} qubit states,"
+                f" got {len(qubit_states)}"
             )
         if len(fock_states) != self.hs.n_modes:
             raise ValueError(
-                f"Expected {self.hs.n_modes} fock states, got {len(fock_states)}"
+                f"Expected {self.hs.n_modes} fock states,"
+                f" got {len(fock_states)}"
             )
         parts = []
-        for i, q in enumerate(qubit_states):
+        for q in qubit_states:
             parts.append(qutip.basis(2, q))
         for m, n in enumerate(fock_states):
             parts.append(qutip.basis(self.hs.fock_dim(m), n))
@@ -52,9 +58,11 @@ class StateFactory:
     def thermal_state(
         self,
         n_bar: list[float],
-        qubit_states: Optional[list[int]] = None,
+        qubit_states: list[int] | None = None,
     ) -> qutip.Qobj:
-        """Qubits in |0>, motional modes in thermal states. Returns a density matrix.
+        """Qubits in |0>, motional modes in thermal states.
+
+        Returns a density matrix.
 
         Parameters
         ----------
@@ -71,7 +79,8 @@ class StateFactory:
             )
         if len(qubit_states) != self.hs.n_ions:
             raise ValueError(
-                f"Expected {self.hs.n_ions} qubit states, got {len(qubit_states)}"
+                f"Expected {self.hs.n_ions} qubit states,"
+                f" got {len(qubit_states)}"
             )
 
         parts = []

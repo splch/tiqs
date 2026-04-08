@@ -1,27 +1,30 @@
-"""TIQS: Trapped Ion Quantum Simulator - lowest-level trapped-ion QC simulation with QuTiP."""
+"""TIQS: Trapped Ion Quantum Simulator.
 
-from tiqs.species.data import IonSpecies, get_species
-from tiqs.trap.paul_trap import PaulTrap
+Lowest-level trapped-ion QC simulation with QuTiP.
+"""
+
 from tiqs.chain.equilibrium import equilibrium_positions
-from tiqs.chain.normal_modes import normal_modes, NormalModeResult
 from tiqs.chain.lamb_dicke import lamb_dicke_parameters
+from tiqs.chain.normal_modes import NormalModeResult, normal_modes
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
 from tiqs.simulation.config import SimulationConfig
 from tiqs.simulation.runner import SimulationRunner
+from tiqs.species.data import IonSpecies, get_species
+from tiqs.trap import PaulTrap
 
 __all__ = [
-    "IonSpecies",
-    "get_species",
-    "PaulTrap",
-    "equilibrium_positions",
-    "normal_modes",
-    "NormalModeResult",
-    "lamb_dicke_parameters",
     "HilbertSpace",
+    "IonSpecies",
+    "NormalModeResult",
     "OperatorFactory",
-    "StateFactory",
+    "PaulTrap",
     "SimulationConfig",
     "SimulationRunner",
+    "StateFactory",
+    "equilibrium_positions",
+    "get_species",
+    "lamb_dicke_parameters",
+    "normal_modes",
 ]

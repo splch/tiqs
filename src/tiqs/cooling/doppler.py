@@ -4,7 +4,9 @@ from tiqs.constants import TWO_PI
 from tiqs.species.data import IonSpecies
 
 
-def doppler_cooled_nbar(species: IonSpecies, trap_frequency_hz: float) -> float:
+def doppler_cooled_nbar(
+    species: IonSpecies, trap_frequency_hz: float
+) -> float:
     """Estimate mean phonon number after Doppler cooling.
 
     n_bar_Doppler = Gamma / (2 * omega_trap)

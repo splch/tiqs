@@ -6,8 +6,6 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "qutip>=5.2.3",
-    "numpy>=2.0",
-    "scipy>=1.14",
 ]
 
 [project.optional-dependencies]
@@ -25,10 +23,39 @@ docs = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = ["slow: marks tests as slow (skip with -m 'not slow')"]
+addopts = ["-x", "--tb=short"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 79 # https://peps.python.org/pep-0008/#maximum-line-length
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "UP",  # pyupgrade (enforces modern Python syntax)
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "NPY", # numpy-specific rules
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "SIM108", # ternary - if/else is clearer in educational code
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["RUF059"]  # unused unpacked vars in test fixtures
+
+[tool.ruff.lint.isort]
+known-first-party = ["tiqs"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tiqs"]
 
+# Suppressed because QuTiP lacks complete type stubs
 [tool.ty.rules]
 unsupported-operator = "ignore"
 no-matching-overload = "ignore"

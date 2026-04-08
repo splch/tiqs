@@ -1,19 +1,21 @@
 """Top-level simulation runner: assembles Hamiltonians, noise, and solvers."""
 
+import math
+
 import numpy as np
 import qutip
 
-from tiqs.simulation.config import SimulationConfig
-from tiqs.chain.normal_modes import normal_modes
 from tiqs.chain.lamb_dicke import lamb_dicke_parameters
+from tiqs.chain.normal_modes import normal_modes
+from tiqs.constants import TWO_PI
+from tiqs.gates.molmer_sorensen import ms_gate_duration, ms_gate_hamiltonian
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
 from tiqs.interaction.hamiltonian import carrier_hamiltonian
-from tiqs.gates.molmer_sorensen import ms_gate_hamiltonian, ms_gate_duration
 from tiqs.noise.motional import motional_heating_ops
 from tiqs.noise.qubit import qubit_dephasing_op, spontaneous_emission_op
-from tiqs.constants import TWO_PI
+from tiqs.simulation.config import SimulationConfig
 
 
 class SimulationRunner:
@@ -41,11 +43,14 @@ class SimulationRunner:
             # Optical qubit: single beam, k_eff = 2*pi/lambda
             k_eff = TWO_PI / config.species.qubit_wavelength
         elif config.species.raman_wavelength is not None:
-            # Hyperfine qubit with counter-propagating Raman beams: k_eff = 2 * 2*pi/lambda
+            # Hyperfine qubit with counter-propagating Raman beams:
+            # k_eff = 2 * 2*pi/lambda
             k_eff = 2 * TWO_PI / config.species.raman_wavelength
         else:
             k_eff = TWO_PI / 400e-9
-        self.eta = lamb_dicke_parameters(self.modes, config.species, k_eff, "axial")
+        self.eta = lamb_dicke_parameters(
+            self.modes, config.species, k_eff, "axial"
+        )
 
         self._c_ops = self._build_collapse_operators()
 
@@ -55,7 +60,9 @@ class SimulationRunner:
 
         if cfg.heating_rate is not None and cfg.heating_rate > 0:
             for m in range(cfg.n_modes):
-                c_ops.extend(motional_heating_ops(self.ops, m, cfg.heating_rate))
+                c_ops.extend(
+                    motional_heating_ops(self.ops, m, cfg.heating_rate)
+                )
 
         for i in range(cfg.n_ions):
             if cfg.t2_qubit is not None:
@@ -63,8 +70,10 @@ class SimulationRunner:
             # Only include spontaneous emission when explicitly requested
             # via t1_qubit. The species default T1 (e.g., 1.168 s for Ca40
             # optical qubit) is not automatically included for sesolve runs.
-            if cfg.t1_qubit is not None and cfg.t1_qubit < float("inf"):
-                c_ops.append(spontaneous_emission_op(self.ops, i, cfg.t1_qubit))
+            if cfg.t1_qubit is not None and cfg.t1_qubit < math.inf:
+                c_ops.append(
+                    spontaneous_emission_op(self.ops, i, cfg.t1_qubit)
+                )
 
         return c_ops
 
@@ -90,7 +99,9 @@ class SimulationRunner:
                 H, psi0, tlist, c_ops=self._c_ops, ntraj=100, options=opts
             )
         else:
-            return qutip.mesolve(H, psi0, tlist, c_ops=self._c_ops, options=opts)
+            return qutip.mesolve(
+                H, psi0, tlist, c_ops=self._c_ops, options=opts
+            )
 
     def run_carrier_pulse(
         self,
@@ -129,8 +140,9 @@ class SimulationRunner:
         """
         if len(ions) != 2:
             raise ValueError(
-                f"run_ms_gate Rabi calibration is valid for exactly 2 ions, got {len(ions)}. "
-                f"For N > 2 ions, construct the Hamiltonian manually with ms_gate_hamiltonian."
+                f"run_ms_gate Rabi calibration is valid for exactly "
+                f"2 ions, got {len(ions)}. For N > 2 ions, construct "
+                f"the Hamiltonian manually with ms_gate_hamiltonian."
             )
         eta_ions = [float(self.eta[i, mode]) for i in ions]
         eta_avg = np.mean(eta_ions)

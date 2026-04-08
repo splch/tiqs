@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
+from tiqs.species.data import get_species
 from tiqs.species.transitions import Transition
-from tiqs.species.data import IonSpecies, get_species
 
 
 class TestTransition:
@@ -39,7 +39,9 @@ class TestIonSpecies:
 
     def test_yb171_cooling_wavelength(self):
         s = get_species("Yb171")
-        assert s.cooling_transition.wavelength == pytest.approx(369.5e-9, rel=1e-2)
+        assert s.cooling_transition.wavelength == pytest.approx(
+            369.5e-9, rel=1e-2
+        )
 
     def test_ca40_optical_qubit(self):
         s = get_species("Ca40")
@@ -67,7 +69,9 @@ class TestIonSpecies:
 
     def test_mass_kg(self):
         s = get_species("Yb171")
-        assert s.mass_kg == pytest.approx(170.936 * 1.66053906660e-27, rel=1e-3)
+        assert s.mass_kg == pytest.approx(
+            170.936 * 1.66053906660e-27, rel=1e-3
+        )
 
     def test_doppler_limit(self):
         s = get_species("Ca40")

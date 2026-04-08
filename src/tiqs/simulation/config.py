@@ -1,17 +1,18 @@
-"""Simulation configuration: approximation levels, solver options, noise parameters."""
+"""Simulation configuration: approximation levels, solver options,
+noise parameters.
+"""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from tiqs.species.data import IonSpecies
-from tiqs.trap.paul_trap import PaulTrap
+from tiqs.trap import PaulTrap
 
 
 @dataclass
 class SimulationConfig:
     """Complete configuration for a trapped-ion simulation.
 
-    Parameters
+    Attributes
     ----------
     species : IonSpecies
         Ion species for all qubits.
@@ -24,20 +25,20 @@ class SimulationConfig:
     n_fock : int
         Fock space cutoff per mode.
     solver : str
-        QuTiP solver: "sesolve", "mesolve", or "mcsolve".
+        QuTiP solver: ``"sesolve"``, ``"mesolve"``, or ``"mcsolve"``.
     lamb_dicke_order : int
         Order of Lamb-Dicke expansion (1 = standard, 2 = with corrections).
     heating_rate : float or None
-        Motional heating rate in quanta/s. None = no heating.
+        Motional heating rate in quanta/s. ``None`` = no heating.
     t2_qubit : float or None
-        Qubit T2 dephasing time in seconds. None = no dephasing.
+        Qubit T2 dephasing time in seconds. ``None`` = no dephasing.
     t1_qubit : float or None
-        Qubit T1 decay time. None = use species default (inf for hyperfine).
+        Qubit T1 decay time. ``None`` = use species default.
     photon_scattering_rate : float or None
-        Off-resonant photon scattering rate. None = no scattering.
+        Off-resonant photon scattering rate. ``None`` = no scattering.
     n_bar_initial : float
         Initial mean phonon number (after cooling). 0 = ground state.
-    solver_options : dict
+    solver_options : dict[str, object]
         Additional options passed to the QuTiP solver.
     """
 
@@ -48,11 +49,11 @@ class SimulationConfig:
     n_fock: int = 15
     solver: str = "sesolve"
     lamb_dicke_order: int = 1
-    heating_rate: Optional[float] = None
-    t2_qubit: Optional[float] = None
-    t1_qubit: Optional[float] = None
-    photon_scattering_rate: Optional[float] = None
+    heating_rate: float | None = None
+    t2_qubit: float | None = None
+    t1_qubit: float | None = None
+    photon_scattering_rate: float | None = None
     n_bar_initial: float = 0.0
-    solver_options: dict = field(
+    solver_options: dict[str, object] = field(
         default_factory=lambda: {"max_step": 0.0, "nsteps": 5000}
     )

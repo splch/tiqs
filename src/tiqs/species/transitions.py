@@ -9,10 +9,10 @@ from tiqs.constants import SPEED_OF_LIGHT, TWO_PI
 class Transition:
     """An atomic transition between two energy levels.
 
-    Parameters
+    Attributes
     ----------
     name : str
-        Human-readable label, e.g. "S1/2 -> P1/2".
+        Human-readable label, e.g. ``"S1/2 -> P1/2"``.
     wavelength : float
         Transition wavelength in meters.
     linewidth : float

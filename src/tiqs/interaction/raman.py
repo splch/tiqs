@@ -14,7 +14,8 @@ class RamanPair:
     rabi_1, rabi_2 : float
         Single-photon Rabi frequencies for each beam (rad/s).
     detuning_from_excited : float
-        Single-photon detuning Delta from the intermediate excited state (rad/s).
+        Single-photon detuning Delta from the intermediate excited
+        state (rad/s).
     excited_state_linewidth : float
         Natural linewidth Gamma of the intermediate state (rad/s).
     """
@@ -28,12 +29,20 @@ class RamanPair:
 
     @property
     def effective_rabi_frequency(self) -> float:
-        """Two-photon effective Rabi frequency: Omega_eff = Omega_1 * Omega_2 / (2 * Delta)."""
-        return self.rabi_1 * self.rabi_2 / (2 * abs(self.detuning_from_excited))
+        """Two-photon effective Rabi frequency.
+
+        Omega_eff = Omega_1 * Omega_2 / (2 * Delta)
+        """
+        return (
+            self.rabi_1 * self.rabi_2 / (2 * abs(self.detuning_from_excited))
+        )
 
     @property
     def frequency_difference(self) -> float:
-        """Beat frequency omega_1 - omega_2 (should match qubit splitting for resonance)."""
+        """Beat frequency omega_1 - omega_2.
+
+        Should match the qubit splitting for resonance.
+        """
         return self.omega_1 - self.omega_2
 
     @property
@@ -50,5 +59,10 @@ class RamanPair:
 
     @property
     def ac_stark_shift(self) -> float:
-        """Differential AC Stark shift: (Omega_1^2 - Omega_2^2) / (4 * Delta)."""
-        return (self.rabi_1**2 - self.rabi_2**2) / (4 * self.detuning_from_excited)
+        """Differential AC Stark shift.
+
+        (Omega_1^2 - Omega_2^2) / (4 * Delta)
+        """
+        return (self.rabi_1**2 - self.rabi_2**2) / (
+            4 * self.detuning_from_excited
+        )

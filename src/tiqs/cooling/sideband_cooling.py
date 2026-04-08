@@ -42,7 +42,7 @@ def sideband_cooling_simulate(
     optical_pumping_rate: float,
     n_cycles: int,
 ) -> float:
-    """Simulate resolved sideband cooling as a sequence of RSB pulses + optical pumping.
+    """Simulate resolved sideband cooling as RSB pulses + optical pumping.
 
     Each cycle:
     1. Red sideband pi-pulse: |0, n> -> |1, n-1> (removes one phonon)
@@ -53,11 +53,13 @@ def sideband_cooling_simulate(
     - Collapse: optical pumping at the given rate
 
     QuTiP conventions:
-    - basis(2,0) = ground = bright state, basis(2,1) = excited = dark state
+    - basis(2,0) = ground = bright state, basis(2,1) = excited = dark
+      state
     - sigmap() = |0><1| (decay from excited to ground)
     - sigmam() = |1><0| (excitation from ground to excited)
     - RSB: sigmam * a + sigmap * a_dag  (|0,n> -> |1,n-1>)
-    - Optical pumping to |0>: collapse = sqrt(rate) * sigmap  (|1> -> |0>)
+    - Optical pumping to |0>: collapse = sqrt(rate) * sigmap
+      (|1> -> |0>)
 
     Parameters
     ----------
@@ -97,7 +99,7 @@ def sideband_cooling_simulate(
     hs = ops.hs
     # Build rho0 matching the full Hilbert space dimensions
     parts = []
-    for i in range(hs.n_ions):
+    for _i in range(hs.n_ions):
         parts.append(qutip.ket2dm(qutip.basis(2, 0)))
     for m in range(hs.n_modes):
         if m == mode:

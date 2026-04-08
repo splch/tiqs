@@ -1,22 +1,24 @@
-"""Tests for single-qubit gates, MS gate, light-shift gate, and Cirac-Zoller gate."""
+"""Tests for single-qubit gates, MS gate, light-shift gate, and
+Cirac-Zoller gate."""
+
 import numpy as np
 import pytest
 import qutip
 
+from tiqs.constants import TWO_PI
+from tiqs.gates.cirac_zoller import cirac_zoller_gate
+from tiqs.gates.light_shift import light_shift_gate_hamiltonian
+from tiqs.gates.molmer_sorensen import ms_gate_duration, ms_gate_hamiltonian
 from tiqs.gates.single_qubit import (
+    bb1_composite_gate,
     rx_gate,
     ry_gate,
     rz_gate,
     sk1_composite_gate,
-    bb1_composite_gate,
 )
-from tiqs.gates.molmer_sorensen import ms_gate_hamiltonian, ms_gate_duration
-from tiqs.gates.light_shift import light_shift_gate_hamiltonian
-from tiqs.gates.cirac_zoller import cirac_zoller_gate
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
-from tiqs.constants import TWO_PI
 
 
 @pytest.fixture
@@ -57,7 +59,8 @@ class TestSingleQubitGates:
         assert qutip.expect(sx, final) == pytest.approx(-1.0, abs=0.05)
 
     def test_sk1_more_robust_than_bare(self, single_ion):
-        """SK1 composite pulse should be less sensitive to Rabi frequency errors."""
+        """SK1 composite pulse should be less sensitive to Rabi
+        frequency errors."""
         hs, ops, sf = single_ion
         psi0 = sf.ground_state()
         target = sf.product_state([1], [0])
@@ -101,13 +104,18 @@ class TestMolmerSorensenGate:
     def test_ms_hamiltonian_is_list_format(self, two_ion_system):
         hs, ops, sf = two_ion_system
         H = ms_gate_hamiltonian(
-            ops, ions=[0, 1], mode=0, eta=[0.1, 0.1],
-            rabi_frequency=TWO_PI * 50e3, detuning=TWO_PI * 10e3,
+            ops,
+            ions=[0, 1],
+            mode=0,
+            eta=[0.1, 0.1],
+            rabi_frequency=TWO_PI * 50e3,
+            detuning=TWO_PI * 10e3,
         )
         assert isinstance(H, list)
 
     def test_ms_gate_produces_bell_state(self, two_ion_system):
-        """MS gate on |00,n=0> should produce (|00> + i|11>)/sqrt(2) up to global phase."""
+        """MS gate on |00,n=0> should produce (|00> + i|11>)/sqrt(2)
+        up to global phase."""
         hs, ops, sf = two_ion_system
         eta = 0.1
         delta = TWO_PI * 20e3
@@ -118,8 +126,12 @@ class TestMolmerSorensenGate:
         tau = ms_gate_duration(delta, loops=1)
 
         H = ms_gate_hamiltonian(
-            ops, ions=[0, 1], mode=0, eta=[eta, eta],
-            rabi_frequency=Omega, detuning=delta,
+            ops,
+            ions=[0, 1],
+            mode=0,
+            eta=[eta, eta],
+            rabi_frequency=Omega,
+            detuning=delta,
         )
         psi0 = sf.ground_state()
         tlist = np.linspace(0, tau, 500)
@@ -139,7 +151,8 @@ class TestMolmerSorensenGate:
         assert fid > 0.90
 
     def test_ms_gate_insensitive_to_thermal_motion(self, two_ion_system):
-        """MS gate fidelity should not degrade significantly with thermal initial motion."""
+        """MS gate fidelity should not degrade significantly with
+        thermal initial motion."""
         hs, ops, sf = two_ion_system
         eta = 0.05
         delta = TWO_PI * 20e3
@@ -148,8 +161,12 @@ class TestMolmerSorensenGate:
         tau = ms_gate_duration(delta, loops=1)
 
         H = ms_gate_hamiltonian(
-            ops, ions=[0, 1], mode=0, eta=[eta, eta],
-            rabi_frequency=Omega, detuning=delta,
+            ops,
+            ions=[0, 1],
+            mode=0,
+            eta=[eta, eta],
+            rabi_frequency=Omega,
+            detuning=delta,
         )
 
         ket_00 = qutip.tensor(qutip.basis(2, 0), qutip.basis(2, 0))
@@ -161,7 +178,9 @@ class TestMolmerSorensenGate:
         for n_bar in [0.0, 2.0]:
             rho0 = sf.thermal_state(n_bar=[n_bar])
             tlist = np.linspace(0, tau, 500)
-            result = qutip.mesolve(H, rho0, tlist, options={"max_step": tau / 100})
+            result = qutip.mesolve(
+                H, rho0, tlist, options={"max_step": tau / 100}
+            )
             rho_spin = result.states[-1].ptrace([0, 1])
             fid = qutip.fidelity(rho_spin, rho_target) ** 2
             fidelities.append(fid)
@@ -194,13 +213,18 @@ class TestLightShiftGate:
     def test_light_shift_is_list_format(self, two_ion_system):
         hs, ops, sf = two_ion_system
         H = light_shift_gate_hamiltonian(
-            ops, ions=[0, 1], mode=0, eta=[0.1, 0.1],
-            rabi_frequency=TWO_PI * 50e3, detuning=TWO_PI * 10e3,
+            ops,
+            ions=[0, 1],
+            mode=0,
+            eta=[0.1, 0.1],
+            rabi_frequency=TWO_PI * 50e3,
+            detuning=TWO_PI * 10e3,
         )
         assert isinstance(H, list)
 
     def test_light_shift_generates_zz_entanglement(self, two_ion_system):
-        """Light-shift gate should entangle |+,+> into a state with ZZ correlations."""
+        """Light-shift gate should entangle |+,+> into a state with
+        ZZ correlations."""
         hs, ops, sf = two_ion_system
         eta = 0.1
         delta = TWO_PI * 20e3
@@ -210,10 +234,15 @@ class TestLightShiftGate:
         tau = ms_gate_duration(delta, loops=1)
 
         H = light_shift_gate_hamiltonian(
-            ops, ions=[0, 1], mode=0, eta=[eta, eta],
-            rabi_frequency=Omega, detuning=delta,
+            ops,
+            ions=[0, 1],
+            mode=0,
+            eta=[eta, eta],
+            rabi_frequency=Omega,
+            detuning=delta,
         )
-        # Start in |++> (both ions in +x eigenstate) - ZZ gate entangles sigma_x eigenstates
+        # Start in |++> (both ions in +x eigenstate) - ZZ gate entangles
+        # sigma_x eigenstates
         plus = (qutip.basis(2, 0) + qutip.basis(2, 1)).unit()
         psi0 = qutip.tensor(plus, plus, qutip.basis(15, 0))
         tlist = np.linspace(0, tau, 500)

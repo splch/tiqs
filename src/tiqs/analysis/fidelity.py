@@ -4,15 +4,18 @@ import qutip
 
 
 def state_fidelity(state1: qutip.Qobj, state2: qutip.Qobj) -> float:
-    """Compute state fidelity between two quantum states (kets or density matrices).
+    """Compute state fidelity between two quantum states.
 
-    F = |<psi1|psi2>|^2 for pure states, or F^2 from qutip.fidelity for mixed states.
+    Accepts kets or density matrices.
+
+    F = |<psi1|psi2>|^2 for pure states, or F^2 from
+    qutip.fidelity for mixed states.
     """
-    if state1.type == "ket" and state2.type == "ket":
+    if state1.isket and state2.isket:
         return abs(state1.overlap(state2)) ** 2
 
-    rho1 = qutip.ket2dm(state1) if state1.type == "ket" else state1
-    rho2 = qutip.ket2dm(state2) if state2.type == "ket" else state2
+    rho1 = qutip.ket2dm(state1) if state1.isket else state1
+    rho2 = qutip.ket2dm(state2) if state2.isket else state2
     return qutip.fidelity(rho1, rho2) ** 2
 
 
@@ -21,7 +24,10 @@ def gate_fidelity(
     rho_target_spin: qutip.Qobj,
     qubit_indices: list[int],
 ) -> float:
-    """Compute gate fidelity by tracing out motional modes and comparing spin states.
+    """Compute gate fidelity by tracing out motional modes.
+
+    Traces out motional modes and compares the resulting spin
+    state to the target.
 
     Parameters
     ----------
@@ -37,7 +43,7 @@ def gate_fidelity(
     float
         Gate fidelity (squared fidelity).
     """
-    if rho_actual.type == "ket":
+    if rho_actual.isket:
         rho_actual = qutip.ket2dm(rho_actual)
     rho_spin = rho_actual.ptrace(qubit_indices)
     return qutip.fidelity(rho_spin, rho_target_spin) ** 2

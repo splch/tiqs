@@ -46,4 +46,6 @@ def crosstalk_hamiltonian(
     sp = ops.sigma_plus(neighbor_ion)
     sm = ops.sigma_minus(neighbor_ion)
     omega_xt = crosstalk_fraction * rabi_frequency
-    return (omega_xt / 2) * (sp * np.exp(1j * phase) + sm * np.exp(-1j * phase))
+    return (omega_xt / 2) * (
+        sp * np.exp(1j * phase) + sm * np.exp(-1j * phase)
+    )

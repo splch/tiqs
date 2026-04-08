@@ -11,7 +11,9 @@ def rayleigh_scattering_op(
     ion: int,
     rate: float,
 ) -> qutip.Qobj:
-    """Rayleigh (elastic) photon scattering collapse operator: L = sqrt(rate/4) * sigma_z.
+    """Rayleigh (elastic) photon scattering collapse operator.
+
+    L = sqrt(rate/4) * sigma_z.
 
     Rayleigh scattering preserves the qubit state but causes dephasing
     through the random phase kick of the scattered photon.
@@ -24,7 +26,9 @@ def raman_scattering_op(
     ion: int,
     rate: float,
 ) -> qutip.Qobj:
-    """Raman (inelastic) photon scattering collapse operator: L = sqrt(rate) * sigma_plus.
+    """Raman (inelastic) photon scattering collapse operator.
+
+    L = sqrt(rate) * sigma_plus.
 
     In our convention sigma_plus = |0><1| maps |1> to |0>, implementing
     decay from the excited qubit state. Raman scattering changes the qubit

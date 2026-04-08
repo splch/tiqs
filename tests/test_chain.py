@@ -3,11 +3,11 @@ import numpy as np
 import pytest
 
 from tiqs.chain.equilibrium import equilibrium_positions
-from tiqs.chain.normal_modes import normal_modes, NormalModeResult
 from tiqs.chain.lamb_dicke import lamb_dicke_parameters
-from tiqs.species.data import get_species
-from tiqs.trap.paul_trap import PaulTrap
+from tiqs.chain.normal_modes import normal_modes
 from tiqs.constants import TWO_PI
+from tiqs.species.data import get_species
+from tiqs.trap import PaulTrap
 
 
 @pytest.fixture
@@ -34,7 +34,8 @@ class TestEquilibriumPositions:
         assert pos[1] > pos[0]
 
     def test_two_ion_spacing(self, ca40_trap):
-        """Spacing d0 = (e^2 / (4*pi*eps0 * m * omega_ax^2))^(1/3) ~ 5 um for Ca40 @ 1 MHz."""
+        """Spacing d0 = (e^2 / (4*pi*eps0 * m * omega_ax^2))^(1/3)
+        ~ 5 um for Ca40 @ 1 MHz."""
         pos = equilibrium_positions(2, ca40_trap)
         spacing = pos[1] - pos[0]
         assert 1e-6 < spacing < 20e-6
@@ -64,7 +65,9 @@ class TestNormalModes:
     def test_single_ion_one_axial_mode(self, ca40_trap):
         result = normal_modes(1, ca40_trap)
         assert len(result.axial_freqs) == 1
-        assert result.axial_freqs[0] == pytest.approx(ca40_trap.omega_axial, rel=1e-6)
+        assert result.axial_freqs[0] == pytest.approx(
+            ca40_trap.omega_axial, rel=1e-6
+        )
 
     def test_two_ion_com_mode(self, ca40_trap):
         result = normal_modes(2, ca40_trap)
@@ -146,14 +149,29 @@ class TestLambDicke:
         assert eta[0, 0] == pytest.approx(eta[1, 0], rel=1e-6)
 
     def test_lighter_ion_larger_eta(self):
-        """Be9 should have larger Lamb-Dicke parameter than Yb171 (eta ~ 1/sqrt(m))."""
-        be_trap = PaulTrap(v_rf=300, omega_rf=TWO_PI * 30e6, r0=0.5e-3,
-                           omega_axial=TWO_PI * 1e6, species=get_species("Be9"))
-        yb_trap = PaulTrap(v_rf=1000, omega_rf=TWO_PI * 30e6, r0=0.5e-3,
-                           omega_axial=TWO_PI * 1e6, species=get_species("Yb171"))
+        """Be9 should have larger Lamb-Dicke parameter than Yb171
+        (eta ~ 1/sqrt(m))."""
+        be_trap = PaulTrap(
+            v_rf=300,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1e6,
+            species=get_species("Be9"),
+        )
+        yb_trap = PaulTrap(
+            v_rf=1000,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1e6,
+            species=get_species("Yb171"),
+        )
         be_modes = normal_modes(1, be_trap)
         yb_modes = normal_modes(1, yb_trap)
         k = TWO_PI / 400e-9
-        eta_be = lamb_dicke_parameters(be_modes, be_trap.species, k, "axial")[0, 0]
-        eta_yb = lamb_dicke_parameters(yb_modes, yb_trap.species, k, "axial")[0, 0]
+        eta_be = lamb_dicke_parameters(be_modes, be_trap.species, k, "axial")[
+            0, 0
+        ]
+        eta_yb = lamb_dicke_parameters(yb_modes, yb_trap.species, k, "axial")[
+            0, 0
+        ]
         assert eta_be > eta_yb

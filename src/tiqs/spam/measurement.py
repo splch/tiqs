@@ -27,7 +27,7 @@ def fluorescence_probabilities(
     list[float]
         Probability of bright (|0>) for each ion.
     """
-    if state.type == "ket":
+    if state.isket:
         rho = qutip.ket2dm(state)
     else:
         rho = state
@@ -46,11 +46,13 @@ def sample_measurement(
     rng: np.random.Generator,
     spam_error: float = 0.0,
 ) -> list[int]:
-    """Sample a projective measurement outcome from the joint qubit distribution.
+    """Sample a projective measurement outcome from the joint qubit
+    distribution.
 
-    Samples from the full joint probability distribution over all 2^N computational
-    basis states of the measured ions, correctly preserving quantum correlations.
-    For entangled states (e.g., Bell states), correlated outcomes are produced.
+    Samples from the full joint probability distribution over all
+    2^N computational basis states of the measured ions, correctly
+    preserving quantum correlations. For entangled states (e.g.,
+    Bell states), correlated outcomes are produced.
 
     Parameters
     ----------
@@ -67,7 +69,7 @@ def sample_measurement(
     list[int]
         Measurement outcomes (0 or 1) for each ion.
     """
-    if state.type == "ket":
+    if state.isket:
         rho = qutip.ket2dm(state)
     else:
         rho = state
@@ -76,8 +78,8 @@ def sample_measurement(
     n = len(ions)
     dim = 2**n
 
-    # Extract diagonal of the density matrix in the computational basis
-    # This gives P(bitstring) for each bitstring
+    # Extract diagonal of the density matrix in the computational
+    # basis. This gives P(bitstring) for each bitstring.
     probs = np.array([rho_ions[i, i].real for i in range(dim)])
     probs = np.maximum(probs, 0.0)
     probs /= probs.sum()
@@ -85,7 +87,8 @@ def sample_measurement(
     # Sample one bitstring from the joint distribution
     outcome_idx = rng.choice(dim, p=probs)
 
-    # Convert index to bit list: index 0 -> [0,0,...], index 1 -> [0,0,...,1], etc.
+    # Convert index to bit list:
+    # index 0 -> [0,0,...], index 1 -> [0,0,...,1], etc.
     bits = [(outcome_idx >> (n - 1 - k)) & 1 for k in range(n)]
 
     # Apply SPAM error independently to each bit
@@ -103,8 +106,9 @@ def measurement_fidelity(
 ) -> float:
     """Estimate single-shot readout fidelity from photon counting parameters.
 
-    Models the bright/dark discrimination with Poisson photon statistics.
-    Optimal threshold minimizes the sum of false-bright and false-dark errors.
+    Models the bright/dark discrimination with Poisson photon
+    statistics. Optimal threshold minimizes the sum of false-bright
+    and false-dark errors.
 
     Parameters
     ----------
@@ -115,7 +119,8 @@ def measurement_fidelity(
     detection_window : float
         Detection time window (s).
     collection_efficiency : float
-        Fraction of emitted photons collected (typically 0.02-0.05).
+        Fraction of emitted photons collected
+        (typically 0.02-0.05).
 
     Returns
     -------
@@ -143,10 +148,12 @@ def mid_circuit_measurement(
     ion: int,
     rng: np.random.Generator,
 ) -> tuple[qutip.Qobj, int]:
-    """Perform a mid-circuit measurement on one ion, projecting and renormalizing.
+    """Perform a mid-circuit measurement on one ion, projecting and
+    renormalizing.
 
-    This models the measurement backaction: the state is projected onto
-    |0> or |1> for the measured ion while preserving the rest of the system.
+    This models the measurement backaction: the state is projected
+    onto |0> or |1> for the measured ion while preserving the rest
+    of the system.
 
     Parameters
     ----------

@@ -16,7 +16,8 @@ def light_shift_gate_hamiltonian(
     Uses a state-dependent optical dipole force from off-resonant Raman beams.
     The AC Stark shift creates a sigma_z-dependent force:
 
-    H_LS(t) = sum_j eta_j * F_j * sigma_z_j * (a^dag * e^{i*delta*t} + a * e^{-i*delta*t})
+    H_LS(t) = sum_j eta_j * F_j * sigma_z_j
+              * (a^dag * e^{i*delta*t} + a * e^{-i*delta*t})
 
     where F_j = eta_j * Omega is the effective force strength. This generates
     a sigma_z tensor sigma_z interaction (ZZ coupling), which is inherently

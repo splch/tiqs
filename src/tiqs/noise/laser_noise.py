@@ -11,7 +11,9 @@ def laser_phase_noise_op(
     ion: int,
     rate: float,
 ) -> qutip.Qobj:
-    """Effective collapse operator for laser phase noise: L = sqrt(rate/2) * sigma_z.
+    """Effective collapse operator for laser phase noise.
+
+    L = sqrt(rate/2) * sigma_z.
 
     Phase noise between Raman beams or on a direct optical drive appears as
     dephasing on the qubit. Rate is the effective linewidth of the
@@ -46,7 +48,8 @@ def laser_intensity_noise_op(
     Returns
     -------
     qutip.Qobj
-        Hermitian operator representing the intensity-noise Hamiltonian perturbation.
+        Hermitian operator representing the intensity-noise
+        Hamiltonian perturbation.
     """
     delta_omega = (fractional_rms / 2) * rabi_frequency
     return (delta_omega / 2) * ops.sigma_x(ion)

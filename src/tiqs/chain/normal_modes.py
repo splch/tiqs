@@ -6,7 +6,7 @@ import numpy as np
 
 from tiqs.chain.equilibrium import equilibrium_positions
 from tiqs.constants import ELECTRON_CHARGE, EPSILON_0, PI
-from tiqs.trap.paul_trap import PaulTrap
+from tiqs.trap import PaulTrap
 
 
 @dataclass
@@ -98,10 +98,12 @@ def normal_modes(n_ions: int, trap: PaulTrap) -> NormalModeResult:
     eigenvalues_ax, eigenvectors_ax = np.linalg.eigh(H_axial)
     axial_freqs = np.sqrt(np.maximum(eigenvalues_ax, 0.0))
 
-    # Radial Hessian: for transverse direction (x or y perpendicular to chain axis)
+    # Radial Hessian: transverse direction (x or y perpendicular to
+    # chain axis)
     # Diagonal: omega_r^2 - sum_{k!=i} C / |z_i - z_k|^3
     # Off-diagonal: +C / |z_i - z_j|^3
-    # (Note the SIGN DIFFERENCE from axial: radial Coulomb coupling is repulsive/defocusing)
+    # (Note the SIGN DIFFERENCE from axial: radial Coulomb coupling
+    # is repulsive/defocusing)
     H_radial = np.zeros((n_ions, n_ions))
     for i in range(n_ions):
         for j in range(n_ions):
