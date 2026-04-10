@@ -64,3 +64,42 @@ wavelengths and long-lived states but slower gate speeds (motional frequencies
 scale as $1/\sqrt{m}$), while **lighter ions** (Be$^+$, Mg$^+$) enable faster
 dynamics but demand challenging UV optics. The 2025-2026 industry trend strongly
 favors barium for its visible-wavelength scalability.
+
+### Trapped Electrons
+
+Bare electrons confined in Paul traps are a candidate platform for quantum
+computing. The qubit is the electron spin-1/2 in an applied magnetic field,
+with Zeeman splitting $f = g_e \mu_B B / h \approx 28$ GHz/T. Unlike atomic
+ions, electrons have no internal level structure, so cooling is resistive
+(via an RLC tank circuit) and spin-motion coupling is mediated by a magnetic
+field gradient rather than a laser wavevector. TIQS models trapped electrons
+via `tiqs.ElectronSpecies`.
+
+| Property | Electron | Typical ion (${}^{40}\text{Ca}^+$) |
+|----------|----------|---------------------|
+| Mass | $9.1 \times 10^{-31}$ kg | $6.6 \times 10^{-26}$ kg |
+| Qubit encoding | Spin Zeeman | Optical or hyperfine |
+| Qubit frequency | Tunable via $B$ ($\sim$1-30 GHz) | Fixed ($\sim$1-13 GHz) |
+| $T_1$ | $\infty$ (no decay channel) | $\infty$ (hyperfine) or $\sim$1 s (optical) |
+| Cooling | Resistive (RLC circuit) | Laser Doppler + sideband |
+| Spin-motion coupling | Magnetic field gradient | Laser wavevector |
+| Paul trap RF drive | 1-10 GHz | 10-100 MHz |
+| Secular frequencies | 30 MHz - 2 GHz | 1-5 MHz |
+
+The magnetic field gradient $dB/dz$ couples the electron spin to its motional
+mode:
+
+$$
+H_\text{grad} = \frac{g_e \mu_B}{2} \frac{dB}{dz}\, \hat{z}\, \sigma_z
+$$
+
+This is a $\sigma_z$-dependent force, making the **light-shift gate** the
+native entangling operation (rather than the MS gate, which requires additional
+microwave dressing to rotate the spin basis).
+
+#### References
+
+1. Yu, P. et al. "Feasibility study of quantum computing using trapped
+   electrons." *Phys. Rev. A* **105**, 022420 (2022).
+2. Hahn, H. et al. "Numerical investigations of electron dynamics in a linear
+   Paul trap." arXiv:2503.12379 (2025).
