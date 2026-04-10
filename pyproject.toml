@@ -5,7 +5,7 @@ description = "Lowest-level trapped-ion quantum computer simulator built on QuTi
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "qutip>=5.2.3",
+    "qutip[runtime_compilation]>=5.2.3",
 ]
 
 [project.optional-dependencies]
