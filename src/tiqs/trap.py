@@ -10,6 +10,7 @@ import numpy as np
 
 from tiqs.constants import ELECTRON_CHARGE
 from tiqs.species.data import IonSpecies
+from tiqs.species.electron import ElectronSpecies
 
 
 @dataclass
@@ -27,8 +28,8 @@ class PaulTrap:
         RF drive angular frequency in rad/s.
     r0 : float
         Characteristic ion-to-electrode distance in meters.
-    species : IonSpecies
-        The trapped ion species.
+    species : IonSpecies or ElectronSpecies
+        The trapped particle species.
     omega_axial : float or None
         Axial secular angular frequency in rad/s.
     u_dc_axial : float or None
@@ -42,7 +43,7 @@ class PaulTrap:
     v_rf: float
     omega_rf: float
     r0: float
-    species: IonSpecies
+    species: IonSpecies | ElectronSpecies
     omega_axial: float | None = None
     u_dc_axial: float | None = None
     z0: float = 2.5e-3
