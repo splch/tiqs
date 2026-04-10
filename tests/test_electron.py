@@ -448,3 +448,76 @@ class TestElectronAnalyticalExactness:
         )
         expected = np.cos(Omega * tlist)
         np.testing.assert_allclose(result.expect[0], expected, atol=0.01)
+
+    def test_hanneke_cyclotron_frequency(self):
+        """Hanneke et al. PRL 100, 120801 (2008): free cyclotron
+        frequency at B = 5.36 T is ~150 GHz.
+
+        nu_c = eB / (2*pi*m_e). Validates ELECTRON_MASS and
+        ELECTRON_CHARGE against the most precise single-particle
+        measurement ever performed."""
+        B = 5.36  # Tesla
+        nu_c = ELECTRON_CHARGE * B / (TWO_PI * ELECTRON_MASS)
+        assert nu_c == pytest.approx(150.0e9, rel=0.001)
+
+    def test_yu_hahn_radial_frequency(self):
+        """Yu et al. PRA 105, 022420 (2022): trap with V_rf = 14 V,
+        Omega_rf/(2pi) = 10.6 GHz, q = 0.53 should give
+        omega_r/(2pi) ~ 2 GHz.
+
+        Our pseudopotential (with DC axial correction) gives 1.97 GHz.
+        The ~1.5% difference from the stated 2 GHz is the Mathieu a
+        parameter correction from the 300 MHz axial confinement,
+        which our simulator correctly includes."""
+        trap = PaulTrap(
+            v_rf=14.0,
+            omega_rf=TWO_PI * 10.6e9,
+            r0=45.8e-6,
+            omega_axial=TWO_PI * 300e6,
+            species=ElectronSpecies(magnetic_field=0.0036),
+        )
+        assert trap.mathieu_q == pytest.approx(0.53, rel=0.01)
+        assert trap.omega_radial == pytest.approx(
+            TWO_PI * 2e9, rel=0.02
+        )
+
+    def test_hoven_pseudopotential_vs_measurement(self):
+        """Hoven et al. arXiv:2508.16407 (2025): measured electron
+        radial frequency 72 MHz at q = 0.11, Omega_rf = 1.6 GHz.
+
+        Pseudopotential predicts 59 MHz - the 18% discrepancy is
+        expected because their PCB slot geometry is not an ideal
+        quadrupole. This test documents the known limitation."""
+        trap = PaulTrap(
+            v_rf=6.4,
+            omega_rf=TWO_PI * 1.6e9,
+            r0=0.45e-3,
+            omega_axial=TWO_PI * 26e6,
+            species=ElectronSpecies(magnetic_field=0.1),
+        )
+        assert trap.mathieu_q == pytest.approx(0.11, rel=0.01)
+        # Pseudopotential prediction
+        omega_r_pseudo = trap.omega_radial / TWO_PI
+        assert omega_r_pseudo == pytest.approx(59e6, rel=0.02)
+        # Measured value is 72 MHz - 18% higher due to non-ideal
+        # geometry. The pseudopotential is a lower bound for real
+        # traps with higher-order multipole contributions.
+        assert omega_r_pseudo < 72e6
+
+    def test_yu_resistive_cooling_time(self):
+        """Yu et al. PRA 105, 022420 (2022): resistive cooling time
+        tau_c = m_e * d_eff^2 / (e^2 * Re(Z)) ~ 4 us.
+
+        Tank circuit: L = 250 nH, C = 1 pF, Q = 1000,
+        d_eff = 254 um, Re(Z) = Q * sqrt(L/C) = 500 kOhm."""
+        L = 250e-9
+        C = 1e-12
+        Q = 1000
+        d_eff = 254e-6
+        ReZ = Q * np.sqrt(L / C)
+        assert ReZ == pytest.approx(500e3, rel=0.01)
+        tau_c = ELECTRON_MASS * d_eff**2 / (ELECTRON_CHARGE**2 * ReZ)
+        assert tau_c == pytest.approx(4.6e-6, rel=0.01)
+        # Yu/Hahn report ~4 us; the 15% difference is within their
+        # stated approximation (neglects frequency-dependent coupling)
+        assert 3e-6 < tau_c < 6e-6
