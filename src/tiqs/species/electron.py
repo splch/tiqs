@@ -37,6 +37,8 @@ class ElectronSpecies:
         $$
         """
         return (
-            ELECTRON_G_FACTOR * BOHR_MAGNETON * self.magnetic_field
+            ELECTRON_G_FACTOR
+            * BOHR_MAGNETON
+            * self.magnetic_field
             / (HBAR * TWO_PI)
         )
