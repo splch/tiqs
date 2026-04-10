@@ -4,7 +4,7 @@ import numpy as np
 
 from tiqs.chain.normal_modes import NormalModeResult
 from tiqs.constants import HBAR
-from tiqs.species.data import IonSpecies
+from tiqs.species.ion import IonSpecies
 from tiqs.species.electron import ElectronSpecies
 
 

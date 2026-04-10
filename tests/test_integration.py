@@ -18,7 +18,7 @@ from tiqs.noise.motional import motional_heating_ops
 from tiqs.noise.qubit import qubit_dephasing_op
 from tiqs.simulation.config import SimulationConfig
 from tiqs.simulation.runner import SimulationRunner
-from tiqs.species.data import get_species
+from tiqs.species.ion import get_species
 from tiqs.trap import PaulTrap
 
 

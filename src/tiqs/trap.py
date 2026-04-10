@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from tiqs.constants import ELECTRON_CHARGE
-from tiqs.species.data import IonSpecies
+from tiqs.species.ion import IonSpecies
 from tiqs.species.electron import ElectronSpecies
 
 

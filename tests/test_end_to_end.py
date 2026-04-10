@@ -92,7 +92,7 @@ from tiqs.spam.measurement import (
     sample_measurement,
 )
 from tiqs.spam.preparation import optical_pumping_ops, prepare_qubit
-from tiqs.species.data import get_species
+from tiqs.species.ion import get_species
 from tiqs.species.transitions import Transition
 from tiqs.transport import (
     apply_shuttling_noise,

@@ -39,7 +39,7 @@ from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
 from tiqs.interaction.hamiltonian import carrier_hamiltonian
 from tiqs.noise.qubit import qubit_dephasing_op
-from tiqs.species.data import get_species
+from tiqs.species.ion import get_species
 from tiqs.species.electron import ElectronSpecies
 from tiqs.trap import PaulTrap
 

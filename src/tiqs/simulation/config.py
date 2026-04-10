@@ -4,7 +4,7 @@ noise parameters.
 
 from dataclasses import dataclass, field
 
-from tiqs.species.data import IonSpecies
+from tiqs.species.ion import IonSpecies
 from tiqs.trap import PaulTrap
 
 

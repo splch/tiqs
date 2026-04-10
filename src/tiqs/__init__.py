@@ -13,7 +13,7 @@ from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
 from tiqs.simulation.config import SimulationConfig
 from tiqs.simulation.runner import SimulationRunner
-from tiqs.species.data import IonSpecies, get_species
+from tiqs.species.ion import IonSpecies, get_species
 from tiqs.species.electron import ElectronSpecies
 from tiqs.trap import PaulTrap
 

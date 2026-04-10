@@ -6,7 +6,7 @@ from tiqs.chain.equilibrium import equilibrium_positions
 from tiqs.chain.lamb_dicke import lamb_dicke_parameters
 from tiqs.chain.normal_modes import normal_modes
 from tiqs.constants import TWO_PI
-from tiqs.species.data import get_species
+from tiqs.species.ion import get_species
 from tiqs.trap import PaulTrap
 
 

@@ -7,7 +7,7 @@ from tiqs.cooling.sideband_cooling import (
 )
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
-from tiqs.species.data import get_species
+from tiqs.species.ion import get_species
 
 
 class TestDopplerCooling:

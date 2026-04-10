@@ -5,7 +5,7 @@ import qutip
 from tiqs.constants import TWO_PI
 from tiqs.simulation.config import SimulationConfig
 from tiqs.simulation.runner import SimulationRunner
-from tiqs.species.data import get_species
+from tiqs.species.ion import get_species
 from tiqs.trap import PaulTrap
 
 

@@ -1,7 +1,7 @@
 """Doppler cooling: rate-equation estimate of final motional occupation."""
 
 from tiqs.constants import TWO_PI
-from tiqs.species.data import IonSpecies
+from tiqs.species.ion import IonSpecies
 
 
 def doppler_cooled_nbar(
