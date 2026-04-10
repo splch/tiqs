@@ -326,9 +326,66 @@ class TestElectronAnalyticalExactness:
     def test_thermal_nbar_bose_einstein(self):
         """Resistive cooling limit: nbar = 1 / (exp(hbar*omega/k_B*T) - 1).
         At T = 4 K, omega/2pi = 300 MHz: nbar ~ 278.
-        At T = 0.4 K: nbar ~ 27.7."""
+        At T = 0.4 K: nbar ~ 27.3.
+        At T = 0.4 K, omega/2pi = 2 GHz: nbar ~ 3.7."""
         omega = TWO_PI * 300e6
         nbar_4K = 1.0 / (np.exp(HBAR * omega / (BOLTZMANN * 4.0)) - 1)
         assert nbar_4K == pytest.approx(278, rel=0.01)
         nbar_04K = 1.0 / (np.exp(HBAR * omega / (BOLTZMANN * 0.4)) - 1)
         assert nbar_04K == pytest.approx(27.3, rel=0.01)
+        # Radial mode at 2 GHz, cryogenic 0.4 K
+        omega_rad = TWO_PI * 2e9
+        nbar_rad = 1.0 / (np.exp(HBAR * omega_rad / (BOLTZMANN * 0.4)) - 1)
+        assert nbar_rad == pytest.approx(3.69, rel=0.01)
+
+    def test_zpf_scaling_vs_ions(self):
+        """Zero-point motion scales as sqrt(m_ion/m_e) at same frequency.
+        For Ca-40: sqrt(m_Ca/m_e) ~ 270."""
+        ca = get_species("Ca40")
+        omega = TWO_PI * 1e6
+        x_zpf_e = np.sqrt(HBAR / (2 * ELECTRON_MASS * omega))
+        x_zpf_ca = np.sqrt(HBAR / (2 * ca.mass_kg * omega))
+        ratio = x_zpf_e / x_zpf_ca
+        expected = np.sqrt(ca.mass_kg / ELECTRON_MASS)
+        assert ratio == pytest.approx(expected, rel=1e-6)
+        assert ratio == pytest.approx(269.9, rel=0.01)
+
+    def test_length_scale_at_multiple_frequencies(self):
+        """Coulomb length scale l_0 = (e^2/(4*pi*eps0*m*omega^2))^(1/3)
+        evaluated at frequencies from Hahn et al. 2025."""
+        for freq_mhz, l0_um in [(30, 19.25), (300, 4.15)]:
+            omega = TWO_PI * freq_mhz * 1e6
+            l0 = (
+                ELECTRON_CHARGE**2
+                / (4 * PI * EPSILON_0 * ELECTRON_MASS * omega**2)
+            ) ** (1 / 3)
+            assert l0 == pytest.approx(l0_um * 1e-6, rel=0.01)
+
+    def test_gradient_keff_simplification(self):
+        """The full gradient coupling k_eff = g_e*mu_B*(dB/dz)/(hbar*omega_q)
+        simplifies to (dB/dz)/B since omega_q = g_e*mu_B*B/hbar.
+        Verify both paths give identical eta."""
+        gradient = 120.0
+        B = 0.1
+        omega_z = TWO_PI * 30e6
+        x_zpf = np.sqrt(HBAR / (2 * ELECTRON_MASS * omega_z))
+        omega_q = ELECTRON_G_FACTOR * BOHR_MAGNETON * B / HBAR
+        # Full formula
+        k_full = (
+            ELECTRON_G_FACTOR * BOHR_MAGNETON * gradient / (HBAR * omega_q)
+        )
+        # Simplified
+        k_simple = gradient / B
+        assert k_full == pytest.approx(k_simple, rel=1e-10)
+        # Both give same eta
+        eta_full = k_full * x_zpf
+        eta_simple = k_simple * x_zpf
+        assert eta_full == pytest.approx(eta_simple, rel=1e-10)
+
+    def test_zpf_at_multiple_frequencies(self):
+        """x_zpf values at frequencies from Hahn et al. 2025 and
+        Yu et al. 2022."""
+        for freq_mhz, zpf_nm in [(30, 554), (300, 175), (2000, 67.9)]:
+            omega = TWO_PI * freq_mhz * 1e6
+            x_zpf = np.sqrt(HBAR / (2 * ELECTRON_MASS * omega))
+            assert x_zpf == pytest.approx(zpf_nm * 1e-9, rel=0.01)
