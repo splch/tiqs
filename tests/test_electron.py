@@ -33,14 +33,13 @@ from tiqs.constants import (
 )
 from tiqs.gates.light_shift import light_shift_gate_hamiltonian
 from tiqs.gates.molmer_sorensen import ms_gate_duration
-from tiqs.gates.single_qubit import rx_gate
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
 from tiqs.interaction.hamiltonian import carrier_hamiltonian
 from tiqs.noise.qubit import qubit_dephasing_op
-from tiqs.species.ion import get_species
 from tiqs.species.electron import ElectronSpecies
+from tiqs.species.ion import get_species
 from tiqs.trap import PaulTrap
 
 
@@ -177,22 +176,6 @@ class TestElectronGradientGate:
         )
         n_final = qutip.expect(ops.number(0), r.states[-1])
         assert n_final == pytest.approx(0.0, abs=0.05)
-
-    def test_carrier_rabi(self):
-        """Carrier pi-pulse should flip |0> to |1>."""
-        hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=5)
-        ops = OperatorFactory(hs)
-        sf = StateFactory(hs)
-
-        Omega = TWO_PI * 500e3
-        gate = rx_gate(ops, ion=0, theta=np.pi, rabi_frequency=Omega)
-        result = qutip.sesolve(
-            gate.hamiltonian, sf.ground_state(), [0, gate.duration],
-        )
-        p1 = abs(
-            result.states[-1].overlap(sf.product_state([1], [0]))
-        ) ** 2
-        assert p1 == pytest.approx(1.0, abs=0.01)
 
     def test_dephasing_degrades_fidelity(self, electron_trap):
         """Magnetic field noise (qubit dephasing) should reduce

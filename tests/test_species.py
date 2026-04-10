@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from tiqs.species.ion import get_species
 from tiqs.species.electron import ElectronSpecies
+from tiqs.species.ion import get_species
 from tiqs.species.transitions import Transition
 
 

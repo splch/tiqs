@@ -4,6 +4,7 @@ noise parameters.
 
 from dataclasses import dataclass, field
 
+from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import IonSpecies
 from tiqs.trap import PaulTrap
 
@@ -14,8 +15,8 @@ class SimulationConfig:
 
     Attributes
     ----------
-    species : IonSpecies
-        Ion species for all qubits.
+    species : IonSpecies or ElectronSpecies
+        Trapped particle species for all qubits.
     trap : PaulTrap
         Trap configuration.
     n_ions : int
@@ -42,7 +43,7 @@ class SimulationConfig:
         Additional options passed to the QuTiP solver.
     """
 
-    species: IonSpecies
+    species: IonSpecies | ElectronSpecies
     trap: PaulTrap
     n_ions: int
     n_modes: int = 1
