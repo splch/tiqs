@@ -9,7 +9,8 @@ from dataclasses import dataclass
 import numpy as np
 
 from tiqs.constants import ELECTRON_CHARGE
-from tiqs.species.data import IonSpecies
+from tiqs.species.electron import ElectronSpecies
+from tiqs.species.ion import IonSpecies
 
 
 @dataclass
@@ -26,9 +27,9 @@ class PaulTrap:
     omega_rf : float
         RF drive angular frequency in rad/s.
     r0 : float
-        Characteristic ion-to-electrode distance in meters.
-    species : IonSpecies
-        The trapped ion species.
+        Characteristic particle-to-electrode distance in meters.
+    species : IonSpecies or ElectronSpecies
+        The trapped particle species.
     omega_axial : float or None
         Axial secular angular frequency in rad/s.
     u_dc_axial : float or None
@@ -42,7 +43,7 @@ class PaulTrap:
     v_rf: float
     omega_rf: float
     r0: float
-    species: IonSpecies
+    species: IonSpecies | ElectronSpecies
     omega_axial: float | None = None
     u_dc_axial: float | None = None
     z0: float = 2.5e-3
@@ -157,7 +158,8 @@ class PaulTrap:
         return depth_J / ELECTRON_CHARGE
 
     def micromotion_amplitude(self, displacement_from_null: float) -> float:
-        r"""Peak micromotion amplitude for an ion displaced from the RF null.
+        r"""Peak micromotion amplitude for a particle displaced from
+        the RF null.
 
         $x_\mathrm{mm} = (q/2) \cdot x_\mathrm{displacement}$,
         valid for $q \ll 1$.
@@ -165,7 +167,7 @@ class PaulTrap:
         return (self.mathieu_q / 2) * abs(displacement_from_null)
 
     def stray_field_displacement(self, stray_E_field: float) -> float:
-        r"""Static displacement of ion from RF null due to a stray DC field.
+        r"""Static displacement from RF null due to a stray DC field.
 
         $$
         x_\mathrm{displacement} = \frac{e E}{m \omega_r^2}

@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from tiqs.species.data import get_species
+from tiqs.species.ion import get_species
 from tiqs.trap import PaulTrap
 
 

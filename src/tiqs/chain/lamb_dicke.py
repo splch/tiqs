@@ -4,12 +4,13 @@ import numpy as np
 
 from tiqs.chain.normal_modes import NormalModeResult
 from tiqs.constants import HBAR
-from tiqs.species.data import IonSpecies
+from tiqs.species.electron import ElectronSpecies
+from tiqs.species.ion import IonSpecies
 
 
 def lamb_dicke_parameters(
     modes: NormalModeResult,
-    species: IonSpecies,
+    species: IonSpecies | ElectronSpecies,
     k_eff: float,
     direction: str = "axial",
 ) -> np.ndarray:
@@ -21,19 +22,19 @@ def lamb_dicke_parameters(
     $$
 
     where $b_{i,m}$ is the participation of ion $i$
-    in mode $m$, $M$ is the ion mass,
+    in mode $m$, $M$ is the particle mass,
     $\omega_m$ is the mode frequency, and
-    $k_\mathrm{eff}$ is the effective laser
-    wavevector component along the mode direction.
+    $k_\mathrm{eff}$ is the effective wavevector
+    component along the mode direction.
 
     Parameters
     ----------
     modes : NormalModeResult
         Result from normal_modes().
-    species : IonSpecies
-        Ion species (for mass).
+    species : IonSpecies or ElectronSpecies
+        Particle species (for mass).
     k_eff : float
-        Effective laser wavevector magnitude along the mode direction (rad/m).
+        Effective wavevector magnitude along the mode direction (rad/m).
         For counter-propagating Raman beams:
         $k_\mathrm{eff} = 2 k_\mathrm{laser}$.
         For co-propagating:

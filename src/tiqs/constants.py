@@ -20,6 +20,15 @@ AMU = 1.66053906660e-27
 EPSILON_0 = 8.8541878128e-12
 """Vacuum permittivity in F/m."""
 
+ELECTRON_MASS = 9.1093837015e-31
+"""Electron mass in kg."""
+
+BOHR_MAGNETON = 9.2740100783e-24
+"""Bohr magneton in J/T."""
+
+ELECTRON_G_FACTOR = 2.00231930436256
+"""Electron spin g-factor."""
+
 PI = np.pi
 """Pi."""
 
