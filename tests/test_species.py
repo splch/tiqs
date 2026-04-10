@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from tiqs.species.data import get_species
+from tiqs.species.electron import ElectronSpecies
 from tiqs.species.transitions import Transition
 
 
@@ -87,3 +88,21 @@ class TestIonSpecies:
             s = get_species(name)
             assert s.mass_amu > 0
             assert s.cooling_transition is not None
+
+
+class TestElectronSpecies:
+    def test_mass(self):
+        e = ElectronSpecies(magnetic_field=0.1)
+        assert e.mass_kg == pytest.approx(9.1094e-31, rel=1e-3)
+
+    def test_qubit_frequency(self):
+        """At B = 0.1 T, qubit frequency should be ~2.803 GHz."""
+        e = ElectronSpecies(magnetic_field=0.1)
+        assert e.qubit_frequency_hz == pytest.approx(2.803e9, rel=1e-2)
+
+    def test_frequency_scales_with_field(self):
+        e1 = ElectronSpecies(0.1)
+        e5 = ElectronSpecies(0.5)
+        assert e5.qubit_frequency_hz / e1.qubit_frequency_hz == pytest.approx(
+            5.0, rel=1e-6
+        )

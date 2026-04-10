@@ -1,7 +1,10 @@
 from tiqs.constants import (
     AMU,
+    BOHR_MAGNETON,
     BOLTZMANN,
     ELECTRON_CHARGE,
+    ELECTRON_G_FACTOR,
+    ELECTRON_MASS,
     EPSILON_0,
     HBAR,
     SPEED_OF_LIGHT,
@@ -30,3 +33,15 @@ def test_speed_of_light_value():
 
 def test_epsilon_0_value():
     assert abs(EPSILON_0 - 8.8541878128e-12) < 1e-21
+
+
+def test_electron_mass_value():
+    assert abs(ELECTRON_MASS - 9.1093837015e-31) < 1e-40
+
+
+def test_bohr_magneton_value():
+    assert abs(BOHR_MAGNETON - 9.2740100783e-24) < 1e-33
+
+
+def test_electron_g_factor_value():
+    assert abs(ELECTRON_G_FACTOR - 2.00231930436256) < 1e-14
