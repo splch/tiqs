@@ -84,3 +84,33 @@ def phase_space_trajectory(
         p_vals.append(qutip.expect(p_op, rho_mode))
 
     return np.array(x_vals), np.array(p_vals)
+
+
+def multi_mode_phase_space_trajectories(
+    states: list[qutip.Qobj],
+    mode_indices: list[int],
+    qubit_indices: list[int],
+) -> dict[int, tuple[np.ndarray, np.ndarray]]:
+    """Extract phase-space trajectories for multiple motional modes.
+
+    Convenience wrapper that calls :func:`phase_space_trajectory`
+    for each mode, returning a dictionary keyed by mode index.
+
+    Parameters
+    ----------
+    states : list[qutip.Qobj]
+        Time series of full system states.
+    mode_indices : list[int]
+        Motional mode indices (0-based among modes).
+    qubit_indices : list[int]
+        Indices of all qubit subsystems.
+
+    Returns
+    -------
+    dict[int, tuple[np.ndarray, np.ndarray]]
+        ``{mode_index: (x_mean, p_mean)}`` for each mode.
+    """
+    return {
+        m: phase_space_trajectory(states, m, qubit_indices)
+        for m in mode_indices
+    }

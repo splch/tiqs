@@ -19,7 +19,7 @@ class StateFactory:
         self.hs = hilbert_space
 
     def ground_state(self) -> qutip.Qobj:
-        """All qubits in |0> (down), all modes in vacuum |n=0>.
+        """All ions in |0>, all modes in vacuum |n=0>.
 
         Returns
         -------
@@ -27,8 +27,8 @@ class StateFactory:
             Tensor-product ket in the composite Hilbert space.
         """
         parts = []
-        for _ in range(self.hs.n_ions):
-            parts.append(qutip.basis(2, 0))
+        for i in range(self.hs.n_ions):
+            parts.append(qutip.basis(self.hs.ion_dim(i), 0))
         for m in range(self.hs.n_modes):
             parts.append(qutip.basis(self.hs.fock_dim(m), 0))
         return qutip.tensor(parts)
@@ -63,8 +63,13 @@ class StateFactory:
                 f" got {len(fock_states)}"
             )
         parts = []
-        for q in qubit_states:
-            parts.append(qutip.basis(2, q))
+        for i, q in enumerate(qubit_states):
+            d = self.hs.ion_dim(i)
+            if q < 0 or q >= d:
+                raise ValueError(
+                    f"State {q} out of range for ion {i} with dimension {d}"
+                )
+            parts.append(qutip.basis(d, q))
         for m, n in enumerate(fock_states):
             parts.append(qutip.basis(self.hs.fock_dim(m), n))
         return qutip.tensor(parts)
@@ -98,8 +103,8 @@ class StateFactory:
             )
 
         parts = []
-        for q in qubit_states:
-            parts.append(qutip.ket2dm(qutip.basis(2, q)))
+        for i, q in enumerate(qubit_states):
+            parts.append(qutip.ket2dm(qutip.basis(self.hs.ion_dim(i), q)))
         for m, nb in enumerate(n_bar):
             parts.append(qutip.thermal_dm(self.hs.fock_dim(m), nb))
         return qutip.tensor(parts)

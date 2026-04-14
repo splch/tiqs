@@ -59,6 +59,16 @@ class OperatorFactory:
             )
         return ion
 
+    def _validate_qubit_ion(self, ion: int) -> None:
+        """Raise if the ion is not a 2-level qubit."""
+        d = self.hs.ion_dim(ion)
+        if d != 2:
+            raise ValueError(
+                f"sigma_* operators require a 2-level ion, but "
+                f"ion {ion} has dimension {d}. "
+                f"Use transition() or spin_j() instead."
+            )
+
     def _mode_index(self, mode: int) -> int:
         """Validate mode index and return subsystem index."""
         if mode < 0 or mode >= self.hs.n_modes:
@@ -68,84 +78,43 @@ class OperatorFactory:
         return self.hs.n_ions + mode
 
     def sigma_x(self, ion: int) -> qutip.Qobj:
-        r"""Pauli $\sigma_x$ on the given ion.
+        r"""Pauli $\sigma_x$ on a qubit ion.
 
-        Parameters
-        ----------
-        ion : int
-            Index of the target ion qubit.
-
-        Returns
-        -------
-        qutip.Qobj
-            Pauli X operator on ion ``ion``, tensored with identities on all
-            other subsystems.
+        Raises ``ValueError`` for qudit ions (d > 2).
         """
+        self._validate_qubit_ion(ion)
         return self._full_operator(qutip.sigmax(), self._ion_index(ion))
 
     def sigma_y(self, ion: int) -> qutip.Qobj:
-        r"""Pauli $\sigma_y$ on the given ion.
+        r"""Pauli $\sigma_y$ on a qubit ion.
 
-        Parameters
-        ----------
-        ion : int
-            Index of the target ion qubit.
-
-        Returns
-        -------
-        qutip.Qobj
-            Pauli Y operator on ion ``ion``, tensored with identities on all
-            other subsystems.
+        Raises ``ValueError`` for qudit ions (d > 2).
         """
+        self._validate_qubit_ion(ion)
         return self._full_operator(qutip.sigmay(), self._ion_index(ion))
 
     def sigma_z(self, ion: int) -> qutip.Qobj:
-        r"""Pauli $\sigma_z$ on the given ion.
+        r"""Pauli $\sigma_z$ on a qubit ion.
 
-        Parameters
-        ----------
-        ion : int
-            Index of the target ion qubit.
-
-        Returns
-        -------
-        qutip.Qobj
-            Pauli Z operator on ion ``ion``, tensored with identities on all
-            other subsystems.
+        Raises ``ValueError`` for qudit ions (d > 2).
         """
+        self._validate_qubit_ion(ion)
         return self._full_operator(qutip.sigmaz(), self._ion_index(ion))
 
     def sigma_plus(self, ion: int) -> qutip.Qobj:
-        r"""Raising operator $\sigma_+ = |0\rangle\langle 1|$ on the given ion.
+        r"""Raising operator $\sigma_+ = |0\rangle\langle 1|$ on a qubit ion.
 
-        Parameters
-        ----------
-        ion : int
-            Index of the target ion qubit.
-
-        Returns
-        -------
-        qutip.Qobj
-            Raising operator on ion ``ion``, tensored with identities on all
-            other subsystems.
+        Raises ``ValueError`` for qudit ions (d > 2).
         """
+        self._validate_qubit_ion(ion)
         return self._full_operator(qutip.sigmap(), self._ion_index(ion))
 
     def sigma_minus(self, ion: int) -> qutip.Qobj:
-        r"""Lowering operator
-        $\sigma_- = |1\rangle\langle 0|$ on the given ion.
+        r"""Lowering operator $\sigma_- = |1\rangle\langle 0|$ on a qubit ion.
 
-        Parameters
-        ----------
-        ion : int
-            Index of the target ion qubit.
-
-        Returns
-        -------
-        qutip.Qobj
-            Lowering operator on ion ``ion``, tensored with identities on all
-            other subsystems.
+        Raises ``ValueError`` for qudit ions (d > 2).
         """
+        self._validate_qubit_ion(ion)
         return self._full_operator(qutip.sigmam(), self._ion_index(ion))
 
     def annihilate(self, mode: int) -> qutip.Qobj:
@@ -248,3 +217,86 @@ class OperatorFactory:
             Identity operator spanning every subsystem.
         """
         return qutip.tensor([qutip.qeye(d) for d in self.hs.dims])
+
+    def transition(self, ion: int, level_i: int, level_j: int) -> qutip.Qobj:
+        r"""Transition operator $|i\rangle\langle j|$ on the given ion.
+
+        The fundamental building block for qudit operations.
+
+        Parameters
+        ----------
+        ion : int
+        level_i, level_j : int
+            Level indices (0 to d-1).
+        """
+        idx = self._ion_index(ion)
+        d = self.hs.ion_dim(ion)
+        if not (0 <= level_i < d and 0 <= level_j < d):
+            raise IndexError(
+                f"Level indices ({level_i}, {level_j}) out of "
+                f"range for ion {ion} with dimension {d}"
+            )
+        op = qutip.basis(d, level_i) * qutip.basis(d, level_j).dag()
+        return self._full_operator(op, idx)
+
+    def transition_x(self, ion: int, level_i: int, level_j: int) -> qutip.Qobj:
+        r"""Hermitian transition operator
+        $|i\rangle\langle j| + |j\rangle\langle i|$.
+
+        Analogous to $\sigma_x$ restricted to the
+        $\{|i\rangle, |j\rangle\}$ subspace.
+        """
+        return self.transition(ion, level_i, level_j) + self.transition(
+            ion, level_j, level_i
+        )
+
+    def transition_y(self, ion: int, level_i: int, level_j: int) -> qutip.Qobj:
+        r"""Hermitian transition operator
+        $-i|i\rangle\langle j| + i|j\rangle\langle i|$.
+
+        Analogous to $\sigma_y$ restricted to the
+        $\{|i\rangle, |j\rangle\}$ subspace.
+        """
+        return -1j * self.transition(
+            ion, level_i, level_j
+        ) + 1j * self.transition(ion, level_j, level_i)
+
+    def transition_z(self, ion: int, level_i: int, level_j: int) -> qutip.Qobj:
+        r"""Diagonal operator
+        $|i\rangle\langle i| - |j\rangle\langle j|$.
+
+        Analogous to $\sigma_z$ restricted to the
+        $\{|i\rangle, |j\rangle\}$ subspace.
+        """
+        return self.projector(ion, level_i) - self.projector(ion, level_j)
+
+    def projector(self, ion: int, level: int) -> qutip.Qobj:
+        r"""Projector $|k\rangle\langle k|$ on the given ion."""
+        idx = self._ion_index(ion)
+        d = self.hs.ion_dim(ion)
+        if not (0 <= level < d):
+            raise IndexError(
+                f"Level {level} out of range for ion {ion} with dimension {d}"
+            )
+        op = qutip.ket2dm(qutip.basis(d, level))
+        return self._full_operator(op, idx)
+
+    def spin_j(self, ion: int, axis: str) -> qutip.Qobj:
+        r"""Generalized spin-$j$ operator on the given ion.
+
+        Parameters
+        ----------
+        ion : int
+        axis : str
+            One of ``'x'``, ``'y'``, ``'z'``, ``'+'``, ``'-'``.
+
+        Returns
+        -------
+        qutip.Qobj
+            Spin-$j$ operator where $j = (d-1)/2$.
+        """
+        idx = self._ion_index(ion)
+        d = self.hs.ion_dim(ion)
+        j = (d - 1) / 2
+        op = qutip.jmat(j, axis)
+        return self._full_operator(op, idx)

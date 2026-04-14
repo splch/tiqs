@@ -1,14 +1,28 @@
 """Top-level simulation runner: assembles Hamiltonians, noise, and solvers."""
 
+from __future__ import annotations
+
 import math
+from typing import TYPE_CHECKING
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from tiqs.pulses import Pulse
 import qutip
 
 from tiqs.chain.lamb_dicke import lamb_dicke_parameters
 from tiqs.chain.normal_modes import normal_modes
 from tiqs.constants import TWO_PI
-from tiqs.gates.molmer_sorensen import ms_gate_duration, ms_gate_hamiltonian
+from tiqs.gates.calibration import (
+    calibrate_multi_tone_ms,
+    calibrate_single_tone_ms,
+)
+from tiqs.gates.molmer_sorensen import (
+    ms_gate_duration,
+    ms_gate_hamiltonian,
+    ms_multimode_hamiltonian,
+)
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
@@ -51,12 +65,11 @@ class SimulationRunner:
         self.ops = OperatorFactory(self.hs)
         self.sf = StateFactory(self.hs)
 
-        if config.species.qubit_wavelength is not None:
-            # Optical qubit: single beam, k_eff = 2*pi/lambda
+        if config.gradient is not None:
+            k_eff = config.gradient.effective_k(config.species)
+        elif config.species.qubit_wavelength is not None:
             k_eff = TWO_PI / config.species.qubit_wavelength
         elif config.species.raman_wavelength is not None:
-            # Hyperfine qubit with counter-propagating Raman beams:
-            # k_eff = 2 * 2*pi/lambda
             k_eff = 2 * TWO_PI / config.species.raman_wavelength
         else:
             k_eff = TWO_PI / 400e-9
@@ -96,6 +109,16 @@ class SimulationRunner:
             if cfg.t1_qubit is not None and cfg.t1_qubit < math.inf:
                 c_ops.append(
                     spontaneous_emission_op(self.ops, i, cfg.t1_qubit)
+                )
+            if cfg.microwave_linewidth is not None:
+                from tiqs.noise.microwave_noise import (
+                    microwave_phase_noise_op,
+                )
+
+                c_ops.append(
+                    microwave_phase_noise_op(
+                        self.ops, i, cfg.microwave_linewidth
+                    )
                 )
 
         return c_ops
@@ -196,42 +219,39 @@ class SimulationRunner:
     def run_ms_gate(
         self,
         ions: list[int],
-        mode: int = 0,
+        mode: int | None = None,
+        modes: list[int] | None = None,
         detuning: float | None = None,
         loops: int = 1,
+        drive: str = "single_tone",
         n_steps: int = 500,
     ) -> qutip.Result:
         r"""Run a Molmer-Sorensen entangling gate.
 
-        Uses the time-dependent Hamiltonian from
-        ``ms_gate_hamiltonian`` with Rabi frequency calibrated so
-        that the geometric phase accumulates to $\pi/4$ over the
-        gate duration, producing a maximally entangling gate.
-
-        For the MS gate the geometric phase is
-
-        $$
-        \phi = 2\pi\left(\frac{\eta\,\Omega}{\delta}\right)^2 K
-        $$
-
-        where $K$ is the number of loops. For maximally entangling:
-        $\phi = \pi/4$, giving
-        $\eta\,\Omega = \delta / (4\sqrt{K})$.
-        Hence $\Omega = \delta / (4\,\bar{\eta}\,\sqrt{K})$.
+        When ``mode`` is given (or neither ``mode`` nor ``modes``),
+        the original single-mode Hamiltonian is used.  When
+        ``modes`` is given, the multi-mode Hamiltonian sums over
+        all listed modes with calibrated parameters.
 
         Parameters
         ----------
         ions : list[int]
             Indices of the two ions to entangle.
-        mode : int, optional
-            Motional mode index (default 0, the COM mode).
+        mode : int or None, optional
+            Single motional mode index.  Mutually exclusive with
+            *modes*.
+        modes : list[int] or None, optional
+            Motional mode indices for multi-mode gate.  Mutually
+            exclusive with *mode*.
         detuning : float or None, optional
-            Detuning from the motional sideband in rad/s. If
-            ``None``, defaults to ``2*pi * 1 kHz``.
+            Detuning from the motional sideband in rad/s.
         loops : int, optional
             Number of phase-space loops (default 1).
+        drive : str, optional
+            ``"single_tone"`` or ``"multi_tone"`` (only used in
+            multi-mode path).
         n_steps : int, optional
-            Number of time steps for the solver (default 500).
+            Number of solver time steps (default 500).
 
         Returns
         -------
@@ -241,8 +261,35 @@ class SimulationRunner:
         Raises
         ------
         ValueError
-            If ``ions`` does not contain exactly two indices.
+            If both *mode* and *modes* are given, or if *ions*
+            does not contain exactly two indices.
         """
+        if mode is not None and modes is not None:
+            raise ValueError(
+                "Specify either 'mode' (single-mode) or 'modes' "
+                "(multi-mode), not both."
+            )
+
+        if mode is not None or modes is None:
+            return self._run_ms_single_mode(
+                ions,
+                0 if mode is None else mode,
+                detuning,
+                loops,
+                n_steps,
+            )
+
+        return self._run_ms_multi_mode(
+            ions,
+            modes,
+            detuning,
+            loops,
+            drive,
+            n_steps,
+        )
+
+    def _run_ms_single_mode(self, ions, mode, detuning, loops, n_steps):
+        """Single-mode MS gate (original code path)."""
         if len(ions) != 2:
             raise ValueError(
                 f"run_ms_gate Rabi calibration is valid for exactly "
@@ -265,6 +312,265 @@ class SimulationRunner:
             eta=eta_ions,
             rabi_frequency=Omega,
             detuning=detuning,
+        )
+        tlist = np.linspace(0, tau, n_steps)
+        return self._solve(H, tlist)
+
+    def _run_ms_multi_mode(
+        self,
+        ions,
+        modes,
+        detuning,
+        loops,
+        drive,
+        n_steps,
+    ):
+        """Multi-mode MS gate using calibrated parameters."""
+        if len(ions) != 2:
+            raise ValueError(
+                "Multi-mode auto-calibration requires exactly "
+                f"2 ions, got {len(ions)}."
+            )
+
+        mode_freqs = self.modes.axial_freqs[modes]
+        eta_slice = self.eta[np.ix_(ions, modes)]
+
+        if drive == "single_tone":
+            params = calibrate_single_tone_ms(
+                eta=eta_slice,
+                mode_frequencies=mode_freqs,
+                target_mode=0,
+                ion_pair=(0, 1),
+                loops=loops,
+                detuning=detuning,
+            )
+        elif drive == "multi_tone":
+            params = calibrate_multi_tone_ms(
+                eta=eta_slice,
+                mode_frequencies=mode_freqs,
+                ion_pair=(0, 1),
+                loops=loops,
+                base_detuning=detuning,
+            )
+        else:
+            raise ValueError(f"Unknown drive scheme: {drive}")
+
+        H = ms_multimode_hamiltonian(
+            self.ops,
+            ions=ions,
+            modes=modes,
+            eta=eta_slice,
+            rabi_frequency=params["rabi_frequency"],
+            detunings=params["detunings"],
+        )
+        tau = params["gate_time"]
+        tlist = np.linspace(0, tau, n_steps)
+        return self._solve(H, tlist)
+
+    def run_smooth_ms_gate(
+        self,
+        ions: list[int],
+        mode: int = 0,
+        detuning: float | None = None,
+        ramp_amplitude: float | None = None,
+        loops: int = 1,
+        n_steps: int = 1000,
+    ) -> qutip.Result:
+        r"""Run a smooth (adiabatically ramped) MS gate.
+
+        The detuning ramps as
+        $\delta(t) = \delta_0 + A\cos(2\pi t/\tau)$, starting
+        far-detuned and sweeping close to the mode at $t = \tau/2$.
+        This suppresses residual spin-motion entanglement without
+        requiring ground-state cooling.
+
+        Parameters
+        ----------
+        ions : list[int]
+            Indices of the two ions to entangle.
+        mode : int
+            Motional mode index.
+        detuning : float or None
+            Mean detuning $\delta_0$ (rad/s).  Default
+            ``2*pi * 1 kHz``.
+        ramp_amplitude : float or None
+            Sinusoidal ramp amplitude *A* (rad/s).  Default
+            ``0.8 * detuning``.
+        loops : int
+            Phase-space loops.
+        n_steps : int
+            Time steps (default 1000).
+
+        Returns
+        -------
+        qutip.Result
+        """
+        from tiqs.gates.molmer_sorensen import ms_gate_hamiltonian_pulsed
+        from tiqs.pulses import smooth_ms_pulse
+
+        if len(ions) != 2:
+            raise ValueError(f"Expected 2 ions, got {len(ions)}")
+
+        eta_ions = [float(self.eta[i, mode]) for i in ions]
+        eta_avg = np.mean(eta_ions)
+
+        if detuning is None:
+            detuning = TWO_PI * 1e3
+        if ramp_amplitude is None:
+            ramp_amplitude = 0.8 * detuning
+
+        Omega = detuning / (4 * eta_avg * np.sqrt(loops))
+        pulse = smooth_ms_pulse(
+            delta_0=detuning,
+            ramp_amplitude=ramp_amplitude,
+            rabi_frequency=Omega,
+            loops=loops,
+        )
+
+        tlist = np.linspace(0, pulse.duration, n_steps)
+        H = ms_gate_hamiltonian_pulsed(
+            self.ops,
+            ions=ions,
+            mode=mode,
+            eta=eta_ions,
+            pulse=pulse,
+            tlist=tlist,
+        )
+        return self._solve(H, tlist)
+
+    def run_pulsed_ms_gate(
+        self,
+        ions: list[int],
+        pulse: Pulse,
+        mode: int = 0,
+        n_steps: int = 1000,
+    ) -> qutip.Result:
+        """Run an MS gate with an arbitrary pulse profile.
+
+        Parameters
+        ----------
+        ions : list[int]
+        pulse : Pulse
+        mode : int
+        n_steps : int
+        """
+        from tiqs.gates.molmer_sorensen import ms_gate_hamiltonian_pulsed
+
+        eta_ions = [float(self.eta[i, mode]) for i in ions]
+        tlist = np.linspace(0, pulse.duration, n_steps)
+        H = ms_gate_hamiltonian_pulsed(
+            self.ops,
+            ions=ions,
+            mode=mode,
+            eta=eta_ions,
+            pulse=pulse,
+            tlist=tlist,
+        )
+        return self._solve(H, tlist)
+
+    def run_gradient_zz_gate(
+        self,
+        ions: list[int],
+        mode: int = 0,
+        detuning: float | None = None,
+        loops: int = 1,
+        n_steps: int = 500,
+    ) -> qutip.Result:
+        r"""Run a ZZ entangling gate via magnetic gradient coupling.
+
+        Uses the light-shift Hamiltonian with gradient-derived
+        Lamb-Dicke parameters.  This is the native gate for
+        gradient-coupled qubits (no dressing required).
+
+        Parameters
+        ----------
+        ions : list[int]
+        mode : int
+        detuning : float or None
+        loops : int
+        n_steps : int
+        """
+        from tiqs.gates.light_shift import light_shift_gate_hamiltonian
+
+        if self.config.gradient is None:
+            raise ValueError(
+                "run_gradient_zz_gate requires a gradient in SimulationConfig."
+            )
+        if len(ions) != 2:
+            raise ValueError(f"Expected 2 ions, got {len(ions)}")
+
+        eta_ions = [float(self.eta[i, mode]) for i in ions]
+        eta_avg = np.mean(np.abs(eta_ions))
+
+        if detuning is None:
+            detuning = TWO_PI * 1e3
+
+        Omega = detuning / (4 * eta_avg * np.sqrt(loops))
+        tau = ms_gate_duration(detuning, loops)
+
+        H = light_shift_gate_hamiltonian(
+            self.ops,
+            ions=ions,
+            mode=mode,
+            eta=eta_ions,
+            rabi_frequency=Omega,
+            detuning=detuning,
+        )
+        tlist = np.linspace(0, tau, n_steps)
+        return self._solve(H, tlist)
+
+    def run_gradient_ms_gate(
+        self,
+        ions: list[int],
+        mode: int = 0,
+        detuning: float | None = None,
+        dressing_rabi_frequency: float | None = None,
+        loops: int = 1,
+        n_steps: int = 500,
+    ) -> qutip.Result:
+        r"""Run an MS (XX) gate via gradient + dressing.
+
+        Requires a strong dressing drive to rotate the native
+        $\sigma_z$ force into $\sigma_x$.
+
+        Parameters
+        ----------
+        ions : list[int]
+        mode : int
+        detuning : float or None
+        dressing_rabi_frequency : float or None
+        loops : int
+        n_steps : int
+        """
+        from tiqs.gates.microwave_ms import microwave_ms_gate_hamiltonian
+
+        if self.config.gradient is None:
+            raise ValueError(
+                "run_gradient_ms_gate requires a gradient in SimulationConfig."
+            )
+        if len(ions) != 2:
+            raise ValueError(f"Expected 2 ions, got {len(ions)}")
+
+        eta_ions = [float(self.eta[i, mode]) for i in ions]
+        eta_avg = np.mean(np.abs(eta_ions))
+
+        if detuning is None:
+            detuning = TWO_PI * 1e3
+
+        Omega = detuning / (4 * eta_avg * np.sqrt(loops))
+        tau = ms_gate_duration(detuning, loops)
+
+        if dressing_rabi_frequency is None:
+            dressing_rabi_frequency = 100 * eta_avg * Omega
+
+        H = microwave_ms_gate_hamiltonian(
+            self.ops,
+            ions=ions,
+            mode=mode,
+            eta=eta_ions,
+            gate_rabi_frequency=Omega,
+            detuning=detuning,
+            dressing_rabi_frequency=dressing_rabi_frequency,
         )
         tlist = np.linspace(0, tau, n_steps)
         return self._solve(H, tlist)

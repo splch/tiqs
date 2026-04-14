@@ -1,15 +1,17 @@
 """Lamb-Dicke parameter calculation for ion-mode-laser combinations."""
 
+from __future__ import annotations
+
 import numpy as np
 
-from tiqs.chain.normal_modes import NormalModeResult
+from tiqs.chain.normal_modes import NormalModeResult, PenningNormalModeResult
 from tiqs.constants import HBAR
 from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import IonSpecies
 
 
 def lamb_dicke_parameters(
-    modes: NormalModeResult,
+    modes: NormalModeResult | PenningNormalModeResult,
     species: IonSpecies | ElectronSpecies,
     k_eff: float,
     direction: str = "axial",
@@ -51,11 +53,18 @@ def lamb_dicke_parameters(
         $(N_\mathrm{ions}, N_\mathrm{modes})$.
         $\eta[i, m]$ is the Lamb-Dicke parameter for ion $i$ and mode $m$.
     """
-    direction_map = {
-        "axial": (modes.axial_freqs, modes.axial_vectors),
-        "radial_x": (modes.radial_x_freqs, modes.radial_x_vectors),
-        "radial_y": (modes.radial_y_freqs, modes.radial_y_vectors),
-    }
+    if isinstance(modes, PenningNormalModeResult):
+        direction_map = {
+            "axial": (modes.axial_freqs, modes.axial_vectors),
+            "cyclotron": (modes.cyclotron_freqs, modes.cyclotron_vectors),
+            "magnetron": (modes.magnetron_freqs, modes.magnetron_vectors),
+        }
+    else:
+        direction_map = {
+            "axial": (modes.axial_freqs, modes.axial_vectors),
+            "radial_x": (modes.radial_x_freqs, modes.radial_x_vectors),
+            "radial_y": (modes.radial_y_freqs, modes.radial_y_vectors),
+        }
     if direction not in direction_map:
         raise ValueError(f"Unknown direction: {direction}")
     freqs, vectors = direction_map[direction]

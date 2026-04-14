@@ -4,9 +4,10 @@ noise parameters.
 
 from dataclasses import dataclass, field
 
+from tiqs.interaction.gradient import MagneticGradient
 from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import IonSpecies
-from tiqs.trap import PaulTrap
+from tiqs.trap import TrapLike
 
 
 @dataclass
@@ -44,7 +45,7 @@ class SimulationConfig:
     """
 
     species: IonSpecies | ElectronSpecies
-    trap: PaulTrap
+    trap: TrapLike
     n_ions: int
     n_modes: int = 1
     n_fock: int = 15
@@ -55,6 +56,8 @@ class SimulationConfig:
     t1_qubit: float | None = None
     photon_scattering_rate: float | None = None
     n_bar_initial: float = 0.0
+    gradient: MagneticGradient | None = None
+    microwave_linewidth: float | None = None
     solver_options: dict[str, object] = field(
         default_factory=lambda: {"max_step": 0.0, "nsteps": 5000}
     )

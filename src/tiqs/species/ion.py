@@ -50,6 +50,15 @@ class IonSpecies:
     qubit_t1: float
     metastable_lifetime: float | None = None
     raman_wavelength: float | None = None
+    qubit_zeeman_sensitivity: float | None = None
+
+    @property
+    def supports_microwave_gate(self) -> bool:
+        """Whether this species has a field-sensitive transition."""
+        return (
+            self.qubit_zeeman_sensitivity is not None
+            and self.qubit_zeeman_sensitivity != 0.0
+        )
 
     @property
     def mass_kg(self) -> float:
@@ -106,6 +115,7 @@ _SPECIES_DB: dict[str, IonSpecies] = {
         ),
         qubit_t1=math.inf,
         raman_wavelength=355e-9,
+        qubit_zeeman_sensitivity=TWO_PI * 2.1e9,
     ),
     # Calcium-40: Optical qubit at 729 nm
     "Ca40": IonSpecies(
@@ -160,6 +170,7 @@ _SPECIES_DB: dict[str, IonSpecies] = {
         qubit_t1=math.inf,
         metastable_lifetime=1.168,
         raman_wavelength=397e-9,
+        qubit_zeeman_sensitivity=TWO_PI * 2.45e9,
     ),
     # Barium-137: Hyperfine qubit with all-visible wavelengths
     "Ba137": IonSpecies(
@@ -185,6 +196,7 @@ _SPECIES_DB: dict[str, IonSpecies] = {
         qubit_t1=math.inf,
         metastable_lifetime=30.14,
         raman_wavelength=515e-9,
+        qubit_zeeman_sensitivity=TWO_PI * 2.8e9,
     ),
     # Beryllium-9: Lightest ion qubit, hyperfine
     "Be9": IonSpecies(
@@ -203,6 +215,7 @@ _SPECIES_DB: dict[str, IonSpecies] = {
         repump_transitions=(),
         qubit_t1=math.inf,
         raman_wavelength=313e-9,
+        qubit_zeeman_sensitivity=TWO_PI * 22.4e9,
     ),
     # Strontium-88: Optical qubit at 674 nm
     "Sr88": IonSpecies(

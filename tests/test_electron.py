@@ -75,9 +75,7 @@ class TestElectronTrap:
         assert electron_trap.is_stable()
 
     def test_secular_frequencies(self, electron_trap):
-        assert electron_trap.omega_axial == pytest.approx(
-            TWO_PI * 30e6
-        )
+        assert electron_trap.omega_axial == pytest.approx(TWO_PI * 30e6)
         assert electron_trap.omega_radial > electron_trap.omega_axial
 
     def test_two_electron_equilibrium(self, electron_trap):
@@ -124,9 +122,7 @@ class TestElectronGradientGate:
         modes = normal_modes(2, electron_trap)
         species = electron_trap.species
         k_eff = _gradient_k_eff(120.0, species.magnetic_field)
-        eta_matrix = lamb_dicke_parameters(
-            modes, species, k_eff, "axial"
-        )
+        eta_matrix = lamb_dicke_parameters(modes, species, k_eff, "axial")
 
         hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=15)
         ops = OperatorFactory(hs)
@@ -137,7 +133,12 @@ class TestElectronGradientGate:
         tau = ms_gate_duration(delta)
 
         H = light_shift_gate_hamiltonian(
-            ops, [0, 1], 0, eta, Omega, delta,
+            ops,
+            [0, 1],
+            0,
+            eta,
+            Omega,
+            delta,
         )
 
         # Start in |+,+> (sigma_x eigenstates)
@@ -145,7 +146,10 @@ class TestElectronGradientGate:
         psi0 = qutip.tensor(plus, plus, qutip.basis(15, 0))
         tlist = np.linspace(0, tau, 500)
         result = qutip.sesolve(
-            H, psi0, tlist, options={"max_step": tau / 100},
+            H,
+            psi0,
+            tlist,
+            options={"max_step": tau / 100},
         )
 
         # Entanglement: reduced single-qubit state is mixed
@@ -165,13 +169,20 @@ class TestElectronGradientGate:
         Omega = delta / (4 * eta)
         tau = ms_gate_duration(delta)
         H = light_shift_gate_hamiltonian(
-            ops, [0, 1], 0, [eta, eta], Omega, delta,
+            ops,
+            [0, 1],
+            0,
+            [eta, eta],
+            Omega,
+            delta,
         )
 
         plus = (qutip.basis(2, 0) + qutip.basis(2, 1)).unit()
         psi0 = qutip.tensor(plus, plus, qutip.basis(20, 0))
         r = qutip.sesolve(
-            H, psi0, np.linspace(0, tau, 500),
+            H,
+            psi0,
+            np.linspace(0, tau, 500),
             options={"max_step": tau / 100},
         )
         n_final = qutip.expect(ops.number(0), r.states[-1])
@@ -188,7 +199,12 @@ class TestElectronGradientGate:
         Omega = delta / (4 * eta)
         tau = ms_gate_duration(delta)
         H = light_shift_gate_hamiltonian(
-            ops, [0, 1], 0, [eta, eta], Omega, delta,
+            ops,
+            [0, 1],
+            0,
+            [eta, eta],
+            Omega,
+            delta,
         )
 
         plus = (qutip.basis(2, 0) + qutip.basis(2, 1)).unit()
@@ -196,23 +212,25 @@ class TestElectronGradientGate:
         tlist = np.linspace(0, tau, 500)
 
         r_clean = qutip.sesolve(
-            H, psi0, tlist, options={"max_step": tau / 100},
+            H,
+            psi0,
+            tlist,
+            options={"max_step": tau / 100},
         )
-        purity_clean = (
-            r_clean.states[-1].ptrace([0, 1]) ** 2
-        ).tr().real
+        purity_clean = (r_clean.states[-1].ptrace([0, 1]) ** 2).tr().real
 
         c_ops = [
             qubit_dephasing_op(ops, 0, t2=100e-6),
             qubit_dephasing_op(ops, 1, t2=100e-6),
         ]
         r_noisy = qutip.mesolve(
-            H, psi0, tlist, c_ops=c_ops,
+            H,
+            psi0,
+            tlist,
+            c_ops=c_ops,
             options={"max_step": tau / 100},
         )
-        purity_noisy = (
-            r_noisy.states[-1].ptrace([0, 1]) ** 2
-        ).tr().real
+        purity_noisy = (r_noisy.states[-1].ptrace([0, 1]) ** 2).tr().real
 
         assert purity_noisy < purity_clean
 
@@ -232,9 +250,7 @@ class TestElectronAnalyticalExactness:
 
     def test_gyromagnetic_ratio(self):
         """Electron gyromagnetic ratio: g_e * mu_B / h ~ 28.025 GHz/T."""
-        gamma_hz_per_T = (
-            ELECTRON_G_FACTOR * BOHR_MAGNETON / (HBAR * TWO_PI)
-        )
+        gamma_hz_per_T = ELECTRON_G_FACTOR * BOHR_MAGNETON / (HBAR * TWO_PI)
         assert gamma_hz_per_T == pytest.approx(28.025e9, rel=1e-4)
 
     def test_mathieu_q_formula(self):
@@ -244,11 +260,14 @@ class TestElectronAnalyticalExactness:
         r0 = 300e-6
         V_rf = 7.8
         trap = PaulTrap(
-            v_rf=V_rf, omega_rf=omega_rf, r0=r0,
-            omega_axial=TWO_PI * 30e6, species=e,
+            v_rf=V_rf,
+            omega_rf=omega_rf,
+            r0=r0,
+            omega_axial=TWO_PI * 30e6,
+            species=e,
         )
-        q_hand = 2 * ELECTRON_CHARGE * V_rf / (
-            ELECTRON_MASS * omega_rf**2 * r0**2
+        q_hand = (
+            2 * ELECTRON_CHARGE * V_rf / (ELECTRON_MASS * omega_rf**2 * r0**2)
         )
         assert trap.mathieu_q == pytest.approx(q_hand, rel=1e-10)
 
@@ -256,8 +275,11 @@ class TestElectronAnalyticalExactness:
         """Trap depth = q * V_rf / 8 in eV."""
         e = ElectronSpecies(0.1)
         trap = PaulTrap(
-            v_rf=7.8, omega_rf=TWO_PI * 1.6e9, r0=300e-6,
-            omega_axial=TWO_PI * 30e6, species=e,
+            v_rf=7.8,
+            omega_rf=TWO_PI * 1.6e9,
+            r0=300e-6,
+            omega_axial=TWO_PI * 30e6,
+            species=e,
         )
         depth_from_q = trap.mathieu_q * trap.v_rf / 8
         assert trap.pseudopotential_depth_eV == pytest.approx(
@@ -270,8 +292,11 @@ class TestElectronAnalyticalExactness:
         e = ElectronSpecies(0.1)
         omega_z = TWO_PI * 30e6
         trap = PaulTrap(
-            v_rf=7.8, omega_rf=TWO_PI * 1.6e9, r0=300e-6,
-            omega_axial=omega_z, species=e,
+            v_rf=7.8,
+            omega_rf=TWO_PI * 1.6e9,
+            r0=300e-6,
+            omega_axial=omega_z,
+            species=e,
         )
         pos = equilibrium_positions(2, trap)
         l_scale = (
@@ -289,12 +314,18 @@ class TestElectronAnalyticalExactness:
         e = ElectronSpecies(0.1)
         omega_z = TWO_PI * 1e6
         trap_ca = PaulTrap(
-            v_rf=300, omega_rf=TWO_PI * 30e6, r0=0.5e-3,
-            omega_axial=omega_z, species=ca,
+            v_rf=300,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=omega_z,
+            species=ca,
         )
         trap_e = PaulTrap(
-            v_rf=7.8, omega_rf=TWO_PI * 1.6e9, r0=300e-6,
-            omega_axial=omega_z, species=e,
+            v_rf=7.8,
+            omega_rf=TWO_PI * 1.6e9,
+            r0=300e-6,
+            omega_axial=omega_z,
+            species=e,
         )
         d_ca = equilibrium_positions(2, trap_ca)
         d_e = equilibrium_positions(2, trap_e)
@@ -312,13 +343,19 @@ class TestElectronAnalyticalExactness:
         omega_q = ELECTRON_G_FACTOR * BOHR_MAGNETON * B / HBAR
         x_zpf = np.sqrt(HBAR / (2 * ELECTRON_MASS * omega_z))
         eta_hand = (
-            ELECTRON_G_FACTOR * BOHR_MAGNETON * gradient * x_zpf
+            ELECTRON_G_FACTOR
+            * BOHR_MAGNETON
+            * gradient
+            * x_zpf
             / (HBAR * omega_q)
         )
         e = ElectronSpecies(B)
         trap = PaulTrap(
-            v_rf=7.8, omega_rf=TWO_PI * 1.6e9, r0=300e-6,
-            omega_axial=omega_z, species=e,
+            v_rf=7.8,
+            omega_rf=TWO_PI * 1.6e9,
+            r0=300e-6,
+            omega_axial=omega_z,
+            species=e,
         )
         modes = normal_modes(1, trap)
         k_eff = _gradient_k_eff(gradient, B)
@@ -396,14 +433,21 @@ class TestElectronAnalyticalExactness:
         Omega = delta / (4 * eta)
         tau = ms_gate_duration(delta)
         H = light_shift_gate_hamiltonian(
-            ops, [0, 1], 0, [eta, eta], Omega, delta,
+            ops,
+            [0, 1],
+            0,
+            [eta, eta],
+            Omega,
+            delta,
         )
 
         # ZZ gate entangles sigma_x eigenstates, not sigma_z
         plus = (qutip.basis(2, 0) + qutip.basis(2, 1)).unit()
         psi0 = qutip.tensor(plus, plus, qutip.basis(20, 0))
         r = qutip.sesolve(
-            H, psi0, np.linspace(0, tau, 500),
+            H,
+            psi0,
+            np.linspace(0, tau, 500),
             options={"max_step": tau / 100},
         )
 
@@ -427,7 +471,10 @@ class TestElectronAnalyticalExactness:
         H = carrier_hamiltonian(ops, 0, Omega)
         tlist = np.linspace(0, 4 * PI / Omega, 400)
         result = qutip.sesolve(
-            H, sf.ground_state(), tlist, e_ops=[ops.sigma_z(0)],
+            H,
+            sf.ground_state(),
+            tlist,
+            e_ops=[ops.sigma_z(0)],
         )
         expected = np.cos(Omega * tlist)
         np.testing.assert_allclose(result.expect[0], expected, atol=0.01)
@@ -460,9 +507,7 @@ class TestElectronAnalyticalExactness:
             species=ElectronSpecies(magnetic_field=0.0036),
         )
         assert trap.mathieu_q == pytest.approx(0.53, rel=0.01)
-        assert trap.omega_radial == pytest.approx(
-            TWO_PI * 2e9, rel=0.02
-        )
+        assert trap.omega_radial == pytest.approx(TWO_PI * 2e9, rel=0.02)
 
     def test_hoven_pseudopotential_vs_measurement(self):
         """Hoven et al. arXiv:2508.16407 (2025): measured electron

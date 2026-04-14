@@ -177,3 +177,106 @@ class PaulTrap:
         return (
             ELECTRON_CHARGE * abs(stray_E_field) / (m * self.omega_radial**2)
         )
+
+
+@dataclass
+class PenningTrap:
+    r"""Static-field Penning trap with magnetic and electric confinement.
+
+    Provide either ``omega_axial`` or ``v_dc``; the other is computed
+    automatically.
+
+    Attributes
+    ----------
+    magnetic_field : float
+        Axial magnetic field strength in Tesla.
+    species : IonSpecies or ElectronSpecies
+        The trapped particle species.
+    d : float
+        Characteristic trap dimension in meters.
+    omega_axial : float or None
+        Axial angular frequency in rad/s.
+    v_dc : float or None
+        DC trapping voltage in volts.
+    """
+
+    magnetic_field: float
+    species: IonSpecies | ElectronSpecies
+    d: float
+    omega_axial: float | None = None
+    v_dc: float | None = None
+
+    def __post_init__(self):
+        """Derive the missing axial parameter."""
+        m = self.species.mass_kg
+        e = ELECTRON_CHARGE
+        if self.omega_axial is not None and self.v_dc is None:
+            self.v_dc = m * self.omega_axial**2 * self.d**2 / e
+        elif self.v_dc is not None and self.omega_axial is None:
+            self.omega_axial = np.sqrt(e * self.v_dc / (m * self.d**2))
+        elif self.omega_axial is None and self.v_dc is None:
+            raise ValueError("Must specify either omega_axial or v_dc")
+
+    @property
+    def omega_cyclotron_free(self) -> float:
+        r"""Free cyclotron frequency $\omega_c = eB/m$ (rad/s)."""
+        return ELECTRON_CHARGE * self.magnetic_field / self.species.mass_kg
+
+    @property
+    def omega_cyclotron(self) -> float:
+        r"""Modified cyclotron frequency $\omega_+$ (rad/s).
+
+        $$
+        \omega_+ = \frac{\omega_c}{2}
+          + \sqrt{\frac{\omega_c^2}{4} - \frac{\omega_z^2}{2}}
+        $$
+        """
+        wc = self.omega_cyclotron_free
+        wz = self.omega_axial
+        disc = wc**2 / 4 - wz**2 / 2
+        if disc < 0:
+            raise ValueError(
+                "Trap is unstable: omega_z > omega_c / sqrt(2). "
+                f"omega_z={wz:.3e}, omega_c/sqrt(2)={wc / np.sqrt(2):.3e}"
+            )
+        return wc / 2 + np.sqrt(disc)
+
+    @property
+    def omega_magnetron(self) -> float:
+        r"""Magnetron frequency $\omega_-$ (rad/s).
+
+        $$
+        \omega_- = \frac{\omega_c}{2}
+          - \sqrt{\frac{\omega_c^2}{4} - \frac{\omega_z^2}{2}}
+        $$
+        """
+        wc = self.omega_cyclotron_free
+        wz = self.omega_axial
+        disc = wc**2 / 4 - wz**2 / 2
+        if disc < 0:
+            raise ValueError("Trap is unstable")
+        return wc / 2 - np.sqrt(disc)
+
+    def is_stable(self) -> bool:
+        r"""Check Penning trap stability: $\omega_z < \omega_c / \sqrt{2}$."""
+        wc = self.omega_cyclotron_free
+        wz = self.omega_axial
+        return wz**2 < wc**2 / 2
+
+    @property
+    def frequency_hierarchy(self) -> tuple[float, float, float, float]:
+        r"""Return $(\omega_-, \omega_z, \omega_+, \omega_c)$."""
+        return (
+            self.omega_magnetron,
+            self.omega_axial,
+            self.omega_cyclotron,
+            self.omega_cyclotron_free,
+        )
+
+    @property
+    def trap_depth_axial_eV(self) -> float:
+        """Axial trap depth in eV: $D_z = V_\\text{dc} / 2$."""
+        return self.v_dc / 2
+
+
+TrapLike = PaulTrap | PenningTrap

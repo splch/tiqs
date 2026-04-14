@@ -4,13 +4,14 @@ import numpy as np
 from scipy.optimize import root
 
 from tiqs.constants import ELECTRON_CHARGE, EPSILON_0, PI
-from tiqs.trap import PaulTrap
+from tiqs.trap import TrapLike
 
 
-def equilibrium_positions(n_ions: int, trap: PaulTrap) -> np.ndarray:
+def equilibrium_positions(n_ions: int, trap: TrapLike) -> np.ndarray:
     r"""Find the axial equilibrium positions of N ions in a linear trap.
 
-    Solves for a harmonic trap with Coulomb repulsion.
+    Works for both Paul and Penning traps (axial confinement is
+    harmonic in both cases).
 
     Solves the dimensionless equilibrium equation for each ion $i$:
 
