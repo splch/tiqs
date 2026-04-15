@@ -8,7 +8,7 @@ References:
     Jain et al., Nature 627, 510 (2024) / arXiv:2308.07672
     Hanneke et al., PRL 100, 120801 (2008) / arXiv:1009.4831
     Berrocal et al., Phys. Rev. Research 6, L012001 (2024) / arXiv:2308.14884
-    Goodwin et al., PRL 116, 143002 (2016) / arXiv:1807.00902
+    Ball et al., Rev. Sci. Instrum. 90, 053103 (2019) / arXiv:1807.00902
     Bohnet et al., Science 352, 1297 (2016) / arXiv:1512.03756
 """
 
@@ -210,9 +210,9 @@ class TestBerrocal2024CaPenning:
         assert wp**2 + wm**2 + wz**2 == pytest.approx(wc**2, rel=1e-10)
 
 
-class TestGoodwinOxfordBePenning:
-    """Goodwin et al., PRL 116, 143002 (2016) / arXiv:1807.00902:
-    Be-9+ in a macroscopic Penning trap at B ~ 2 T.
+class TestBallBePenning:
+    """Ball et al., Rev. Sci. Instrum. 90, 053103 (2019) / arXiv:1807.00902:
+    Be-9+ in a high-optical-access Penning trap at B ~ 2 T.
 
     Table 1 gives both simulated and experimentally measured
     eigenfrequencies. The trap geometry is fully specified,
@@ -220,7 +220,7 @@ class TestGoodwinOxfordBePenning:
     """
 
     @pytest.fixture
-    def oxford_trap(self):
+    def ball_trap(self):
         return PenningTrap(
             magnetic_field=1.998,
             species=get_species("Be9"),
@@ -228,30 +228,30 @@ class TestGoodwinOxfordBePenning:
             omega_axial=TWO_PI * 402e3,
         )
 
-    def test_modified_cyclotron_frequency(self, oxford_trap):
+    def test_modified_cyclotron_frequency(self, ball_trap):
         """nu_+ = 3382 kHz measured (Table 1, arXiv:1807.00902)."""
-        nu_plus = oxford_trap.omega_modified_cyclotron / TWO_PI
+        nu_plus = ball_trap.omega_modified_cyclotron / TWO_PI
         assert nu_plus == pytest.approx(3382e3, rel=0.001)
 
-    def test_magnetron_frequency(self, oxford_trap):
+    def test_magnetron_frequency(self, ball_trap):
         """nu_- = 23.9 kHz measured (Table 1, arXiv:1807.00902)."""
-        nu_minus = oxford_trap.omega_magnetron / TWO_PI
+        nu_minus = ball_trap.omega_magnetron / TWO_PI
         assert nu_minus == pytest.approx(23.9e3, rel=0.01)
 
-    def test_simulated_vs_measured_axial(self, oxford_trap):
+    def test_simulated_vs_measured_axial(self, ball_trap):
         """Simulated nu_z = 406.4 kHz vs measured 402 kHz (Table 1).
 
         The ~1% difference comes from anharmonic corrections in the
         real trap. Our harmonic calculation should match the
         simulated column."""
-        nu_z = oxford_trap.omega_axial / TWO_PI
+        nu_z = ball_trap.omega_axial / TWO_PI
         assert nu_z == pytest.approx(402e3, rel=0.02)
 
-    def test_brown_gabrielse_invariant(self, oxford_trap):
-        wc = oxford_trap.omega_cyclotron
-        wp = oxford_trap.omega_modified_cyclotron
-        wm = oxford_trap.omega_magnetron
-        wz = oxford_trap.omega_axial
+    def test_brown_gabrielse_invariant(self, ball_trap):
+        wc = ball_trap.omega_cyclotron
+        wp = ball_trap.omega_modified_cyclotron
+        wm = ball_trap.omega_magnetron
+        wz = ball_trap.omega_axial
         assert wp**2 + wm**2 + wz**2 == pytest.approx(wc**2, rel=1e-10)
 
 
