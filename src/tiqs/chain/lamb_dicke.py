@@ -40,6 +40,8 @@ def lamb_dicke_parameters(
         $k_\mathrm{eff} \approx 0$ (no motional
         coupling). For single beam on optical qubit:
         $k_\mathrm{eff} = k_\mathrm{laser} \cos\theta$.
+        For magnetic-gradient coupling (electrons):
+        $k_\mathrm{eff} = (\partial B/\partial z) / B$.
     direction : str
         Key into ``modes.modes``: e.g. ``"axial"``, ``"radial_x"``,
         ``"modified_cyclotron"``.
