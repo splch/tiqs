@@ -188,8 +188,8 @@ class TestBerrocal2024CaPenning:
 
         Using the precise Ca-40 isotopic mass (39.9626 amu), not 40 amu."""
         nu_c = ca_penning.omega_cyclotron / TWO_PI
-        expected = ELECTRON_CHARGE * 7.0 / (
-            TWO_PI * get_species("Ca40").mass_kg
+        expected = (
+            ELECTRON_CHARGE * 7.0 / (TWO_PI * get_species("Ca40").mass_kg)
         )
         assert nu_c == pytest.approx(expected, rel=1e-10)
 
@@ -275,7 +275,9 @@ class TestBohnetNISTBePenning:
     def test_bare_cyclotron_frequency(self, nist_trap):
         """omega_c/(2pi) = eB/(2pi*m) ~ 7.6 MHz for Be-9+ at 4.45 T."""
         nu_c = nist_trap.omega_cyclotron / TWO_PI
-        expected = ELECTRON_CHARGE * 4.45 / (TWO_PI * get_species("Be9").mass_kg)
+        expected = (
+            ELECTRON_CHARGE * 4.45 / (TWO_PI * get_species("Be9").mass_kg)
+        )
         assert nu_c == pytest.approx(expected, rel=1e-6)
         assert nu_c == pytest.approx(7.6e6, rel=0.01)
 
@@ -337,11 +339,15 @@ class TestPenningTrapScaling:
         (magnetron becomes slower as cyclotron dominates)."""
         species = get_species("Be9")
         trap_low_B = PenningTrap(
-            magnetic_field=2.0, species=species,
-            d=1e-3, omega_axial=TWO_PI * 500e3,
+            magnetic_field=2.0,
+            species=species,
+            d=1e-3,
+            omega_axial=TWO_PI * 500e3,
         )
         trap_high_B = PenningTrap(
-            magnetic_field=6.0, species=species,
-            d=1e-3, omega_axial=TWO_PI * 500e3,
+            magnetic_field=6.0,
+            species=species,
+            d=1e-3,
+            omega_axial=TWO_PI * 500e3,
         )
         assert trap_high_B.omega_magnetron < trap_low_B.omega_magnetron

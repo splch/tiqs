@@ -219,9 +219,7 @@ class TestIsingQuantumSimulation:
         assert len(axial.freqs) == 3
         for i in range(2):
             assert axial.freqs[i] < axial.freqs[i + 1]
-        assert axial.freqs[0] == pytest.approx(
-            yb_trap.omega_axial, rel=1e-3
-        )
+        assert axial.freqs[0] == pytest.approx(yb_trap.omega_axial, rel=1e-3)
 
         # Eigenvectors are orthonormal
         V = axial.vectors

@@ -4,7 +4,7 @@ import pytest
 
 from tiqs.chain.equilibrium import equilibrium_positions
 from tiqs.chain.lamb_dicke import lamb_dicke_parameters
-from tiqs.chain.normal_modes import ModeGroup, NormalModeResult, normal_modes
+from tiqs.chain.normal_modes import ModeGroup, normal_modes
 from tiqs.constants import TWO_PI
 from tiqs.species.ion import get_species
 from tiqs.trap import PaulTrap
@@ -86,9 +86,7 @@ class TestNormalModes:
         result = normal_modes(1, ca40_trap)
         axial = result.modes["axial"]
         assert len(axial.freqs) == 1
-        assert axial.freqs[0] == pytest.approx(
-            ca40_trap.omega_axial, rel=1e-6
-        )
+        assert axial.freqs[0] == pytest.approx(ca40_trap.omega_axial, rel=1e-6)
 
     def test_two_ion_com_mode(self, ca40_trap):
         result = normal_modes(2, ca40_trap)
@@ -164,7 +162,7 @@ class TestNormalModes:
 
     def test_mode_group_structure(self, ca40_trap):
         result = normal_modes(2, ca40_trap)
-        for label, group in result.modes.items():
+        for _label, group in result.modes.items():
             assert isinstance(group, ModeGroup)
             assert group.freqs.shape == (2,)
             assert group.vectors.shape == (2, 2)

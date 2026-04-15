@@ -80,7 +80,7 @@ class TestPaulTrap:
 
 class TestPaulTrapFactory:
     def test_from_dc_voltage(self):
-        """Construct PaulTrap from voltage and verify omega_axial is derived."""
+        """Construct PaulTrap from voltage; omega_axial is derived."""
         trap = PaulTrap.from_dc_voltage(
             v_rf=300.0,
             omega_rf=2 * np.pi * 30e6,
@@ -91,7 +91,7 @@ class TestPaulTrapFactory:
         assert trap.omega_axial > 0
 
     def test_u_dc_axial_property_roundtrip(self):
-        """Constructing with omega_axial then reading u_dc_axial is consistent."""
+        """omega_axial -> u_dc_axial -> omega_axial roundtrips."""
         trap = PaulTrap(
             v_rf=300.0,
             omega_rf=2 * np.pi * 30e6,
@@ -160,8 +160,9 @@ class TestPenningTrap:
 
     def test_modified_cyclotron_near_cyclotron(self, electron_penning):
         """omega_+ is slightly less than omega_c."""
-        assert electron_penning.omega_modified_cyclotron < electron_penning.omega_cyclotron
-        assert electron_penning.omega_modified_cyclotron > electron_penning.omega_axial
+        wp = electron_penning.omega_modified_cyclotron
+        assert wp < electron_penning.omega_cyclotron
+        assert wp > electron_penning.omega_axial
 
     def test_magnetron_frequency_positive(self, electron_penning):
         """Magnetron frequency is positive and much smaller than cyclotron."""
@@ -171,8 +172,10 @@ class TestPenningTrap:
 
     def test_frequency_hierarchy(self, electron_penning):
         """omega_- << omega_z << omega_+ ~ omega_c."""
-        assert electron_penning.omega_magnetron < electron_penning.omega_axial
-        assert electron_penning.omega_axial < electron_penning.omega_modified_cyclotron
+        wm = electron_penning.omega_magnetron
+        wz = electron_penning.omega_axial
+        wp = electron_penning.omega_modified_cyclotron
+        assert wm < wz < wp
 
     def test_frequency_invariant(self, electron_penning):
         """omega_+^2 + omega_-^2 + omega_z^2 = omega_c^2."""

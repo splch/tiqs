@@ -56,7 +56,8 @@ def _coulomb_hessian(
 ) -> np.ndarray:
     r"""Build the Coulomb-coupled Hessian matrix for one direction.
 
-    The matrix elements are $H_{ij} = \partial^2 V / (m\,\partial x_i\,\partial x_j)$
+    The matrix elements are
+    $H_{ij} = \partial^2 V / (m\,\partial x_i\,\partial x_j)$
     where $C = e^2 / (4\pi\epsilon_0\,m)$.
 
     For axial modes (focusing Coulomb coupling):
@@ -167,7 +168,9 @@ def normal_modes(
             ),
         }
     elif isinstance(trap, PaulTrap):
-        H_radial = _coulomb_hessian(n_ions, pos, trap.omega_radial, m, axial=False)
+        H_radial = _coulomb_hessian(
+            n_ions, pos, trap.omega_radial, m, axial=False
+        )
         radial = _diagonalize_to_modes(n_ions, trap.omega_radial, H_radial)
         modes = {
             "axial": axial,

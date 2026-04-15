@@ -75,7 +75,7 @@ class PaulTrap:
         u_dc_axial: float,
         z0: float = 2.5e-3,
         kappa: float = 0.4,
-    ) -> "PaulTrap":
+    ) -> PaulTrap:
         r"""Construct from DC axial voltage instead of axial frequency.
 
         $$
@@ -110,7 +110,9 @@ class PaulTrap:
         """
         m = self.species.mass_kg
         return (
-            m * self.omega_axial**2 * self.z0**2
+            m
+            * self.omega_axial**2
+            * self.z0**2
             / (self.kappa * ELECTRON_CHARGE)
         )
 
@@ -252,13 +254,15 @@ class PenningTrap:
     omega_axial: float
 
     def __post_init__(self):
-        if isinstance(self.species, ElectronSpecies):
-            if self.species.magnetic_field != self.magnetic_field:
-                raise ValueError(
-                    f"PenningTrap.magnetic_field ({self.magnetic_field}) "
-                    f"must match species.magnetic_field "
-                    f"({self.species.magnetic_field})"
-                )
+        if (
+            isinstance(self.species, ElectronSpecies)
+            and self.species.magnetic_field != self.magnetic_field
+        ):
+            raise ValueError(
+                f"PenningTrap.magnetic_field ({self.magnetic_field}) "
+                f"must match species.magnetic_field "
+                f"({self.species.magnetic_field})"
+            )
 
     @classmethod
     def from_dc_voltage(
@@ -267,7 +271,7 @@ class PenningTrap:
         species: IonSpecies | ElectronSpecies,
         d: float,
         v_dc: float,
-    ) -> "PenningTrap":
+    ) -> PenningTrap:
         r"""Construct from DC trapping voltage instead of axial frequency.
 
         $$
@@ -295,7 +299,9 @@ class PenningTrap:
         $$
         """
         return (
-            self.species.mass_kg * self.omega_axial**2 * self.d**2
+            self.species.mass_kg
+            * self.omega_axial**2
+            * self.d**2
             / ELECTRON_CHARGE
         )
 
