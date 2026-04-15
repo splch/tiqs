@@ -99,6 +99,66 @@ class DuffingPotential:
         return self.omega * n + (self.anharmonicity / 2) * n * (n - I)
 
 
+@dataclass(frozen=True)
+class ArbitraryPotential:
+    r"""Arbitrary potential energy function $V(x)$.
+
+    Constructs the Hamiltonian in the Fock basis by expressing
+    the potential in terms of the position operator
+    $\hat{x} = x_\mathrm{zpf}\,(a + a^\dagger)$
+    and adding the kinetic energy:
+
+    $$
+    H = \frac{\hat{p}^2}{2m} + V(\hat{x})
+    $$
+
+    The kinetic energy is computed as $T = H_\mathrm{ref} - V_\mathrm{ref}$
+    where $H_\mathrm{ref} = \omega\,(\hat{n} + \tfrac{1}{2})$ is the
+    reference harmonic oscillator and
+    $V_\mathrm{ref} = \tfrac{1}{2} m \omega^2 \hat{x}^2$ is its potential.
+
+    The user must provide the **full** potential $V(x)$ including any
+    harmonic part. For example, a quartic anharmonic oscillator:
+    $V(x) = \tfrac{1}{2} m \omega^2 x^2 + \lambda x^4$.
+
+    Convergence of the Fock-basis representation depends on
+    ``n_fock``. Use ``check_convergence()`` to verify the
+    truncation. Choose ``omega`` to match the curvature of $V(x)$
+    near its minimum for best convergence.
+
+    Simulations with ``ArbitraryPotential`` should use the
+    Schrodinger picture rather than the interaction picture,
+    because the anharmonic correction generally does not commute
+    with the free harmonic Hamiltonian.
+
+    Attributes
+    ----------
+    v_func : callable
+        ``V(x_op) -> qutip.Qobj`` where ``x_op`` is the position
+        operator as a QuTiP Qobj. Returns the **full** potential
+        energy operator in the Fock basis.
+    omega : float
+        Reference harmonic frequency in rad/s. Defines the Fock
+        basis length scale.
+    mass_kg : float
+        Particle mass in kg.
+    """
+
+    v_func: callable
+    omega: float
+    mass_kg: float
+
+    def single_mode_hamiltonian(self, n_fock: int) -> qutip.Qobj:
+        a = qutip.destroy(n_fock)
+        n = qutip.num(n_fock)
+        I = qutip.qeye(n_fock)
+        x_zpf = np.sqrt(HBAR / (2 * self.mass_kg * self.omega))
+        x_op = x_zpf * (a + a.dag())
+        H_ref = self.omega * (n + 0.5 * I)
+        V_ref = 0.5 * self.mass_kg * self.omega**2 * x_op * x_op
+        return H_ref - V_ref + self.v_func(x_op)
+
+
 def energy_levels(potential: Potential, n_fock: int) -> np.ndarray:
     r"""Compute energy eigenvalues of a potential.
 
