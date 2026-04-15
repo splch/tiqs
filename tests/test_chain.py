@@ -4,7 +4,7 @@ import pytest
 
 from tiqs.chain.equilibrium import equilibrium_positions
 from tiqs.chain.lamb_dicke import lamb_dicke_parameters
-from tiqs.chain.normal_modes import normal_modes
+from tiqs.chain.normal_modes import ModeGroup, normal_modes
 from tiqs.constants import TWO_PI
 from tiqs.species.ion import get_species
 from tiqs.trap import PaulTrap
@@ -84,75 +84,88 @@ class TestEquilibriumPositions:
 class TestNormalModes:
     def test_single_ion_one_axial_mode(self, ca40_trap):
         result = normal_modes(1, ca40_trap)
-        assert len(result.axial_freqs) == 1
-        assert result.axial_freqs[0] == pytest.approx(
-            ca40_trap.omega_axial, rel=1e-6
-        )
+        axial = result.modes["axial"]
+        assert len(axial.freqs) == 1
+        assert axial.freqs[0] == pytest.approx(ca40_trap.omega_axial, rel=1e-6)
 
     def test_two_ion_com_mode(self, ca40_trap):
         result = normal_modes(2, ca40_trap)
-        omega_com = result.axial_freqs[0]
+        omega_com = result.modes["axial"].freqs[0]
         assert omega_com == pytest.approx(ca40_trap.omega_axial, rel=1e-6)
 
     def test_two_ion_stretch_mode(self, ca40_trap):
         """Stretch mode at sqrt(3) * omega_axial for two ions."""
         result = normal_modes(2, ca40_trap)
-        omega_stretch = result.axial_freqs[1]
+        omega_stretch = result.modes["axial"].freqs[1]
         expected = np.sqrt(3) * ca40_trap.omega_axial
         assert omega_stretch == pytest.approx(expected, rel=1e-4)
 
     def test_two_ion_com_eigenvector(self, ca40_trap):
         """COM mode: both ions oscillate in phase with equal amplitude."""
         result = normal_modes(2, ca40_trap)
-        v_com = result.axial_vectors[:, 0]
+        v_com = result.modes["axial"].vectors[:, 0]
         assert abs(v_com[0]) == pytest.approx(abs(v_com[1]), rel=1e-6)
         assert np.sign(v_com[0]) == np.sign(v_com[1])
 
     def test_two_ion_stretch_eigenvector(self, ca40_trap):
         """Stretch mode: ions oscillate out of phase."""
         result = normal_modes(2, ca40_trap)
-        v_str = result.axial_vectors[:, 1]
+        v_str = result.modes["axial"].vectors[:, 1]
         assert abs(v_str[0]) == pytest.approx(abs(v_str[1]), rel=1e-6)
         assert np.sign(v_str[0]) != np.sign(v_str[1])
 
     def test_three_ion_tilt_mode_ratio(self, ca40_trap):
         """[James1998] Table I: tilt mode at sqrt(3) * omega_z."""
         result = normal_modes(3, ca40_trap)
-        ratio = result.axial_freqs[1] / result.axial_freqs[0]
+        axial = result.modes["axial"]
+        ratio = axial.freqs[1] / axial.freqs[0]
         assert ratio == pytest.approx(np.sqrt(3), rel=1e-4)
 
     def test_three_ion_breathing_mode_ratio(self, ca40_trap):
-        """[James1998] Table I: breathing mode at sqrt(29/5) * omega_z
-        for 3 ions."""
+        """[James1998] Table I: breathing mode at sqrt(29/5) * omega_z."""
         result = normal_modes(3, ca40_trap)
-        ratio = result.axial_freqs[2] / result.axial_freqs[0]
+        axial = result.modes["axial"]
+        ratio = axial.freqs[2] / axial.freqs[0]
         assert ratio == pytest.approx(np.sqrt(29 / 5), rel=1e-4)
 
     def test_three_ion_mode_count(self, ca40_trap):
         result = normal_modes(3, ca40_trap)
-        assert len(result.axial_freqs) == 3
+        assert len(result.modes["axial"].freqs) == 3
 
     def test_mode_frequencies_increasing(self, ca40_trap):
         result = normal_modes(5, ca40_trap)
-        for i in range(len(result.axial_freqs) - 1):
-            assert result.axial_freqs[i] < result.axial_freqs[i + 1]
+        freqs = result.modes["axial"].freqs
+        for i in range(len(freqs) - 1):
+            assert freqs[i] < freqs[i + 1]
 
     def test_eigenvectors_orthonormal(self, ca40_trap):
         result = normal_modes(4, ca40_trap)
-        V = result.axial_vectors
+        V = result.modes["axial"].vectors
         product = V.T @ V
         np.testing.assert_allclose(product, np.eye(4), atol=1e-10)
 
     def test_radial_modes_exist(self, ca40_trap):
         result = normal_modes(3, ca40_trap)
-        assert len(result.radial_x_freqs) == 3
-        assert len(result.radial_y_freqs) == 3
+        assert len(result.modes["radial_x"].freqs) == 3
+        assert len(result.modes["radial_y"].freqs) == 3
 
     def test_radial_frequencies_near_trap_radial(self, ca40_trap):
         result = normal_modes(2, ca40_trap)
         omega_r = ca40_trap.omega_radial
-        for f in result.radial_x_freqs:
+        for f in result.modes["radial_x"].freqs:
             assert abs(f - omega_r) / omega_r < 0.5
+
+    def test_paul_trap_mode_labels(self, ca40_trap):
+        """Paul trap produces axial, radial_x, radial_y mode groups."""
+        result = normal_modes(2, ca40_trap)
+        assert set(result.modes.keys()) == {"axial", "radial_x", "radial_y"}
+
+    def test_mode_group_structure(self, ca40_trap):
+        result = normal_modes(2, ca40_trap)
+        for _label, group in result.modes.items():
+            assert isinstance(group, ModeGroup)
+            assert group.freqs.shape == (2,)
+            assert group.vectors.shape == (2, 2)
 
 
 class TestLambDicke:

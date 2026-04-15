@@ -4,13 +4,12 @@ import numpy as np
 
 from tiqs.chain.normal_modes import NormalModeResult
 from tiqs.constants import HBAR
-from tiqs.species.electron import ElectronSpecies
-from tiqs.species.ion import IonSpecies
+from tiqs.species.protocol import Species
 
 
 def lamb_dicke_parameters(
     modes: NormalModeResult,
-    species: IonSpecies | ElectronSpecies,
+    species: Species,
     k_eff: float,
     direction: str = "axial",
 ) -> np.ndarray:
@@ -31,7 +30,7 @@ def lamb_dicke_parameters(
     ----------
     modes : NormalModeResult
         Result from normal_modes().
-    species : IonSpecies or ElectronSpecies
+    species : Species
         Particle species (for mass).
     k_eff : float
         Effective wavevector magnitude along the mode direction (rad/m).
@@ -41,8 +40,13 @@ def lamb_dicke_parameters(
         $k_\mathrm{eff} \approx 0$ (no motional
         coupling). For single beam on optical qubit:
         $k_\mathrm{eff} = k_\mathrm{laser} \cos\theta$.
+        For magnetic-gradient coupling
+        (Mintert and Wunderlich, PRL 87, 257904):
+        $k_\mathrm{eff} = g\,\mu_B\,(\partial B/\partial z)
+        / (\hbar\,\omega_m)$.
     direction : str
-        Which modes to compute for: "axial", "radial_x", or "radial_y".
+        Key into ``modes.modes``: e.g. ``"axial"``, ``"radial_x"``,
+        ``"modified_cyclotron"``.
 
     Returns
     -------
@@ -51,19 +55,17 @@ def lamb_dicke_parameters(
         $(N_\mathrm{ions}, N_\mathrm{modes})$.
         $\eta[i, m]$ is the Lamb-Dicke parameter for ion $i$ and mode $m$.
     """
-    direction_map = {
-        "axial": (modes.axial_freqs, modes.axial_vectors),
-        "radial_x": (modes.radial_x_freqs, modes.radial_x_vectors),
-        "radial_y": (modes.radial_y_freqs, modes.radial_y_vectors),
-    }
-    if direction not in direction_map:
-        raise ValueError(f"Unknown direction: {direction}")
-    freqs, vectors = direction_map[direction]
+    if direction not in modes.modes:
+        raise ValueError(
+            f"Unknown direction: {direction!r}. "
+            f"Available: {list(modes.modes.keys())}"
+        )
+    group = modes.modes[direction]
+    freqs = group.freqs
+    vectors = group.vectors
 
     m = species.mass_kg
-    # Zero-point fluctuation x_zpf_m = sqrt(hbar / (2*M*omega_m)) for each mode
     x_zpf = np.zeros_like(freqs)
     mask = freqs > 0
     x_zpf[mask] = np.sqrt(HBAR / (2 * m * freqs[mask]))
-    # eta[i,m] = k_eff * b_{i,m} * x_zpf_m via broadcasting over ions (axis 0)
     return k_eff * vectors * x_zpf

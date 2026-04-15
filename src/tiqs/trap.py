@@ -1,24 +1,43 @@
-r"""Radiofrequency Paul trap physics: Mathieu stability, secular frequencies,
-pseudopotential.
+r"""Trapped-particle confinement: Paul traps, Penning traps, and the
+shared ``Trap`` protocol.
 
 .. include:: ../../docs/theory/trapping.md
 """
 
 from dataclasses import dataclass
+from typing import Protocol
 
 import numpy as np
 
 from tiqs.constants import ELECTRON_CHARGE
 from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import IonSpecies
+from tiqs.species.protocol import Species
+
+
+class Trap(Protocol):
+    """Structural interface for any charged-particle trap.
+
+    Any class exposing ``omega_axial``, ``species``, and ``is_stable()``
+    satisfies this protocol. ``PaulTrap`` and ``PenningTrap`` conform
+    without modification.
+    """
+
+    @property
+    def omega_axial(self) -> float: ...
+
+    @property
+    def species(self) -> Species: ...
+
+    def is_stable(self) -> bool: ...
 
 
 @dataclass
 class PaulTrap:
     """Linear Paul trap with RF radial confinement and DC axial confinement.
 
-    Provide either ``omega_axial`` or ``u_dc_axial``; the other is
-    computed automatically.
+    Construct directly with ``omega_axial``, or use
+    ``PaulTrap.from_dc_voltage()`` if the DC voltage is known instead.
 
     Attributes
     ----------
@@ -30,10 +49,8 @@ class PaulTrap:
         Characteristic particle-to-electrode distance in meters.
     species : IonSpecies or ElectronSpecies
         The trapped particle species.
-    omega_axial : float or None
+    omega_axial : float
         Axial secular angular frequency in rad/s.
-    u_dc_axial : float or None
-        DC axial endcap voltage in volts.
     z0 : float
         Half-length of the trap for axial confinement in meters.
     kappa : float
@@ -44,29 +61,60 @@ class PaulTrap:
     omega_rf: float
     r0: float
     species: IonSpecies | ElectronSpecies
-    omega_axial: float | None = None
-    u_dc_axial: float | None = None
+    omega_axial: float
     z0: float = 2.5e-3
     kappa: float = 0.4
 
-    def __post_init__(self):
-        """Derive the missing axial parameter.
+    @classmethod
+    def from_dc_voltage(
+        cls,
+        v_rf: float,
+        omega_rf: float,
+        r0: float,
+        species: IonSpecies | ElectronSpecies,
+        u_dc_axial: float,
+        z0: float = 2.5e-3,
+        kappa: float = 0.4,
+    ) -> PaulTrap:
+        r"""Construct from DC axial voltage instead of axial frequency.
 
-        If ``omega_axial`` is given, compute ``u_dc_axial``, and
-        vice versa. Raises ``ValueError`` if neither is provided.
+        $$
+        \omega_z = \sqrt{\frac{\kappa\,e\,U_\mathrm{dc}}{m\,z_0^2}}
+        $$
+        """
+        if u_dc_axial < 0:
+            raise ValueError(
+                f"u_dc_axial must be non-negative, got {u_dc_axial}"
+            )
+        m = species.mass_kg
+        omega_axial = np.sqrt(
+            kappa * ELECTRON_CHARGE * u_dc_axial / (m * z0**2)
+        )
+        return cls(
+            v_rf=v_rf,
+            omega_rf=omega_rf,
+            r0=r0,
+            species=species,
+            omega_axial=omega_axial,
+            z0=z0,
+            kappa=kappa,
+        )
+
+    @property
+    def u_dc_axial(self) -> float:
+        r"""DC axial endcap voltage in volts, derived from omega_axial.
+
+        $$
+        U_\mathrm{dc} = \frac{m\,\omega_z^2\,z_0^2}{\kappa\,e}
+        $$
         """
         m = self.species.mass_kg
-        e = ELECTRON_CHARGE
-        if self.omega_axial is not None and self.u_dc_axial is None:
-            self.u_dc_axial = (
-                m * self.omega_axial**2 * self.z0**2 / (self.kappa * e)
-            )
-        elif self.u_dc_axial is not None and self.omega_axial is None:
-            self.omega_axial = np.sqrt(
-                self.kappa * e * self.u_dc_axial / (m * self.z0**2)
-            )
-        elif self.omega_axial is None and self.u_dc_axial is None:
-            raise ValueError("Must specify either omega_axial or u_dc_axial")
+        return (
+            m
+            * self.omega_axial**2
+            * self.z0**2
+            / (self.kappa * ELECTRON_CHARGE)
+        )
 
     @property
     def mathieu_q(self) -> float:
@@ -177,3 +225,139 @@ class PaulTrap:
         return (
             ELECTRON_CHARGE * abs(stray_E_field) / (m * self.omega_radial**2)
         )
+
+
+@dataclass
+class PenningTrap:
+    r"""Static-field Penning trap with magnetic radial and electric axial
+    confinement.
+
+    Construct directly with ``omega_axial``, or use
+    ``PenningTrap.from_dc_voltage()`` if the DC voltage is known instead.
+
+    Attributes
+    ----------
+    magnetic_field : float
+        Axial magnetic field strength in Tesla.
+    species : IonSpecies or ElectronSpecies
+        The trapped particle species.
+    d : float
+        Characteristic trap dimension in meters.
+        For a hyperbolic trap, $d^2 = (z_0^2 + r_0^2/2) / 2$.
+    omega_axial : float
+        Axial angular frequency in rad/s.
+    """
+
+    magnetic_field: float
+    species: IonSpecies | ElectronSpecies
+    d: float
+    omega_axial: float
+
+    def __post_init__(self):
+        if (
+            isinstance(self.species, ElectronSpecies)
+            and self.species.magnetic_field != self.magnetic_field
+        ):
+            raise ValueError(
+                f"PenningTrap.magnetic_field ({self.magnetic_field}) "
+                f"must match species.magnetic_field "
+                f"({self.species.magnetic_field})"
+            )
+
+    @classmethod
+    def from_dc_voltage(
+        cls,
+        magnetic_field: float,
+        species: IonSpecies | ElectronSpecies,
+        d: float,
+        v_dc: float,
+    ) -> PenningTrap:
+        r"""Construct from DC trapping voltage instead of axial frequency.
+
+        $$
+        \omega_z = \sqrt{\frac{e\,V_\mathrm{dc}}{m\,d^2}}
+        $$
+        """
+        if v_dc < 0:
+            raise ValueError(f"v_dc must be non-negative, got {v_dc}")
+        omega_axial = np.sqrt(
+            ELECTRON_CHARGE * v_dc / (species.mass_kg * d**2)
+        )
+        return cls(
+            magnetic_field=magnetic_field,
+            species=species,
+            d=d,
+            omega_axial=omega_axial,
+        )
+
+    @property
+    def v_dc(self) -> float:
+        r"""DC trapping voltage in volts, derived from omega_axial.
+
+        $$
+        V_\mathrm{dc} = \frac{m\,\omega_z^2\,d^2}{e}
+        $$
+        """
+        return (
+            self.species.mass_kg
+            * self.omega_axial**2
+            * self.d**2
+            / ELECTRON_CHARGE
+        )
+
+    @property
+    def omega_cyclotron(self) -> float:
+        r"""Free cyclotron angular frequency.
+
+        $$
+        \omega_c = \frac{eB}{m}
+        $$
+        """
+        return ELECTRON_CHARGE * self.magnetic_field / self.species.mass_kg
+
+    def _transverse_discriminant(self) -> float:
+        """Shared discriminant for modified cyclotron and magnetron."""
+        wc2 = self.omega_cyclotron / 2
+        discriminant = wc2**2 - self.omega_axial**2 / 2
+        if discriminant < 0:
+            raise ValueError(
+                "Trap is unstable: omega_c < sqrt(2)*omega_z. "
+                "Check is_stable() before accessing transverse frequencies."
+            )
+        return discriminant
+
+    @property
+    def omega_modified_cyclotron(self) -> float:
+        r"""Modified cyclotron angular frequency.
+
+        $$
+        \omega_+ = \frac{\omega_c}{2}
+        + \sqrt{\left(\frac{\omega_c}{2}\right)^2
+        - \frac{\omega_z^2}{2}}
+        $$
+        """
+        wc2 = self.omega_cyclotron / 2
+        return wc2 + np.sqrt(self._transverse_discriminant())
+
+    @property
+    def omega_magnetron(self) -> float:
+        r"""Magnetron angular frequency.
+
+        $$
+        \omega_- = \frac{\omega_c}{2}
+        - \sqrt{\left(\frac{\omega_c}{2}\right)^2
+        - \frac{\omega_z^2}{2}}
+        $$
+        """
+        wc2 = self.omega_cyclotron / 2
+        return wc2 - np.sqrt(self._transverse_discriminant())
+
+    def is_stable(self) -> bool:
+        r"""Check Penning stability: $\omega_c > \sqrt{2}\,\omega_z$.
+
+        When this condition is violated the discriminant
+        $(\omega_c/2)^2 - \omega_z^2/2$ becomes negative and the
+        modified cyclotron and magnetron frequencies are no longer real,
+        meaning radial confinement is lost.
+        """
+        return self.omega_cyclotron > np.sqrt(2) * self.omega_axial
