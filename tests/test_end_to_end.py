@@ -182,9 +182,9 @@ class TestIsingQuantumSimulation:
             t.mathieu_q / 2 * 1e-6
         )
         assert t.stray_field_displacement(1.0) > 0
-        assert t.u_dc_axial is not None
+        assert t.u_dc_axial > 0
 
-        trap_v = PaulTrap(
+        trap_v = PaulTrap.from_dc_voltage(
             v_rf=300,
             omega_rf=TWO_PI * 30e6,
             r0=0.5e-3,
@@ -201,14 +201,6 @@ class TestIsingQuantumSimulation:
             species=get_species("Yb171"),
         )
         assert not unstable.is_stable()
-
-        with pytest.raises(ValueError):
-            PaulTrap(
-                v_rf=200,
-                omega_rf=TWO_PI * 30e6,
-                r0=0.5e-3,
-                species=get_species("Ca40"),
-            )
 
     def test_03_three_ion_chain(self, yb_trap):
         """Compute 3-ion Coulomb crystal: positions, all 9 normal

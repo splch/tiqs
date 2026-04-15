@@ -10,12 +10,11 @@ class TestPaulTrap:
     @pytest.fixture
     def yb_trap(self):
         """Standard Yb171 trap: V_rf=1000V, Omega_rf=2pi*30MHz,
-        r0=0.5mm, U_dc for 1MHz axial."""
+        r0=0.5mm, 1MHz axial."""
         return PaulTrap(
             v_rf=1000.0,
             omega_rf=2 * np.pi * 30e6,
             r0=0.5e-3,
-            u_dc_axial=None,
             omega_axial=2 * np.pi * 1.0e6,
             species=get_species("Yb171"),
         )
@@ -76,3 +75,34 @@ class TestPaulTrap:
         displacement = yb_trap.stray_field_displacement(stray_E)
         assert displacement > 0
         assert displacement < 1e-3  # less than trap size
+
+
+class TestPaulTrapFactory:
+    def test_from_dc_voltage(self):
+        """Construct PaulTrap from voltage and verify omega_axial is derived."""
+        trap = PaulTrap.from_dc_voltage(
+            v_rf=300.0,
+            omega_rf=2 * np.pi * 30e6,
+            r0=0.5e-3,
+            species=get_species("Ca40"),
+            u_dc_axial=10.0,
+        )
+        assert trap.omega_axial > 0
+
+    def test_u_dc_axial_property_roundtrip(self):
+        """Constructing with omega_axial then reading u_dc_axial is consistent."""
+        trap = PaulTrap(
+            v_rf=300.0,
+            omega_rf=2 * np.pi * 30e6,
+            r0=0.5e-3,
+            species=get_species("Ca40"),
+            omega_axial=2 * np.pi * 1e6,
+        )
+        trap2 = PaulTrap.from_dc_voltage(
+            v_rf=300.0,
+            omega_rf=2 * np.pi * 30e6,
+            r0=0.5e-3,
+            species=get_species("Ca40"),
+            u_dc_axial=trap.u_dc_axial,
+        )
+        assert trap2.omega_axial == pytest.approx(trap.omega_axial, rel=1e-10)

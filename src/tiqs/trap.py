@@ -1,5 +1,5 @@
-r"""Radiofrequency Paul trap physics: Mathieu stability, secular frequencies,
-pseudopotential.
+r"""Trapped-particle confinement: Paul traps, Penning traps, and the
+shared ``Trap`` protocol.
 
 .. include:: ../../docs/theory/trapping.md
 """
@@ -17,8 +17,8 @@ from tiqs.species.ion import IonSpecies
 class PaulTrap:
     """Linear Paul trap with RF radial confinement and DC axial confinement.
 
-    Provide either ``omega_axial`` or ``u_dc_axial``; the other is
-    computed automatically.
+    Construct directly with ``omega_axial``, or use
+    ``PaulTrap.from_dc_voltage()`` if the DC voltage is known instead.
 
     Attributes
     ----------
@@ -30,10 +30,8 @@ class PaulTrap:
         Characteristic particle-to-electrode distance in meters.
     species : IonSpecies or ElectronSpecies
         The trapped particle species.
-    omega_axial : float or None
+    omega_axial : float
         Axial secular angular frequency in rad/s.
-    u_dc_axial : float or None
-        DC axial endcap voltage in volts.
     z0 : float
         Half-length of the trap for axial confinement in meters.
     kappa : float
@@ -44,29 +42,46 @@ class PaulTrap:
     omega_rf: float
     r0: float
     species: IonSpecies | ElectronSpecies
-    omega_axial: float | None = None
-    u_dc_axial: float | None = None
+    omega_axial: float
     z0: float = 2.5e-3
     kappa: float = 0.4
 
-    def __post_init__(self):
-        """Derive the missing axial parameter.
+    @classmethod
+    def from_dc_voltage(
+        cls,
+        v_rf: float,
+        omega_rf: float,
+        r0: float,
+        species: IonSpecies | ElectronSpecies,
+        u_dc_axial: float,
+        z0: float = 2.5e-3,
+        kappa: float = 0.4,
+    ) -> "PaulTrap":
+        r"""Construct from DC axial voltage instead of axial frequency.
 
-        If ``omega_axial`` is given, compute ``u_dc_axial``, and
-        vice versa. Raises ``ValueError`` if neither is provided.
+        $$
+        \omega_z = \sqrt{\frac{\kappa\,e\,U_\mathrm{dc}}{m\,z_0^2}}
+        $$
+        """
+        m = species.mass_kg
+        omega_axial = np.sqrt(
+            kappa * ELECTRON_CHARGE * u_dc_axial / (m * z0**2)
+        )
+        return cls(v_rf, omega_rf, r0, species, omega_axial, z0, kappa)
+
+    @property
+    def u_dc_axial(self) -> float:
+        r"""DC axial endcap voltage in volts, derived from omega_axial.
+
+        $$
+        U_\mathrm{dc} = \frac{m\,\omega_z^2\,z_0^2}{\kappa\,e}
+        $$
         """
         m = self.species.mass_kg
-        e = ELECTRON_CHARGE
-        if self.omega_axial is not None and self.u_dc_axial is None:
-            self.u_dc_axial = (
-                m * self.omega_axial**2 * self.z0**2 / (self.kappa * e)
-            )
-        elif self.u_dc_axial is not None and self.omega_axial is None:
-            self.omega_axial = np.sqrt(
-                self.kappa * e * self.u_dc_axial / (m * self.z0**2)
-            )
-        elif self.omega_axial is None and self.u_dc_axial is None:
-            raise ValueError("Must specify either omega_axial or u_dc_axial")
+        return (
+            m * self.omega_axial**2 * self.z0**2
+            / (self.kappa * ELECTRON_CHARGE)
+        )
 
     @property
     def mathieu_q(self) -> float:
@@ -88,16 +103,6 @@ class PaulTrap:
     def mathieu_a(self) -> float:
         r"""Dimensionless Mathieu a parameter from DC axial confinement.
 
-        The axial DC field also modifies the radial potential. For a
-        linear trap:
-
-        $$
-        a = \frac{-4 e \kappa U_\mathrm{dc}}{m \Omega_\mathrm{rf}^2 r_0^2}
-        \left(\frac{r_0}{z_0}\right)^2
-        $$
-
-        In practice we use a simplified model:
-
         $$
         a \approx \frac{-2 \omega_\mathrm{axial}^2}{\Omega_\mathrm{rf}^2}
         $$
@@ -105,12 +110,7 @@ class PaulTrap:
         return -2 * self.omega_axial**2 / self.omega_rf**2
 
     def is_stable(self) -> bool:
-        r"""Check if $(a, q)$ falls within the first Mathieu stability region.
-
-        Approximate boundary: $q < 0.908$ and $|a| < q^2/2$ for the
-        lowest region. More precisely, we check the secular frequency
-        remains real and positive.
-        """
+        r"""Check if $(a, q)$ falls within the first Mathieu stability region."""
         q = self.mathieu_q
         a = self.mathieu_a
         if q <= 0 or q >= 0.908:
@@ -126,13 +126,6 @@ class PaulTrap:
         $$
         \omega_r = \frac{\Omega_\mathrm{rf}}{2} \sqrt{a + \frac{q^2}{2}}
         $$
-
-        For $|a| \ll q$:
-
-        $$
-        \omega_r \approx \frac{q \, \Omega_\mathrm{rf}}{2\sqrt{2}}
-        $$
-
         """
         q = self.mathieu_q
         a = self.mathieu_a
@@ -148,8 +141,6 @@ class PaulTrap:
         $$
         \Psi_0 = \frac{e^2 V_\mathrm{rf}^2}{4 m \Omega_\mathrm{rf}^2 r_0^2}
         $$
-
-        converted to eV.
         """
         m = self.species.mass_kg
         depth_J = (ELECTRON_CHARGE**2 * self.v_rf**2) / (
@@ -161,8 +152,7 @@ class PaulTrap:
         r"""Peak micromotion amplitude for a particle displaced from
         the RF null.
 
-        $x_\mathrm{mm} = (q/2) \cdot x_\mathrm{displacement}$,
-        valid for $q \ll 1$.
+        $x_\mathrm{mm} = (q/2) \cdot x_\mathrm{displacement}$
         """
         return (self.mathieu_q / 2) * abs(displacement_from_null)
 
