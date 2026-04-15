@@ -40,11 +40,31 @@ class TestEquilibriumPositions:
         spacing = pos[1] - pos[0]
         assert 1e-6 < spacing < 20e-6
 
-    def test_three_ions_symmetric(self, ca40_trap):
+    def test_three_ion_center_at_origin(self, ca40_trap):
+        """[James1998]: center ion at z=0 by symmetry."""
         pos = equilibrium_positions(3, ca40_trap)
         assert len(pos) == 3
         assert pos[0] == pytest.approx(-pos[2], abs=1e-12)
         assert pos[1] == pytest.approx(0.0, abs=1e-12)
+
+    def test_three_ion_dimensionless_offset(self, ca40_trap):
+        """[James1998] Table I: outer ions at u = +/-(5/4)^(1/3)
+        in dimensionless units."""
+        from tiqs.constants import ELECTRON_CHARGE, EPSILON_0, PI
+
+        pos = equilibrium_positions(3, ca40_trap)
+        length_scale = (
+            ELECTRON_CHARGE**2
+            / (
+                4
+                * PI
+                * EPSILON_0
+                * ca40_trap.species.mass_kg
+                * ca40_trap.omega_axial**2
+            )
+        ) ** (1 / 3)
+        u_outer = pos[2] / length_scale
+        assert u_outer == pytest.approx((5 / 4) ** (1 / 3), rel=1e-3)
 
     def test_five_ions_ordered(self, ca40_trap):
         pos = equilibrium_positions(5, ca40_trap)
@@ -94,6 +114,19 @@ class TestNormalModes:
         v_str = result.axial_vectors[:, 1]
         assert abs(v_str[0]) == pytest.approx(abs(v_str[1]), rel=1e-6)
         assert np.sign(v_str[0]) != np.sign(v_str[1])
+
+    def test_three_ion_tilt_mode_ratio(self, ca40_trap):
+        """[James1998] Table I: tilt mode at sqrt(3) * omega_z."""
+        result = normal_modes(3, ca40_trap)
+        ratio = result.axial_freqs[1] / result.axial_freqs[0]
+        assert ratio == pytest.approx(np.sqrt(3), rel=1e-4)
+
+    def test_three_ion_breathing_mode_ratio(self, ca40_trap):
+        """[James1998] Table I: breathing mode at sqrt(29/5) * omega_z
+        for 3 ions."""
+        result = normal_modes(3, ca40_trap)
+        ratio = result.axial_freqs[2] / result.axial_freqs[0]
+        assert ratio == pytest.approx(np.sqrt(29 / 5), rel=1e-4)
 
     def test_three_ion_mode_count(self, ca40_trap):
         result = normal_modes(3, ca40_trap)

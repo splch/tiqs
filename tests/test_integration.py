@@ -15,7 +15,7 @@ from tiqs.interaction.hamiltonian import (
     red_sideband_hamiltonian,
 )
 from tiqs.noise.motional import motional_heating_ops
-from tiqs.noise.qubit import qubit_dephasing_op
+from tiqs.noise.qubit import qubit_dephasing_op, spontaneous_emission_op
 from tiqs.simulation.config import SimulationConfig
 from tiqs.simulation.runner import SimulationRunner
 from tiqs.species.ion import get_species
@@ -190,6 +190,78 @@ class TestNoiseEffects:
             result.expect[0][-50:]
         )
         assert late_amplitude < early_amplitude
+
+    def test_spontaneous_decay_reduces_ms_fidelity(self):
+        """[Benhelm2008] Ca-40 D5/2 decay (T1=1.168 s) should slightly
+        reduce MS gate Bell fidelity. The gate is fast (~50 us) vs T1,
+        so the reduction should be small."""
+        hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=20)
+        ops = OperatorFactory(hs)
+        sf = StateFactory(hs)
+
+        eta = 0.05
+        delta = TWO_PI * 20e3
+        Omega = delta / (4 * eta)
+        tau = ms_gate_duration(delta)
+        H = ms_gate_hamiltonian(ops, [0, 1], 0, [eta, eta], Omega, delta)
+        tlist = np.linspace(0, tau, 500)
+
+        r_clean = qutip.sesolve(
+            H, sf.ground_state(), tlist, options={"max_step": tau / 100}
+        )
+        fid_clean = bell_state_fidelity(r_clean.states[-1].ptrace([0, 1]))
+
+        c_ops = [
+            spontaneous_emission_op(ops, 0, t1=1.168),
+            spontaneous_emission_op(ops, 1, t1=1.168),
+        ]
+        r_noisy = qutip.mesolve(
+            H,
+            sf.ground_state(),
+            tlist,
+            c_ops=c_ops,
+            options={"max_step": tau / 100},
+        )
+        fid_noisy = bell_state_fidelity(r_noisy.states[-1].ptrace([0, 1]))
+        assert fid_noisy < fid_clean
+        assert fid_noisy > 0.98
+
+    def test_combined_noise_reduces_ms_fidelity_further(self):
+        """[Benhelm2008] Adding heating + dephasing + spontaneous decay
+        should reduce MS gate fidelity more than any single source."""
+        hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=20)
+        ops = OperatorFactory(hs)
+        sf = StateFactory(hs)
+
+        eta = 0.05
+        delta = TWO_PI * 20e3
+        Omega = delta / (4 * eta)
+        tau = ms_gate_duration(delta)
+        H = ms_gate_hamiltonian(ops, [0, 1], 0, [eta, eta], Omega, delta)
+        tlist = np.linspace(0, tau, 500)
+
+        r_clean = qutip.sesolve(
+            H, sf.ground_state(), tlist, options={"max_step": tau / 100}
+        )
+        fid_clean = bell_state_fidelity(r_clean.states[-1].ptrace([0, 1]))
+
+        c_ops = [
+            spontaneous_emission_op(ops, 0, t1=1.168),
+            spontaneous_emission_op(ops, 1, t1=1.168),
+            *motional_heating_ops(ops, 0, heating_rate=100),
+            qubit_dephasing_op(ops, 0, t2=10e-3),
+            qubit_dephasing_op(ops, 1, t2=10e-3),
+        ]
+        r_noisy = qutip.mesolve(
+            H,
+            sf.ground_state(),
+            tlist,
+            c_ops=c_ops,
+            options={"max_step": tau / 100},
+        )
+        fid_noisy = bell_state_fidelity(r_noisy.states[-1].ptrace([0, 1]))
+        assert fid_noisy < fid_clean
+        assert 0.95 < fid_noisy < 1.0
 
 
 class TestFullSimulationRunner:

@@ -1,6 +1,9 @@
+import math
+
 import numpy as np
 import pytest
 
+from tiqs.constants import TWO_PI
 from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import get_species
 from tiqs.species.transitions import Transition
@@ -78,6 +81,27 @@ class TestIonSpecies:
         s = get_species("Ca40")
         T_D = s.doppler_limit_temperature()
         assert 0.1e-3 < T_D < 2e-3
+
+    def test_ca40_metastable_lifetime(self):
+        """Ca-40 D5/2 lifetime: 1.168 s (Barton et al. 2000)."""
+        s = get_species("Ca40")
+        assert s.metastable_lifetime == pytest.approx(1.168, rel=0.01)
+
+    def test_yb171_infinite_t1(self):
+        """Hyperfine ground-state qubits have T1 = infinity."""
+        s = get_species("Yb171")
+        assert s.qubit_t1 == math.inf
+
+    def test_doppler_nbar_formula(self):
+        """[Leibfried2003] Eq. 6: nbar_D = Gamma / (2*omega_trap).
+        For Ca-40 at 1 MHz: nbar ~ 11."""
+        ca = get_species("Ca40")
+        nbar = ca.doppler_limit_nbar(1e6)
+        gamma = ca.cooling_transition.linewidth
+        omega_trap = TWO_PI * 1e6
+        expected = gamma / (2 * omega_trap)
+        assert nbar == pytest.approx(expected, rel=1e-6)
+        assert 5 < nbar < 20
 
     def test_unknown_species_raises(self):
         with pytest.raises(KeyError):
