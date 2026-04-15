@@ -134,6 +134,16 @@ class PaulTrap:
     def mathieu_a(self) -> float:
         r"""Dimensionless Mathieu a parameter from DC axial confinement.
 
+        The axial DC field also modifies the radial potential. For a
+        linear trap:
+
+        $$
+        a = \frac{-4 e \kappa U_\mathrm{dc}}{m \Omega_\mathrm{rf}^2 r_0^2}
+        \left(\frac{r_0}{z_0}\right)^2
+        $$
+
+        In practice we use a simplified model:
+
         $$
         a \approx \frac{-2 \omega_\mathrm{axial}^2}{\Omega_\mathrm{rf}^2}
         $$
@@ -141,7 +151,12 @@ class PaulTrap:
         return -2 * self.omega_axial**2 / self.omega_rf**2
 
     def is_stable(self) -> bool:
-        r"""Check if $(a, q)$ falls within the first Mathieu stability region."""
+        r"""Check if $(a, q)$ falls within the first Mathieu stability region.
+
+        Approximate boundary: $q < 0.908$ and $|a| < q^2/2$ for the
+        lowest region. More precisely, we check the secular frequency
+        remains real and positive.
+        """
         q = self.mathieu_q
         a = self.mathieu_a
         if q <= 0 or q >= 0.908:
@@ -157,6 +172,13 @@ class PaulTrap:
         $$
         \omega_r = \frac{\Omega_\mathrm{rf}}{2} \sqrt{a + \frac{q^2}{2}}
         $$
+
+        For $|a| \ll q$:
+
+        $$
+        \omega_r \approx \frac{q \, \Omega_\mathrm{rf}}{2\sqrt{2}}
+        $$
+
         """
         q = self.mathieu_q
         a = self.mathieu_a
@@ -172,6 +194,8 @@ class PaulTrap:
         $$
         \Psi_0 = \frac{e^2 V_\mathrm{rf}^2}{4 m \Omega_\mathrm{rf}^2 r_0^2}
         $$
+
+        converted to eV.
         """
         m = self.species.mass_kg
         depth_J = (ELECTRON_CHARGE**2 * self.v_rf**2) / (
@@ -183,7 +207,8 @@ class PaulTrap:
         r"""Peak micromotion amplitude for a particle displaced from
         the RF null.
 
-        $x_\mathrm{mm} = (q/2) \cdot x_\mathrm{displacement}$
+        $x_\mathrm{mm} = (q/2) \cdot x_\mathrm{displacement}$,
+        valid for $q \ll 1$.
         """
         return (self.mathieu_q / 2) * abs(displacement_from_null)
 
@@ -322,5 +347,11 @@ class PenningTrap:
         return wc2 - np.sqrt(self._transverse_discriminant())
 
     def is_stable(self) -> bool:
-        r"""Check Penning stability: $\omega_c > \sqrt{2}\,\omega_z$."""
+        r"""Check Penning stability: $\omega_c > \sqrt{2}\,\omega_z$.
+
+        When this condition is violated the discriminant
+        $(\omega_c/2)^2 - \omega_z^2/2$ becomes negative and the
+        modified cyclotron and magnetron frequencies are no longer real,
+        meaning radial confinement is lost.
+        """
         return self.omega_cyclotron > np.sqrt(2) * self.omega_axial

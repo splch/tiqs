@@ -21,7 +21,7 @@ def lamb_dicke_parameters(
     $$
 
     where $b_{i,m}$ is the participation of ion $i$
-    in mode $m$, $M$ is the ion mass,
+    in mode $m$, $M$ is the particle mass,
     $\omega_m$ is the mode frequency, and
     $k_\mathrm{eff}$ is the effective wavevector
     component along the mode direction.
@@ -34,6 +34,12 @@ def lamb_dicke_parameters(
         Particle species (for mass).
     k_eff : float
         Effective wavevector magnitude along the mode direction (rad/m).
+        For counter-propagating Raman beams:
+        $k_\mathrm{eff} = 2 k_\mathrm{laser}$.
+        For co-propagating:
+        $k_\mathrm{eff} \approx 0$ (no motional
+        coupling). For single beam on optical qubit:
+        $k_\mathrm{eff} = k_\mathrm{laser} \cos\theta$.
     direction : str
         Key into ``modes.modes``: e.g. ``"axial"``, ``"radial_x"``,
         ``"modified_cyclotron"``.
@@ -43,6 +49,7 @@ def lamb_dicke_parameters(
     np.ndarray
         Matrix of Lamb-Dicke parameters, shape
         $(N_\mathrm{ions}, N_\mathrm{modes})$.
+        $\eta[i, m]$ is the Lamb-Dicke parameter for ion $i$ and mode $m$.
     """
     if direction not in modes.modes:
         raise ValueError(

@@ -56,9 +56,18 @@ def _coulomb_hessian(
 ) -> np.ndarray:
     r"""Build the Coulomb-coupled Hessian matrix for one direction.
 
-    For axial modes the Coulomb coupling is focusing (factor 2, negative
-    off-diagonal). For radial modes it is defocusing (factor 1, positive
-    off-diagonal).
+    The matrix elements are $H_{ij} = \partial^2 V / (m\,\partial x_i\,\partial x_j)$
+    where $C = e^2 / (4\pi\epsilon_0\,m)$.
+
+    For axial modes (focusing Coulomb coupling):
+
+    - Diagonal: $\omega_z^2 + \sum_{k \neq i} 2C / |z_i - z_k|^3$
+    - Off-diagonal: $-2C / |z_i - z_j|^3$
+
+    For radial modes (defocusing Coulomb coupling):
+
+    - Diagonal: $\omega_r^2 - \sum_{k \neq i} C / |z_i - z_k|^3$
+    - Off-diagonal: $+C / |z_i - z_j|^3$
     """
     C = _COULOMB_PREFACTOR / mass_kg
     sign = -1 if axial else +1
@@ -120,6 +129,13 @@ def normal_modes(
     n_ions: int, trap: PaulTrap | PenningTrap
 ) -> NormalModeResult:
     """Compute all normal modes of an N-ion crystal.
+
+    Constructs the Hessian matrix of the total potential (harmonic trap +
+    Coulomb) evaluated at the equilibrium positions, then diagonalizes it
+    to find mode frequencies and participation vectors. Axial modes are
+    computed identically for all trap types; transverse modes use
+    trap-specific physics (radial pseudopotential for Paul traps,
+    cyclotron/magnetron frequencies for Penning traps).
 
     Parameters
     ----------
