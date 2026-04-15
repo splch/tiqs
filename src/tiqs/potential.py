@@ -57,6 +57,48 @@ class HarmonicPotential:
         return self.omega * qutip.num(n_fock)
 
 
+@dataclass(frozen=True)
+class DuffingPotential:
+    r"""Duffing (Kerr) oscillator: harmonic with a quartic nonlinearity.
+
+    $$
+    H = \omega\,\hat{n}
+      + \frac{\alpha}{2}\,\hat{n}\,(\hat{n} - 1)
+    $$
+
+    where $\alpha$ is the anharmonicity. For transmon-like systems,
+    $\alpha < 0$ (subharmonic: higher transitions have lower
+    frequencies). For stiffening nonlinearities, $\alpha > 0$.
+
+    The transition frequency from $|n\rangle$ to $|n+1\rangle$ is:
+
+    $$
+    \omega_{n \to n+1} = \omega + \alpha\,n
+    $$
+
+    so $\alpha$ equals the frequency shift per excitation quantum.
+    The $|0\rangle \to |1\rangle$ transition is at $\omega$, the
+    $|1\rangle \to |2\rangle$ transition is at $\omega + \alpha$,
+    and so on.
+
+    Attributes
+    ----------
+    omega : float
+        Fundamental oscillation angular frequency in rad/s.
+    anharmonicity : float
+        Anharmonicity $\alpha$ in rad/s. Negative for transmon-like
+        (subharmonic) systems, positive for stiffening.
+    """
+
+    omega: float
+    anharmonicity: float
+
+    def single_mode_hamiltonian(self, n_fock: int) -> qutip.Qobj:
+        n = qutip.num(n_fock)
+        I = qutip.qeye(n_fock)
+        return self.omega * n + (self.anharmonicity / 2) * n * (n - I)
+
+
 def energy_levels(potential: Potential, n_fock: int) -> np.ndarray:
     r"""Compute energy eigenvalues of a potential.
 
