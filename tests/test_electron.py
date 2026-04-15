@@ -8,9 +8,9 @@ gate), not a sigma_x force (MS / XX gate). An MS gate requires
 additional microwave dressing to rotate the spin basis.
 
 TestElectronAnalyticalExactness validates electron-specific formulas
-against known results and published values from Hahn et al.
+against known results and published values from Huang et al.
 arXiv:2503.12379 (2025), Yu et al. PRA 105 022420 (2022), and
-Hoven et al. arXiv:2508.16407 (2025).
+Mikhailovskii et al. arXiv:2508.16407 (2025).
 """
 
 import numpy as np
@@ -226,8 +226,8 @@ class TestElectronAnalyticalExactness:
     mechanics are already validated for ions in test_end_to_end.py.
 
     References: CODATA 2018, Leibfried et al. RMP 75 281 (2003),
-    Hahn et al. arXiv:2503.12379 (2025), Yu et al. PRA 105 022420
-    (2022), Hoven et al. arXiv:2508.16407 (2025).
+    Huang et al. arXiv:2503.12379 (2025), Yu et al. PRA 105 022420
+    (2022), Mikhailovskii et al. arXiv:2508.16407 (2025).
     """
 
     def test_gyromagnetic_ratio(self):
@@ -365,7 +365,7 @@ class TestElectronAnalyticalExactness:
 
     def test_length_scale_at_multiple_frequencies(self):
         """Coulomb length scale l_0 = (e^2/(4*pi*eps0*m*omega^2))^(1/3)
-        evaluated at frequencies from Hahn et al. 2025."""
+        evaluated at frequencies from Huang et al. 2025."""
         for freq_mhz, l0_um in [(30, 19.25), (300, 4.15)]:
             omega = TWO_PI * freq_mhz * 1e6
             l0 = (
@@ -375,7 +375,7 @@ class TestElectronAnalyticalExactness:
             assert l0 == pytest.approx(l0_um * 1e-6, rel=0.01)
 
     def test_zpf_at_multiple_frequencies(self):
-        """x_zpf values at frequencies from Hahn et al. 2025 and
+        """x_zpf values at frequencies from Huang et al. 2025 and
         Yu et al. 2022."""
         for freq_mhz, zpf_nm in [(30, 554), (300, 175), (2000, 67.9)]:
             omega = TWO_PI * freq_mhz * 1e6
@@ -464,8 +464,8 @@ class TestElectronAnalyticalExactness:
             TWO_PI * 2e9, rel=0.02
         )
 
-    def test_hoven_pseudopotential_vs_measurement(self):
-        """Hoven et al. arXiv:2508.16407 (2025): measured electron
+    def test_mikhailovskii_pseudopotential_vs_measurement(self):
+        """Mikhailovskii et al. arXiv:2508.16407 (2025): measured electron
         radial frequency 72 MHz at q = 0.11, Omega_rf = 1.6 GHz.
 
         Pseudopotential predicts 59 MHz - the 18% discrepancy is
@@ -501,6 +501,6 @@ class TestElectronAnalyticalExactness:
         assert ReZ == pytest.approx(500e3, rel=0.01)
         tau_c = ELECTRON_MASS * d_eff**2 / (ELECTRON_CHARGE**2 * ReZ)
         assert tau_c == pytest.approx(4.6e-6, rel=0.01)
-        # Yu/Hahn report ~4 us; the 15% difference is within their
+        # Yu/Huang report ~4 us; the 15% difference is within their
         # stated approximation (neglects frequency-dependent coupling)
         assert 3e-6 < tau_c < 6e-6

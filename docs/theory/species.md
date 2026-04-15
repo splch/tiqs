@@ -99,7 +99,7 @@ microwave dressing to rotate the spin basis).
 
 #### References
 
-1. Yu, P. et al. "Feasibility study of quantum computing using trapped
+1. Yu, Q. et al. "Feasibility study of quantum computing using trapped
    electrons." *Phys. Rev. A* **105**, 022420 (2022).
-2. Hahn, H. et al. "Numerical investigations of electron dynamics in a linear
+2. Huang, A. et al. "Numerical investigations of electron dynamics in a linear
    Paul trap." arXiv:2503.12379 (2025).
