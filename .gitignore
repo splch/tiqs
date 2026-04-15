@@ -37,5 +37,8 @@ venv/
 # Generated documentation
 docs/api/
 
+# Worktrees
+.worktrees/
+
 # macOS
 .DS_Store
