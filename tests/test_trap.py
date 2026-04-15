@@ -2,8 +2,9 @@
 import numpy as np
 import pytest
 
+from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import get_species
-from tiqs.trap import PaulTrap
+from tiqs.trap import PaulTrap, PenningTrap, Trap
 
 
 class TestPaulTrap:
@@ -104,5 +105,120 @@ class TestPaulTrapFactory:
             r0=0.5e-3,
             species=get_species("Ca40"),
             u_dc_axial=trap.u_dc_axial,
+        )
+        assert trap2.omega_axial == pytest.approx(trap.omega_axial, rel=1e-10)
+
+
+class TestTrapProtocol:
+    def test_paul_trap_satisfies_protocol(self):
+        """PaulTrap structurally satisfies Trap protocol."""
+        trap = PaulTrap(
+            v_rf=300.0,
+            omega_rf=2 * np.pi * 30e6,
+            r0=0.5e-3,
+            species=get_species("Ca40"),
+            omega_axial=2 * np.pi * 1e6,
+        )
+
+        def accepts_trap(t: Trap) -> tuple[float, bool]:
+            return t.omega_axial, t.is_stable()
+
+        freq, stable = accepts_trap(trap)
+        assert freq > 0
+        assert stable
+
+    def test_penning_trap_satisfies_protocol(self):
+        """PenningTrap structurally satisfies Trap protocol."""
+        trap = PenningTrap(
+            magnetic_field=5.0,
+            species=ElectronSpecies(magnetic_field=5.0),
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 64e6,
+        )
+
+        def accepts_trap(t: Trap) -> float:
+            return t.omega_axial
+
+        assert accepts_trap(trap) > 0
+
+
+class TestPenningTrap:
+    @pytest.fixture
+    def electron_penning(self):
+        """Electron in a 5T Penning trap, d=3.5mm, omega_z=2pi*64MHz."""
+        return PenningTrap(
+            magnetic_field=5.0,
+            species=ElectronSpecies(magnetic_field=5.0),
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 64e6,
+        )
+
+    def test_cyclotron_frequency(self, electron_penning):
+        """omega_c = eB/m ~ 2pi*140 GHz for electrons at 5T."""
+        omega_c = electron_penning.omega_cyclotron
+        assert omega_c / (2 * np.pi) == pytest.approx(140e9, rel=0.01)
+
+    def test_modified_cyclotron_near_cyclotron(self, electron_penning):
+        """omega_+ is slightly less than omega_c."""
+        assert electron_penning.omega_modified_cyclotron < electron_penning.omega_cyclotron
+        assert electron_penning.omega_modified_cyclotron > electron_penning.omega_axial
+
+    def test_magnetron_frequency_positive(self, electron_penning):
+        """Magnetron frequency is positive and much smaller than cyclotron."""
+        omega_m = electron_penning.omega_magnetron
+        assert omega_m > 0
+        assert omega_m < electron_penning.omega_axial
+
+    def test_frequency_hierarchy(self, electron_penning):
+        """omega_- << omega_z << omega_+ ~ omega_c."""
+        assert electron_penning.omega_magnetron < electron_penning.omega_axial
+        assert electron_penning.omega_axial < electron_penning.omega_modified_cyclotron
+
+    def test_frequency_invariant(self, electron_penning):
+        """omega_+^2 + omega_-^2 + omega_z^2 = omega_c^2."""
+        wc = electron_penning.omega_cyclotron
+        wp = electron_penning.omega_modified_cyclotron
+        wm = electron_penning.omega_magnetron
+        wz = electron_penning.omega_axial
+        assert wp**2 + wm**2 + wz**2 == pytest.approx(wc**2, rel=1e-10)
+
+    def test_stability(self, electron_penning):
+        assert electron_penning.is_stable()
+
+    def test_unstable_penning(self):
+        """omega_c < sqrt(2)*omega_z is unstable."""
+        trap = PenningTrap(
+            magnetic_field=0.001,
+            species=ElectronSpecies(magnetic_field=0.001),
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 64e6,
+        )
+        assert not trap.is_stable()
+
+
+class TestPenningTrapFactory:
+    def test_from_dc_voltage(self):
+        species = ElectronSpecies(magnetic_field=5.0)
+        trap = PenningTrap.from_dc_voltage(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            v_dc=100.0,
+        )
+        assert trap.omega_axial > 0
+
+    def test_v_dc_property_roundtrip(self):
+        species = ElectronSpecies(magnetic_field=5.0)
+        trap = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 64e6,
+        )
+        trap2 = PenningTrap.from_dc_voltage(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            v_dc=trap.v_dc,
         )
         assert trap2.omega_axial == pytest.approx(trap.omega_axial, rel=1e-10)

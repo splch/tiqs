@@ -5,12 +5,31 @@ shared ``Trap`` protocol.
 """
 
 from dataclasses import dataclass
+from typing import Protocol
 
 import numpy as np
 
 from tiqs.constants import ELECTRON_CHARGE
 from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import IonSpecies
+from tiqs.species.protocol import Species
+
+
+class Trap(Protocol):
+    """Structural interface for any charged-particle trap.
+
+    Any class exposing ``omega_axial``, ``species``, and ``is_stable()``
+    satisfies this protocol. ``PaulTrap`` and ``PenningTrap`` conform
+    without modification.
+    """
+
+    @property
+    def omega_axial(self) -> float: ...
+
+    @property
+    def species(self) -> Species: ...
+
+    def is_stable(self) -> bool: ...
 
 
 @dataclass
@@ -167,3 +186,102 @@ class PaulTrap:
         return (
             ELECTRON_CHARGE * abs(stray_E_field) / (m * self.omega_radial**2)
         )
+
+
+@dataclass
+class PenningTrap:
+    r"""Static-field Penning trap with magnetic radial and electric axial
+    confinement.
+
+    Construct directly with ``omega_axial``, or use
+    ``PenningTrap.from_dc_voltage()`` if the DC voltage is known instead.
+
+    Attributes
+    ----------
+    magnetic_field : float
+        Axial magnetic field strength in Tesla.
+    species : IonSpecies or ElectronSpecies
+        The trapped particle species.
+    d : float
+        Characteristic trap dimension in meters.
+        For a hyperbolic trap, $d^2 = (z_0^2 + r_0^2/2) / 2$.
+    omega_axial : float
+        Axial angular frequency in rad/s.
+    """
+
+    magnetic_field: float
+    species: IonSpecies | ElectronSpecies
+    d: float
+    omega_axial: float
+
+    @classmethod
+    def from_dc_voltage(
+        cls,
+        magnetic_field: float,
+        species: IonSpecies | ElectronSpecies,
+        d: float,
+        v_dc: float,
+    ) -> "PenningTrap":
+        r"""Construct from DC trapping voltage instead of axial frequency.
+
+        $$
+        \omega_z = \sqrt{\frac{e\,V_\mathrm{dc}}{m\,d^2}}
+        $$
+        """
+        omega_axial = np.sqrt(
+            ELECTRON_CHARGE * v_dc / (species.mass_kg * d**2)
+        )
+        return cls(magnetic_field, species, d, omega_axial)
+
+    @property
+    def v_dc(self) -> float:
+        r"""DC trapping voltage in volts, derived from omega_axial.
+
+        $$
+        V_\mathrm{dc} = \frac{m\,\omega_z^2\,d^2}{e}
+        $$
+        """
+        return (
+            self.species.mass_kg * self.omega_axial**2 * self.d**2
+            / ELECTRON_CHARGE
+        )
+
+    @property
+    def omega_cyclotron(self) -> float:
+        r"""Free cyclotron angular frequency.
+
+        $$
+        \omega_c = \frac{eB}{m}
+        $$
+        """
+        return ELECTRON_CHARGE * self.magnetic_field / self.species.mass_kg
+
+    @property
+    def omega_modified_cyclotron(self) -> float:
+        r"""Modified cyclotron angular frequency.
+
+        $$
+        \omega_+ = \frac{\omega_c}{2}
+        + \sqrt{\left(\frac{\omega_c}{2}\right)^2
+        - \frac{\omega_z^2}{2}}
+        $$
+        """
+        wc2 = self.omega_cyclotron / 2
+        return wc2 + np.sqrt(wc2**2 - self.omega_axial**2 / 2)
+
+    @property
+    def omega_magnetron(self) -> float:
+        r"""Magnetron angular frequency.
+
+        $$
+        \omega_- = \frac{\omega_c}{2}
+        - \sqrt{\left(\frac{\omega_c}{2}\right)^2
+        - \frac{\omega_z^2}{2}}
+        $$
+        """
+        wc2 = self.omega_cyclotron / 2
+        return wc2 - np.sqrt(wc2**2 - self.omega_axial**2 / 2)
+
+    def is_stable(self) -> bool:
+        r"""Check Penning stability: $\omega_c > \sqrt{2}\,\omega_z$."""
+        return self.omega_cyclotron > np.sqrt(2) * self.omega_axial
