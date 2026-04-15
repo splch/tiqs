@@ -134,6 +134,11 @@ class TestElectronSpecies:
 
 
 class TestSpeciesProtocol:
+    """Smoke tests for protocol attribute access.
+
+    Full structural conformance is verified by running mypy --strict.
+    """
+
     def test_ion_satisfies_protocol(self):
         """IonSpecies structurally satisfies Species protocol."""
         ion = get_species("Yb171")

@@ -195,6 +195,47 @@ class TestPenningTrap:
         )
         assert not trap.is_stable()
 
+    def test_unstable_penning_raises_on_transverse_freq(self):
+        """Accessing transverse frequencies on an unstable trap raises."""
+        trap = PenningTrap(
+            magnetic_field=0.001,
+            species=ElectronSpecies(magnetic_field=0.001),
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 64e6,
+        )
+        with pytest.raises(ValueError, match="unstable"):
+            _ = trap.omega_modified_cyclotron
+        with pytest.raises(ValueError, match="unstable"):
+            _ = trap.omega_magnetron
+
+    def test_negative_voltage_raises(self):
+        """Negative voltage in from_dc_voltage raises ValueError."""
+        with pytest.raises(ValueError, match="non-negative"):
+            PaulTrap.from_dc_voltage(
+                v_rf=300.0,
+                omega_rf=2 * np.pi * 30e6,
+                r0=0.5e-3,
+                species=get_species("Ca40"),
+                u_dc_axial=-10.0,
+            )
+        with pytest.raises(ValueError, match="non-negative"):
+            PenningTrap.from_dc_voltage(
+                magnetic_field=5.0,
+                species=ElectronSpecies(magnetic_field=5.0),
+                d=3.5e-3,
+                v_dc=-100.0,
+            )
+
+    def test_mismatched_magnetic_field_raises(self):
+        """PenningTrap rejects inconsistent species magnetic field."""
+        with pytest.raises(ValueError, match="must match"):
+            PenningTrap(
+                magnetic_field=5.0,
+                species=ElectronSpecies(magnetic_field=3.0),
+                d=3.5e-3,
+                omega_axial=2 * np.pi * 64e6,
+            )
+
 
 class TestPenningTrapFactory:
     def test_from_dc_voltage(self):

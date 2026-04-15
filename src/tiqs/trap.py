@@ -82,11 +82,23 @@ class PaulTrap:
         \omega_z = \sqrt{\frac{\kappa\,e\,U_\mathrm{dc}}{m\,z_0^2}}
         $$
         """
+        if u_dc_axial < 0:
+            raise ValueError(
+                f"u_dc_axial must be non-negative, got {u_dc_axial}"
+            )
         m = species.mass_kg
         omega_axial = np.sqrt(
             kappa * ELECTRON_CHARGE * u_dc_axial / (m * z0**2)
         )
-        return cls(v_rf, omega_rf, r0, species, omega_axial, z0, kappa)
+        return cls(
+            v_rf=v_rf,
+            omega_rf=omega_rf,
+            r0=r0,
+            species=species,
+            omega_axial=omega_axial,
+            z0=z0,
+            kappa=kappa,
+        )
 
     @property
     def u_dc_axial(self) -> float:
@@ -214,6 +226,15 @@ class PenningTrap:
     d: float
     omega_axial: float
 
+    def __post_init__(self):
+        if isinstance(self.species, ElectronSpecies):
+            if self.species.magnetic_field != self.magnetic_field:
+                raise ValueError(
+                    f"PenningTrap.magnetic_field ({self.magnetic_field}) "
+                    f"must match species.magnetic_field "
+                    f"({self.species.magnetic_field})"
+                )
+
     @classmethod
     def from_dc_voltage(
         cls,
@@ -228,10 +249,17 @@ class PenningTrap:
         \omega_z = \sqrt{\frac{e\,V_\mathrm{dc}}{m\,d^2}}
         $$
         """
+        if v_dc < 0:
+            raise ValueError(f"v_dc must be non-negative, got {v_dc}")
         omega_axial = np.sqrt(
             ELECTRON_CHARGE * v_dc / (species.mass_kg * d**2)
         )
-        return cls(magnetic_field, species, d, omega_axial)
+        return cls(
+            magnetic_field=magnetic_field,
+            species=species,
+            d=d,
+            omega_axial=omega_axial,
+        )
 
     @property
     def v_dc(self) -> float:
@@ -256,6 +284,17 @@ class PenningTrap:
         """
         return ELECTRON_CHARGE * self.magnetic_field / self.species.mass_kg
 
+    def _transverse_discriminant(self) -> float:
+        """Shared discriminant for modified cyclotron and magnetron."""
+        wc2 = self.omega_cyclotron / 2
+        discriminant = wc2**2 - self.omega_axial**2 / 2
+        if discriminant < 0:
+            raise ValueError(
+                "Trap is unstable: omega_c < sqrt(2)*omega_z. "
+                "Check is_stable() before accessing transverse frequencies."
+            )
+        return discriminant
+
     @property
     def omega_modified_cyclotron(self) -> float:
         r"""Modified cyclotron angular frequency.
@@ -267,7 +306,7 @@ class PenningTrap:
         $$
         """
         wc2 = self.omega_cyclotron / 2
-        return wc2 + np.sqrt(wc2**2 - self.omega_axial**2 / 2)
+        return wc2 + np.sqrt(self._transverse_discriminant())
 
     @property
     def omega_magnetron(self) -> float:
@@ -280,7 +319,7 @@ class PenningTrap:
         $$
         """
         wc2 = self.omega_cyclotron / 2
-        return wc2 - np.sqrt(wc2**2 - self.omega_axial**2 / 2)
+        return wc2 - np.sqrt(self._transverse_discriminant())
 
     def is_stable(self) -> bool:
         r"""Check Penning stability: $\omega_c > \sqrt{2}\,\omega_z$."""

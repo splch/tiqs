@@ -1,4 +1,4 @@
-"""Lamb-Dicke parameter calculation for particle-mode-laser combinations."""
+"""Lamb-Dicke parameter calculation for ion-mode-laser combinations."""
 
 import numpy as np
 
@@ -14,14 +14,14 @@ def lamb_dicke_parameters(
     direction: str = "axial",
 ) -> np.ndarray:
     r"""Compute Lamb-Dicke parameters $\eta_{i,m}$
-    for each particle $i$ and mode $m$.
+    for each ion $i$ and mode $m$.
 
     $$
     \eta_{i,m} = k_\mathrm{eff} \, b_{i,m} \sqrt{\frac{\hbar}{2 M \omega_m}}
     $$
 
-    where $b_{i,m}$ is the participation of particle $i$
-    in mode $m$, $M$ is the particle mass,
+    where $b_{i,m}$ is the participation of ion $i$
+    in mode $m$, $M$ is the ion mass,
     $\omega_m$ is the mode frequency, and
     $k_\mathrm{eff}$ is the effective wavevector
     component along the mode direction.
@@ -42,7 +42,7 @@ def lamb_dicke_parameters(
     -------
     np.ndarray
         Matrix of Lamb-Dicke parameters, shape
-        $(N_\mathrm{particles}, N_\mathrm{modes})$.
+        $(N_\mathrm{ions}, N_\mathrm{modes})$.
     """
     if direction not in modes.modes:
         raise ValueError(

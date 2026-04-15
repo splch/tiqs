@@ -1,4 +1,4 @@
-"""Compute equilibrium positions of N particles in a linear trap."""
+"""Compute equilibrium positions of N ions in a linear trap."""
 
 import numpy as np
 from scipy.optimize import root
@@ -8,7 +8,7 @@ from tiqs.trap import Trap
 
 
 def equilibrium_positions(n_ions: int, trap: Trap) -> np.ndarray:
-    r"""Find the axial equilibrium positions of N particles in a linear trap.
+    r"""Find the axial equilibrium positions of N ions in a linear trap.
 
     Solves for a harmonic trap with Coulomb repulsion.
 

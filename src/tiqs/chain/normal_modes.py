@@ -1,12 +1,15 @@
 """Normal mode analysis of a Coulomb crystal."""
 
+import warnings
 from dataclasses import dataclass
 
 import numpy as np
 
 from tiqs.chain.equilibrium import equilibrium_positions
 from tiqs.constants import ELECTRON_CHARGE, EPSILON_0, PI
-from tiqs.trap import PaulTrap, PenningTrap, Trap
+from tiqs.trap import PaulTrap, PenningTrap
+
+_COULOMB_PREFACTOR = ELECTRON_CHARGE**2 / (4 * PI * EPSILON_0)
 
 
 @dataclass
@@ -44,66 +47,49 @@ class NormalModeResult:
     modes: dict[str, ModeGroup]
 
 
-def _axial_modes(
-    n_ions: int, pos: np.ndarray, omega_z: float, mass_kg: float
-) -> ModeGroup:
-    """Compute axial normal modes from equilibrium positions.
+def _coulomb_hessian(
+    n_ions: int,
+    pos: np.ndarray,
+    omega_diag: float,
+    mass_kg: float,
+    axial: bool,
+) -> np.ndarray:
+    r"""Build the Coulomb-coupled Hessian matrix for one direction.
 
-    Shared by all trap types since the axial Hessian depends only on
-    the axial frequency and Coulomb repulsion.
+    For axial modes the Coulomb coupling is focusing (factor 2, negative
+    off-diagonal). For radial modes it is defocusing (factor 1, positive
+    off-diagonal).
     """
-    if n_ions == 1:
-        return ModeGroup(
-            freqs=np.array([omega_z]),
-            vectors=np.array([[1.0]]),
-        )
+    C = _COULOMB_PREFACTOR / mass_kg
+    sign = -1 if axial else +1
+    factor = 2 if axial else 1
 
-    coulomb_prefactor = ELECTRON_CHARGE**2 / (4 * PI * EPSILON_0)
-    C = coulomb_prefactor / mass_kg
-
-    H_axial = np.zeros((n_ions, n_ions))
+    H = np.zeros((n_ions, n_ions))
     for i in range(n_ions):
-        for j in range(n_ions):
-            if i == j:
-                coulomb_sum = 0.0
-                for k in range(n_ions):
-                    if k != i:
-                        coulomb_sum += 2 * C / abs(pos[i] - pos[k]) ** 3
-                H_axial[i, i] = omega_z**2 + coulomb_sum
-            else:
-                H_axial[i, j] = -2 * C / abs(pos[i] - pos[j]) ** 3
+        coulomb_sum = 0.0
+        for k in range(n_ions):
+            if k != i:
+                d3 = abs(pos[i] - pos[k]) ** 3
+                coulomb_sum += factor * C / d3
+                H[i, k] = sign * factor * C / d3
+        if axial:
+            H[i, i] = omega_diag**2 + coulomb_sum
+        else:
+            H[i, i] = omega_diag**2 - coulomb_sum
 
-    eigenvalues, eigenvectors = np.linalg.eigh(H_axial)
-    freqs = np.sqrt(np.maximum(eigenvalues, 0.0))
-    return ModeGroup(freqs=freqs, vectors=eigenvectors)
+    return H
 
 
-def _paul_radial_modes(
-    n_ions: int, pos: np.ndarray, omega_r: float, mass_kg: float
+def _diagonalize_to_modes(
+    n_ions: int, omega_single: float, H: np.ndarray | None
 ) -> ModeGroup:
-    """Compute radial normal modes for a Paul trap."""
+    """Diagonalize a Hessian into a ModeGroup, or return single-ion result."""
     if n_ions == 1:
         return ModeGroup(
-            freqs=np.array([omega_r]),
+            freqs=np.array([omega_single]),
             vectors=np.array([[1.0]]),
         )
-
-    coulomb_prefactor = ELECTRON_CHARGE**2 / (4 * PI * EPSILON_0)
-    C = coulomb_prefactor / mass_kg
-
-    H_radial = np.zeros((n_ions, n_ions))
-    for i in range(n_ions):
-        for j in range(n_ions):
-            if i == j:
-                coulomb_sum = 0.0
-                for k in range(n_ions):
-                    if k != i:
-                        coulomb_sum += C / abs(pos[i] - pos[k]) ** 3
-                H_radial[i, i] = omega_r**2 - coulomb_sum
-            else:
-                H_radial[i, j] = C / abs(pos[i] - pos[j]) ** 3
-
-    eigenvalues, eigenvectors = np.linalg.eigh(H_radial)
+    eigenvalues, eigenvectors = np.linalg.eigh(H)
     freqs = np.sqrt(np.maximum(eigenvalues, 0.0))
     return ModeGroup(freqs=freqs, vectors=eigenvectors)
 
@@ -119,20 +105,28 @@ def _penning_transverse_modes(
     Penning mode structure with rotation-frame Coulomb coupling is a
     future extension.
     """
+    if n_ions > 1:
+        warnings.warn(
+            "Penning transverse modes use a single-particle approximation. "
+            "Inter-particle coupling is not included.",
+            stacklevel=3,
+        )
     freqs = np.full(n_ions, omega_transverse)
     vectors = np.eye(n_ions)
     return ModeGroup(freqs=freqs, vectors=vectors)
 
 
-def normal_modes(n_ions: int, trap: Trap) -> NormalModeResult:
-    """Compute all normal modes of an N-particle crystal.
+def normal_modes(
+    n_ions: int, trap: PaulTrap | PenningTrap
+) -> NormalModeResult:
+    """Compute all normal modes of an N-ion crystal.
 
     Parameters
     ----------
     n_ions : int
-        Number of particles.
-    trap : Trap
-        Trap configuration (PaulTrap or PenningTrap).
+        Number of ions.
+    trap : PaulTrap or PenningTrap
+        Trap configuration.
 
     Returns
     -------
@@ -143,7 +137,8 @@ def normal_modes(n_ions: int, trap: Trap) -> NormalModeResult:
     m = trap.species.mass_kg
     omega_z = trap.omega_axial
 
-    axial = _axial_modes(n_ions, pos, omega_z, m)
+    H_axial = _coulomb_hessian(n_ions, pos, omega_z, m, axial=True)
+    axial = _diagonalize_to_modes(n_ions, omega_z, H_axial)
 
     if isinstance(trap, PenningTrap):
         modes = {
@@ -156,7 +151,8 @@ def normal_modes(n_ions: int, trap: Trap) -> NormalModeResult:
             ),
         }
     elif isinstance(trap, PaulTrap):
-        radial = _paul_radial_modes(n_ions, pos, trap.omega_radial, m)
+        H_radial = _coulomb_hessian(n_ions, pos, trap.omega_radial, m, axial=False)
+        radial = _diagonalize_to_modes(n_ions, trap.omega_radial, H_radial)
         modes = {
             "axial": axial,
             "radial_x": radial,

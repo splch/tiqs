@@ -52,6 +52,9 @@ class SimulationRunner:
         self.ops = OperatorFactory(self.hs)
         self.sf = StateFactory(self.hs)
 
+        # Derive effective wavevector from species laser properties.
+        # 400 nm fallback is a typical UV wavelength for species without
+        # a defined laser transition (e.g. electrons with gradient coupling).
         if isinstance(config.species, IonSpecies):
             if config.species.qubit_wavelength is not None:
                 k_eff = TWO_PI / config.species.qubit_wavelength
