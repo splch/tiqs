@@ -89,10 +89,11 @@ class TestElectronTrap:
 
     def test_normal_modes(self, electron_trap):
         modes = normal_modes(2, electron_trap)
-        assert modes.axial_freqs[0] == pytest.approx(
+        axial = modes.modes["axial"]
+        assert axial.freqs[0] == pytest.approx(
             electron_trap.omega_axial, rel=1e-4
         )
-        ratio = modes.axial_freqs[1] / modes.axial_freqs[0]
+        ratio = axial.freqs[1] / axial.freqs[0]
         assert ratio == pytest.approx(np.sqrt(3), rel=1e-4)
 
     def test_gradient_lamb_dicke(self, electron_trap):

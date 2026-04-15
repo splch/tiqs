@@ -215,15 +215,16 @@ class TestIsingQuantumSimulation:
         assert isinstance(modes, NormalModeResult)
 
         # 3 axial modes: COM < tilt < stretch
-        assert len(modes.axial_freqs) == 3
+        axial = modes.modes["axial"]
+        assert len(axial.freqs) == 3
         for i in range(2):
-            assert modes.axial_freqs[i] < modes.axial_freqs[i + 1]
-        assert modes.axial_freqs[0] == pytest.approx(
+            assert axial.freqs[i] < axial.freqs[i + 1]
+        assert axial.freqs[0] == pytest.approx(
             yb_trap.omega_axial, rel=1e-3
         )
 
         # Eigenvectors are orthonormal
-        V = modes.axial_vectors
+        V = axial.vectors
         np.testing.assert_allclose(V.T @ V, np.eye(3), atol=1e-10)
 
         # COM mode: all ions in phase
@@ -231,8 +232,8 @@ class TestIsingQuantumSimulation:
         assert np.sign(v_com[0]) == np.sign(v_com[1]) == np.sign(v_com[2])
 
         # 3 radial modes each for x and y
-        assert len(modes.radial_x_freqs) == 3
-        assert len(modes.radial_y_freqs) == 3
+        assert len(modes.modes["radial_x"].freqs) == 3
+        assert len(modes.modes["radial_y"].freqs) == 3
 
         # Lamb-Dicke parameters: 3 ions x 3 modes for counter-propagating Raman
         k_eff = 2 * TWO_PI / 355e-9  # Yb Raman, counter-propagating
@@ -875,7 +876,7 @@ class TestIsingQuantumSimulation:
             if not trap.is_stable():
                 continue
             modes = normal_modes(1, trap)
-            assert modes.axial_freqs[0] == pytest.approx(
+            assert modes.modes["axial"].freqs[0] == pytest.approx(
                 trap.omega_axial, rel=1e-3
             )
             if species.qubit_wavelength:
@@ -928,7 +929,7 @@ class TestAnalyticalExactness:
             species=ca,
         )
         modes = normal_modes(2, trap)
-        ratio = modes.axial_freqs[1] / modes.axial_freqs[0]
+        ratio = modes.modes["axial"].freqs[1] / modes.modes["axial"].freqs[0]
         assert ratio == pytest.approx(np.sqrt(3), rel=1e-4)
 
     def test_lamb_dicke_formula_direct(self):
