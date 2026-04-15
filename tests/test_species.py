@@ -6,6 +6,7 @@ import pytest
 from tiqs.constants import TWO_PI
 from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import get_species
+from tiqs.species.protocol import Species
 from tiqs.species.transitions import Transition
 
 
@@ -130,3 +131,27 @@ class TestElectronSpecies:
         assert e5.qubit_frequency_hz / e1.qubit_frequency_hz == pytest.approx(
             5.0, rel=1e-6
         )
+
+
+class TestSpeciesProtocol:
+    def test_ion_satisfies_protocol(self):
+        """IonSpecies structurally satisfies Species protocol."""
+        ion = get_species("Yb171")
+
+        def accepts_species(s: Species) -> tuple[float, float]:
+            return s.mass_kg, s.qubit_frequency_hz
+
+        mass, freq = accepts_species(ion)
+        assert mass > 0
+        assert freq > 0
+
+    def test_electron_satisfies_protocol(self):
+        """ElectronSpecies structurally satisfies Species protocol."""
+        electron = ElectronSpecies(magnetic_field=0.1)
+
+        def accepts_species(s: Species) -> tuple[float, float]:
+            return s.mass_kg, s.qubit_frequency_hz
+
+        mass, freq = accepts_species(electron)
+        assert mass > 0
+        assert freq > 0
