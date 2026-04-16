@@ -32,16 +32,17 @@ TIQS models the full trapped-particle physics stack from the ground up:
 ### Quick Start
 
 ```python
+import numpy as np
 import tiqs
 
 # Define species and trap
 species = tiqs.get_species("Ca40")
 trap = tiqs.PaulTrap(
     v_rf=200.0,
-    omega_rf=2 * 3.14159 * 30e6,
+    omega_rf=2 * np.pi * 30e6,
     r0=200e-6,
     species=species,
-    omega_axial=2 * 3.14159 * 1e6,
+    omega_axial=2 * np.pi * 1e6,
 )
 
 # Compute normal modes

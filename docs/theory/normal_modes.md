@@ -142,13 +142,14 @@ For Paul traps, ``radial_x`` and ``radial_y`` are identical (degenerate)
 unless a symmetry-breaking field is applied.
 
 ```python
+import numpy as np
 import tiqs
 
 species = tiqs.get_species("Ca40")
 trap = tiqs.PaulTrap(
-    v_rf=200.0, omega_rf=2*3.14159*30e6,
+    v_rf=200.0, omega_rf=2*np.pi*30e6,
     r0=200e-6, species=species,
-    omega_axial=2*3.14159*1e6,
+    omega_axial=2*np.pi*1e6,
 )
 result = tiqs.normal_modes(n_ions=2, trap=trap)
 

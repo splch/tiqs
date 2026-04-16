@@ -44,9 +44,10 @@ equal $\omega$. This is what TIQS uses implicitly when no potential is
 explicitly specified.
 
 ```python
+import numpy as np
 import tiqs
 
-pot = tiqs.HarmonicPotential(omega=2 * 3.14159 * 1e6)
+pot = tiqs.HarmonicPotential(omega=2 * np.pi * 1e6)
 H = pot.single_mode_hamiltonian(n_fock=20)
 ```
 
@@ -78,8 +79,8 @@ of $\alpha$.
 import tiqs
 
 pot = tiqs.DuffingPotential(
-    omega=2 * 3.14159 * 1e6,
-    anharmonicity=-2 * 3.14159 * 10e3,  # -10 kHz anharmonicity
+    omega=2 * np.pi * 1e6,
+    anharmonicity=-2 * np.pi * 10e3,  # -10 kHz anharmonicity
 )
 freqs = tiqs.transition_frequencies(pot, n_fock=20)
 # freqs[0] ~ omega, freqs[1] ~ omega + alpha, ...
