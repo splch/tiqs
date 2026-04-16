@@ -4,7 +4,7 @@ from typing import Protocol
 
 
 class Species(Protocol):
-    """Any trapped particle species.
+    """Structural interface for any trapped particle species.
 
     Any class exposing ``mass_kg`` and ``qubit_frequency_hz`` as
     read-only properties satisfies this protocol. ``IonSpecies`` and

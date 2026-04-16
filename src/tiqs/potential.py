@@ -189,7 +189,7 @@ def energy_levels(potential: Potential, n_fock: int) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        Sorted energy eigenvalues, shape ``(n_fock,)``.
+        Sorted energy eigenvalues, shape $(n_\mathrm{fock},)$.
     """
     H = potential.single_mode_hamiltonian(n_fock)
     return np.sort(H.eigenenergies().real)
@@ -211,7 +211,7 @@ def transition_frequencies(potential: Potential, n_fock: int) -> np.ndarray:
     Returns
     -------
     np.ndarray
-        Transition frequencies, shape ``(n_fock - 1,)``.
+        Transition frequencies, shape $(n_\mathrm{fock} - 1,)$.
     """
     E = energy_levels(potential, n_fock)
     return np.diff(E)
@@ -264,7 +264,7 @@ def mode_hamiltonian(
     ops: OperatorFactory,
     mode: int,
 ) -> qutip.Qobj:
-    r"""Lift a single-mode Hamiltonian to the full tensor-product space.
+    """Lift a single-mode Hamiltonian to the full tensor-product space.
 
     Constructs the single-mode Hamiltonian from the potential, then
     embeds it in the composite Hilbert space at the given mode index

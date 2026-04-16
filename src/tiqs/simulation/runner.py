@@ -91,7 +91,11 @@ class SimulationRunner:
         Potentials are assumed to apply to axial modes (mode indices
         correspond to positions in the axial frequency array).
 
-        Returns ``None`` if no potentials are configured.
+        Returns
+        -------
+        qutip.Qobj or None
+            Summed anharmonic correction Hamiltonian, or ``None``
+            if no potentials are configured.
         """
         if not self.config.potentials:
             return None
