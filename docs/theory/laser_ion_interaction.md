@@ -108,3 +108,10 @@ Beam geometry controls the coupling:
 
 - **Co-propagating** ($|\Delta k| \approx 0$): Pure carrier for single-qubit gates
 - **Counter-propagating** ($|\Delta k| \approx 2k$): Maximum motional coupling for entangling gates
+
+### References
+
+1. Leibfried, D. et al. "Quantum dynamics of single trapped ions."
+   *Rev. Mod. Phys.* **75**, 281 (2003).
+2. Wineland, D.J. et al. "Experimental issues in coherent quantum-state
+   manipulation of trapped atomic ions." *J. Res. NIST* **103**, 259 (1998).

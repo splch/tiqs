@@ -112,3 +112,12 @@ disturbing the computational qubits' internal states. The Coulomb interaction
 couples the motional modes of both species, enabling indirect cooling. This
 is critical in QCCD architectures where frequent ion transport heats the
 motional modes.
+
+### References
+
+1. Wineland, D.J. & Itano, W.M. "Laser cooling of atoms." *Phys. Rev. A*
+   **20**, 1521 (1979).
+2. Monroe, C. et al. "Resolved-sideband Raman cooling of a bound atom to
+   the 3D zero-point energy." *Phys. Rev. Lett.* **75**, 4011 (1995).
+3. Lechner, R. et al. "Electromagnetically-induced-transparency ground-state
+   cooling of long ion strings." *Phys. Rev. A* **93**, 053401 (2016).

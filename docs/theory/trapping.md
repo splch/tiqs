@@ -204,9 +204,11 @@ Penning traps are particularly well-suited for trapping **bare electrons**:
 - The spin qubit frequency ($\omega_s = g_e \mu_B B / \hbar$) is set by
   the same magnetic field that provides confinement.
 
-#### References
+### References
 
-1. Brown, L.S. & Gabrielse, G. "Geonium theory: Physics of a single
+1. Leibfried, D. et al. "Quantum dynamics of single trapped ions."
+   *Rev. Mod. Phys.* **75**, 281 (2003).
+2. Brown, L.S. & Gabrielse, G. "Geonium theory: Physics of a single
    electron or ion in a Penning trap." *Rev. Mod. Phys.* **58**, 233 (1986).
-2. Jain, S. et al. "Penning micro-trap for quantum computing."
+3. Jain, S. et al. "Penning micro-trap for quantum computing."
    *Nature* **627**, 510 (2024).

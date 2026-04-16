@@ -180,3 +180,11 @@ Penning transverse modes in a **single-particle approximation**: all $N$
 ions share the same modified cyclotron frequency $\omega_+$ and magnetron
 frequency $\omega_-$. Full $N$-particle transverse mode analysis with
 rotating-frame Coulomb coupling is a planned extension.
+
+### References
+
+1. James, D.F.V. "Quantum dynamics of cold trapped ions with application
+   to quantum computation." *Appl. Phys. B* **66**, 181 (1998).
+2. Marquet, C., Schmidt-Kaler, F. & James, D.F.V. "Phonon-phonon
+   interactions due to non-linear effects in a linear ion trap."
+   *Appl. Phys. B* **76**, 199 (2003).

@@ -136,3 +136,13 @@ The total Lindblad superoperator sums all channels:
 $$
 \mathcal{D}[\rho] = \sum_p \mathcal{D}_{\text{heat},p}[\rho] + \sum_p \mathcal{D}_{\text{deph},p}[\rho] + \sum_j \mathcal{D}_{\phi,j}[\rho] + \sum_j \mathcal{D}_{\text{decay},j}[\rho] + \sum_j \mathcal{D}_{\text{scatter},j}[\rho]
 $$
+
+### References
+
+1. Turchette, Q.A. et al. "Decoherence and decay of motional quantum states
+   of a trapped atom coupled to engineered reservoirs." *Phys. Rev. A*
+   **62**, 053807 (2000).
+2. Brownnutt, M. et al. "Ion-trap measurements of electric-field noise near
+   surfaces." *Rev. Mod. Phys.* **87**, 1419 (2015).
+3. Ozeri, R. et al. "Errors in trapped-ion quantum gates due to spontaneous
+   photon scattering." *Phys. Rev. A* **75**, 042329 (2007).

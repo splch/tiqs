@@ -180,3 +180,14 @@ making it more robust to path-length instabilities than the MS gate.
 | Single-qubit | $1.5 \times 10^{-7}$ | Oxford Ionics, ${}^{43}\text{Ca}^+$, microwave |
 | Two-qubit | $8.4 \times 10^{-5}$ | IonQ/Oxford Ionics, ${}^{43}\text{Ca}^+$, smooth gate |
 | Two-qubit (98-qubit system) | $7.9 \times 10^{-4}$ | Quantinuum Helios, ${}^{137}\text{Ba}^+$ |
+
+### References
+
+1. Cirac, J.I. & Zoller, P. "Quantum computations with cold trapped ions."
+   *Phys. Rev. Lett.* **74**, 4091 (1995).
+2. Molmer, K. & Sorensen, A. "Multiparticle entanglement of hot trapped ions."
+   *Phys. Rev. Lett.* **82**, 1835 (1999).
+3. Lee, P.J. et al. "Phase control of trapped ion quantum gates using a
+   geometric phase." *J. Opt. B* **7**, S371 (2005).
+4. Leibfried, D. et al. "Experimental demonstration of a robust, high-fidelity
+   geometric two ion-qubit phase gate." *Nature* **422**, 412 (2003).

@@ -60,3 +60,12 @@ Measuring ancilla qubits while preserving data qubits is critical for quantum
 error correction. In QCCD architectures, ions are physically shuttled to
 separated detection zones ($\sim 370\;\mu$m apart), reducing measurement
 crosstalk to $\sim 2 \times 10^{-5}$.
+
+### References
+
+1. Myerson, A.H. et al. "High-fidelity readout of trapped-ion qubits."
+   *Phys. Rev. Lett.* **100**, 200502 (2008).
+2. Noek, R. et al. "High speed, high fidelity detection of an atomic
+   hyperfine qubit." *Opt. Lett.* **38**, 4735 (2013).
+3. Pino, J.M. et al. "Demonstration of the trapped-ion quantum CCD
+   computer architecture." *Nature* **592**, 209 (2021).

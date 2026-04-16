@@ -35,12 +35,19 @@ def ms_gate_hamiltonian(
     r"""Construct the Molmer-Sorensen gate Hamiltonian in the interaction
     picture.
 
-    The MS Hamiltonian for two ions coupled to one motional mode:
+    The MS Hamiltonian for $N$ ions coupled to one motional mode:
 
     $$
     H_\mathrm{MS}(t) = \sum_j \eta_j \, \Omega \, \sigma_{x,j}
     \left( a^\dagger e^{i \delta t} + a \, e^{-i \delta t} \right)
     $$
+
+    Note: this implementation absorbs the factor of $1/2$ from the
+    theory-doc convention
+    ($\frac{\hbar\eta\Omega}{2}\,\sigma_\phi\,[\ldots]$) into the
+    definition of $\Omega$, so the ``rabi_frequency`` parameter
+    here equals half the bare single-photon Rabi frequency.
+    ``SimulationRunner.run_ms_gate`` calibrates $\Omega$ automatically.
 
     This is a spin-dependent force that displaces the motional state
     conditioned on the collective spin. After time
@@ -49,9 +56,7 @@ def ms_gate_hamiltonian(
     phase-space area.
 
     For two identically-coupled ions, the maximally entangling condition is
-    $\eta \Omega = \delta / 4$ (single loop). The geometric phase scales as the
-    square of the collective spin eigenvalue, so two ions need half the
-    single-ion drive strength.
+    $\eta \Omega = \delta / 4$ (single loop).
 
     Parameters
     ----------

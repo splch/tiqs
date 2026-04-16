@@ -114,9 +114,13 @@ This is a $\sigma_z$-dependent force, making the **light-shift gate** the
 native entangling operation (rather than the MS gate, which requires additional
 microwave dressing to rotate the spin basis).
 
-#### References
+### References
 
-1. Yu, Q. et al. "Feasibility study of quantum computing using trapped
+1. Harty, T.P. et al. "High-fidelity preparation, gates, memory, and readout
+   of a trapped-ion quantum bit." *Phys. Rev. Lett.* **113**, 220501 (2014).
+2. Huang, W. et al. "High-fidelity trapped-ion quantum logic using
+   near-field microwaves." arXiv:2407.07694 (2024).
+3. Yu, Q. et al. "Feasibility study of quantum computing using trapped
    electrons." *Phys. Rev. A* **105**, 022420 (2022).
-2. Huang, A. et al. "Numerical investigations of electron dynamics in a linear
+4. Huang, A. et al. "Numerical investigations of electron dynamics in a linear
    Paul trap." arXiv:2503.12379 (2025).
