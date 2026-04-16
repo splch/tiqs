@@ -88,6 +88,9 @@ class SimulationRunner:
         picture. For ``ArbitraryPotential`` the simulation should
         use the Schrodinger picture.
 
+        Potentials are assumed to apply to axial modes (mode indices
+        correspond to positions in the axial frequency array).
+
         Returns ``None`` if no potentials are configured.
         """
         if not self.config.potentials:

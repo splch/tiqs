@@ -21,8 +21,6 @@ import qutip
 if TYPE_CHECKING:
     from tiqs.hilbert_space.operators import OperatorFactory
 
-from tiqs.constants import HBAR
-
 
 class Potential(Protocol):
     """Structural interface for any motional potential.
@@ -107,29 +105,42 @@ class DuffingPotential:
 
 @dataclass(frozen=True)
 class ArbitraryPotential:
-    r"""Arbitrary potential energy function $V(x)$.
+    r"""Arbitrary potential defined in dimensionless coordinates.
 
-    Constructs the Hamiltonian in the Fock basis by expressing
-    the potential in terms of the position operator
-    $\hat{x} = x_\mathrm{zpf}\,(a + a^\dagger)$
-    and adding the kinetic energy:
+    The user provides $V(q)$ as a function of the **dimensionless
+    position operator** $q = a + a^\dagger$, returning the potential
+    in **angular frequency units** (rad/s, i.e. $\hbar = 1$). The
+    full Hamiltonian is then:
 
     $$
-    H = \frac{\hat{p}^2}{2m} + V(\hat{x})
+    H = \omega\,(\hat{n} + \tfrac{1}{2})
+      - \frac{\omega}{4}(q^2 - 2\hat{n} - 1) + V(q)
+      = \frac{\omega}{4}(2\hat{n} + 1 - q^2) + V(q)
+      + \frac{\omega}{2}(\hat{n} + \tfrac{1}{2})
     $$
 
-    The kinetic energy is computed as $T = H_\mathrm{ref} - V_\mathrm{ref}$
-    where $H_\mathrm{ref} = \omega\,(\hat{n} + \tfrac{1}{2})$ is the
-    reference harmonic oscillator and
-    $V_\mathrm{ref} = \tfrac{1}{2} m \omega^2 \hat{x}^2$ is its potential.
+    which simplifies to the kinetic energy (in the reference basis)
+    plus the user-supplied potential.
 
-    The user must provide the **full** potential $V(x)$ including any
-    harmonic part. For example, a quartic anharmonic oscillator:
-    $V(x) = \tfrac{1}{2} m \omega^2 x^2 + \lambda x^4$.
+    For example, a quartic anharmonic oscillator with harmonic
+    frequency $\omega$ and quartic coefficient $\lambda$ (in
+    rad/s per unit $q^4$):
+
+    $$
+    V(q) = \frac{\omega}{4}\,q^2 + \lambda\,q^4
+    $$
+
+    The $\omega/4\,q^2$ term is the harmonic part; it must be
+    included because $V(q)$ is the **full** potential.
+
+    Working in dimensionless units avoids catastrophic
+    cancellation that occurs when SI Joule-scale energies
+    ($\sim 10^{-28}$) are added to rad/s-scale energies
+    ($\sim 10^{6}$) in QuTiP matrix arithmetic.
 
     Convergence of the Fock-basis representation depends on
     ``n_fock``. Use ``check_convergence()`` to verify the
-    truncation. Choose ``omega`` to match the curvature of $V(x)$
+    truncation. Choose ``omega`` to match the curvature of $V$
     near its minimum for best convergence.
 
     Simulations with ``ArbitraryPotential`` should use the
@@ -140,29 +151,28 @@ class ArbitraryPotential:
     Attributes
     ----------
     v_func : callable
-        ``V(x_op) -> qutip.Qobj`` where ``x_op`` is the position
-        operator as a QuTiP Qobj. Returns the **full** potential
-        energy operator in the Fock basis.
+        ``V(q_op) -> qutip.Qobj`` where ``q_op`` is the
+        dimensionless position operator $q = a + a^\dagger$ as a
+        QuTiP Qobj. Returns the **full** potential in angular
+        frequency units (rad/s).
     omega : float
         Reference harmonic frequency in rad/s. Defines the Fock
-        basis length scale.
-    mass_kg : float
-        Particle mass in kg.
+        basis and sets the kinetic energy scale.
     """
 
     v_func: Callable[[qutip.Qobj], qutip.Qobj]
     omega: float
-    mass_kg: float
 
     def single_mode_hamiltonian(self, n_fock: int) -> qutip.Qobj:
         a = qutip.destroy(n_fock)
         n = qutip.num(n_fock)
         eye = qutip.qeye(n_fock)
-        x_zpf = np.sqrt(HBAR / (2 * self.mass_kg * self.omega))
-        x_op = x_zpf * (a + a.dag())
-        H_ref = self.omega * (n + 0.5 * eye)
-        V_ref = 0.5 * self.mass_kg * self.omega**2 * x_op * x_op
-        return H_ref - V_ref + self.v_func(x_op)
+        q_op = a + a.dag()
+        # For the reference harmonic oscillator H_ref = omega*(n + 1/2),
+        # the potential is V_ref = omega/4 * q^2, so the kinetic
+        # energy is T = H_ref - V_ref = omega*(n + 1/2) - omega/4*q^2.
+        T = self.omega * (n + 0.5 * eye) - self.omega / 4 * q_op * q_op
+        return T + self.v_func(q_op)
 
 
 def energy_levels(potential: Potential, n_fock: int) -> np.ndarray:
@@ -234,11 +244,14 @@ def check_convergence(
     bool
         Whether the levels are converged.
     """
+    if n_levels > n_fock:
+        raise ValueError(f"n_levels ({n_levels}) must be <= n_fock ({n_fock})")
     E1 = energy_levels(potential, n_fock)[:n_levels]
     E2 = energy_levels(potential, n_fock + 5)[:n_levels]
     converged = np.allclose(E1, E2, rtol=1e-6)
     if not converged:
-        max_diff = float(np.max(np.abs(E1 - E2) / np.abs(E2)))
+        denom = np.maximum(np.abs(E2), 1e-30)
+        max_diff = float(np.max(np.abs(E1 - E2) / denom))
         warnings.warn(
             f"Lowest {n_levels} levels not converged at "
             f"n_fock={n_fock}. Max relative difference: "

@@ -89,46 +89,44 @@ freqs = tiqs.transition_frequencies(pot, n_fock=20)
 
 For potentials that cannot be expressed as a simple polynomial in
 $\hat{n}$, ``ArbitraryPotential`` constructs the Hamiltonian from
-a user-supplied potential energy function $V(x)$ expressed in terms
-of the position operator:
+a user-supplied potential $V(q)$ defined in **dimensionless
+coordinates**, where $q = a + a^\dagger$ is the dimensionless
+position operator. The potential must return values in **angular
+frequency units** (rad/s, i.e. $\hbar = 1$).
+
+The kinetic energy in the reference harmonic basis is:
 
 $$
-H = \frac{\hat{p}^2}{2m} + V(\hat{x})
+T = \frac{\omega}{4}(2\hat{n} + 1 - q^2)
 $$
 
-The position operator is built from the Fock-basis ladder operators:
+The full Hamiltonian is $H = T + V(q)$. For a harmonic potential,
+$V(q) = \omega q^2/4$, and $H$ reduces to $\omega(\hat{n} + 1/2)$.
+
+**Important**: The user must provide the **full** potential $V(q)$
+including any harmonic part. Working in dimensionless units avoids
+the catastrophic cancellation that occurs when SI Joule-scale
+energies ($\sim 10^{-28}$) are added to rad/s-scale values
+($\sim 10^{6}$) in QuTiP matrix arithmetic.
+
+For example, a quartic anharmonic oscillator:
 
 $$
-\hat{x} = x_\mathrm{zpf}\,(a + a^\dagger),
-\qquad
-x_\mathrm{zpf} = \sqrt{\frac{\hbar}{2m\omega}}
+V(q) = \frac{\omega}{4}\,q^2 + \lambda\,q^4
 $$
 
-The kinetic energy is computed indirectly as
-$T = H_\mathrm{ref} - V_\mathrm{ref}$, where $H_\mathrm{ref}$ is the
-reference harmonic oscillator and $V_\mathrm{ref}$ is its harmonic
-potential.
-
-**Important**: The user must provide the **full** potential $V(x)$,
-including any harmonic part. For example, a quartic anharmonic
-oscillator:
-
-$$
-V(x) = \frac{1}{2}m\omega^2 x^2 + \lambda x^4
-$$
+where $\lambda$ is in rad/s per unit $q^4$.
 
 ```python
 import tiqs
 import numpy as np
 
-species = tiqs.get_species("Ca40")
 omega = 2 * np.pi * 1e6
-lam = 1e40
+lam = omega * 0.01  # 1% anharmonicity
 
 pot = tiqs.ArbitraryPotential(
-    v_func=lambda x: 0.5 * species.mass_kg * omega**2 * x * x + lam * x**4,
+    v_func=lambda q: omega / 4 * q * q + lam * q**4,
     omega=omega,
-    mass_kg=species.mass_kg,
 )
 E = tiqs.energy_levels(pot, n_fock=40)
 ```
@@ -136,7 +134,7 @@ E = tiqs.energy_levels(pot, n_fock=40)
 #### Convergence
 
 The Fock-basis representation converges best when the reference
-frequency $\omega$ matches the curvature of $V(x)$ near its minimum.
+frequency $\omega$ matches the curvature of $V(q)$ near its minimum.
 Use ``check_convergence()`` to verify that the truncation dimension
 ``n_fock`` is sufficient:
 

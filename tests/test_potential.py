@@ -3,7 +3,6 @@
 import numpy as np
 import pytest
 
-from tiqs.constants import ELECTRON_MASS
 from tiqs.potential import (
     ArbitraryPotential,
     DuffingPotential,
@@ -130,48 +129,56 @@ class TestDuffingPotential:
 
 class TestArbitraryPotential:
     def test_harmonic_v_matches_harmonic_potential(self):
-        """ArbitraryPotential with V = (1/2)*m*omega^2*x^2 should
-        produce the same spectrum as HarmonicPotential."""
+        """ArbitraryPotential with V(q) = omega/4 * q^2 should
+        produce the same spectrum as HarmonicPotential.
+
+        The harmonic potential in dimensionless units is
+        V(q) = omega/4 * q^2, which combined with the kinetic
+        energy T = omega/4 * (2n+1-q^2) gives H = omega*(n+1/2)."""
         omega = 2 * np.pi * 1e6
-        m = ELECTRON_MASS
 
-        def v_harmonic(x_op):
-            return 0.5 * m * omega**2 * x_op * x_op
+        def v_harmonic(q_op):
+            return omega / 4 * q_op * q_op
 
-        arb = ArbitraryPotential(v_func=v_harmonic, omega=omega, mass_kg=m)
+        arb = ArbitraryPotential(v_func=v_harmonic, omega=omega)
         harm = HarmonicPotential(omega=omega)
         E_arb = energy_levels(arb, n_fock=15)
         E_harm = energy_levels(harm, n_fock=15)
         E_arb_shifted = E_arb - E_arb[0]
         np.testing.assert_allclose(E_arb_shifted, E_harm, rtol=1e-8)
 
-    def test_quartic_perturbation_shifts_levels(self):
-        """Adding a quartic term should shift energy levels away
-        from harmonic."""
+    def test_quartic_perturbation_theory(self):
+        """First-order perturbation theory for V(q) = omega/4*q^2 + lam*q^4:
+
+        The quartic perturbation is lam*q^4 and
+        <n|q^4|n> = <n|(a+a_dag)^4|n> = 6n^2 + 6n + 3.
+
+        So E_n^(1) = lam * (6n^2 + 6n + 3).
+
+        Use small lam (lam << omega) so perturbation theory is
+        accurate to ~1%."""
         omega = 2 * np.pi * 1e6
-        m = ELECTRON_MASS
-        lam = 1e30
+        lam = omega * 1e-4
 
-        def v_quartic(x_op):
-            return 0.5 * m * omega**2 * x_op * x_op + lam * x_op**4
+        def v_quartic(q_op):
+            return omega / 4 * q_op * q_op + lam * q_op**4
 
-        arb = ArbitraryPotential(v_func=v_quartic, omega=omega, mass_kg=m)
-        harm = HarmonicPotential(omega=omega)
-        E_arb = energy_levels(arb, n_fock=20)
-        E_harm = energy_levels(harm, n_fock=20)
-        diffs_arb = np.diff(E_arb)
-        diffs_harm = np.diff(E_harm)
-        assert not np.allclose(diffs_arb[:5], diffs_harm[:5], rtol=0.01)
+        arb = ArbitraryPotential(v_func=v_quartic, omega=omega)
+        E = energy_levels(arb, n_fock=30)
+        E_shifted = E - E[0]
+        for n_level in range(1, 4):
+            E_harmonic = n_level * omega
+            correction = lam * 6 * n_level * (n_level + 1)
+            expected = E_harmonic + correction
+            assert E_shifted[n_level] == pytest.approx(expected, rel=0.01)
 
     def test_satisfies_protocol(self):
         omega = 2 * np.pi * 1e6
 
-        def v_simple(x_op):
-            return 0.5 * ELECTRON_MASS * omega**2 * x_op * x_op
+        def v_simple(q_op):
+            return omega / 4 * q_op * q_op
 
-        pot = ArbitraryPotential(
-            v_func=v_simple, omega=omega, mass_kg=ELECTRON_MASS
-        )
+        pot = ArbitraryPotential(v_func=v_simple, omega=omega)
 
         def accepts_potential(p: Potential) -> float:
             return p.omega
@@ -196,16 +203,10 @@ class TestCheckConvergence:
         low n_fock."""
         omega = 2 * np.pi * 1e6
 
-        def v_strong_quartic(x_op):
-            return (
-                0.5 * ELECTRON_MASS * omega**2 * x_op * x_op + 1e40 * x_op**4
-            )
+        def v_strong_quartic(q_op):
+            return omega / 4 * q_op * q_op + omega * 100 * q_op**4
 
-        pot = ArbitraryPotential(
-            v_func=v_strong_quartic,
-            omega=omega,
-            mass_kg=ELECTRON_MASS,
-        )
+        pot = ArbitraryPotential(v_func=v_strong_quartic, omega=omega)
         with pytest.warns(UserWarning, match="not converged"):
             check_convergence(pot, n_fock=5)
 
