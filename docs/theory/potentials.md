@@ -3,13 +3,22 @@
 In standard trapped-ion physics, each normal mode is a quantum harmonic
 oscillator with equally-spaced energy levels separated by $\hbar\omega$.
 This simplification enables the elegant sideband framework that underlies
-all cooling and gate protocols.
+all cooling and gate protocols: the uniform level spacing means a single
+laser frequency addresses the $|n\rangle \to |n+1\rangle$ transition for
+all $n$, which is essential for resolved-sideband cooling and for the
+Molmer-Sorensen and light-shift entangling gates described in
+[gates.md](gates.md).
 
 However, real trapping potentials can deviate from perfect harmonicity.
 Higher-order terms in the electrode potential, intentional anharmonic
 traps, or effective nonlinearities from strong drives produce
 **anharmonic** mode Hamiltonians where the energy level spacing is no
-longer uniform.
+longer uniform. Anharmonicity causes each sideband transition
+$|n\rangle \to |n+1\rangle$ to occur at a different frequency, so
+gate and cooling protocols designed for a harmonic spectrum acquire
+$n$-dependent errors. Quantifying these shifts is necessary for
+predicting gate infidelity in realistic traps and for designing
+protocols that compensate or exploit the nonlinearity.
 
 TIQS provides three potential models with a shared ``Potential`` protocol.
 
@@ -30,10 +39,22 @@ This allows user-defined potentials to integrate seamlessly with TIQS
 utility functions like ``energy_levels()``, ``transition_frequencies()``,
 and ``mode_hamiltonian()``.
 
+### Unit Convention
+
+The potential classes work in **angular-frequency units** (rad/s), with
+$\hbar = 1$ so that energies and frequencies are numerically identical.
+This differs from other parts of TIQS (and the other theory pages in
+this documentation) where $\hbar$ appears explicitly -- for example, the
+motional Hamiltonian in [normal_modes.md](normal_modes.md) is written
+$H = \sum_p \hbar\omega_p(a_p^\dagger a_p + 1/2)$. To convert a
+potential-module eigenvalue $E_n$ to SI energy in joules, multiply by
+$\hbar$: $E_n^{(\mathrm{SI})} = \hbar\, E_n$. Within the potential
+module itself, the factor cancels everywhere, so all ``Potential``
+methods accept and return values in rad/s with no $\hbar$ bookkeeping.
+
 ### Harmonic Potential
 
-The default model. The single-mode Hamiltonian in natural units
-($\hbar = 1$) is:
+The default model. The single-mode Hamiltonian is:
 
 $$
 H = \omega\,a^\dagger a
@@ -75,6 +96,17 @@ $$
 The $|0\rangle \to |1\rangle$ transition remains at $\omega$ regardless
 of $\alpha$.
 
+For quantum computing, the Duffing model captures the leading-order
+effect of trap anharmonicity on gate fidelity. In a Molmer-Sorensen
+gate, the bichromatic drive is tuned to $\omega_0 \pm (\omega + \delta)$.
+When the motional mode is anharmonic, the transition
+$|n\rangle \to |n+1\rangle$ occurs at $\omega + \alpha n$ rather than
+$\omega$, so higher Fock states are progressively off-resonant from the
+gate drive. For typical trapped-ion parameters ($\alpha/\omega \sim
+10^{-6}$--$10^{-4}$), this shifts the phase-space closure condition and
+produces a residual spin-motion entanglement at the nominal gate time,
+limiting fidelity.
+
 ```python
 import numpy as np
 import tiqs
@@ -94,7 +126,11 @@ $\hat{n}$, ``ArbitraryPotential`` constructs the Hamiltonian from
 a user-supplied potential $V(q)$ defined in **dimensionless
 coordinates**, where $q = a + a^\dagger$ is the dimensionless
 position operator. The potential must return values in **angular
-frequency units** (rad/s, i.e. $\hbar = 1$).
+frequency units** (rad/s). This class is the primary tool for
+studying realistic electrode geometries -- such as surface traps where
+higher-order multipole terms distort the potential -- or engineered
+anharmonic traps used in Penning-trap electron experiments where the
+potential shape may be deliberately non-quadratic.
 
 The kinetic energy in the reference harmonic basis is:
 
@@ -158,21 +194,37 @@ apply directly.
 
 ### Utility Functions
 
-``energy_levels(potential, n_fock)``
-:   Diagonalizes the single-mode Hamiltonian and returns sorted
-    eigenvalues in rad/s.
+The potentials module provides four helper functions that accept any
+object satisfying the ``Potential`` protocol:
 
-``transition_frequencies(potential, n_fock)``
-:   Returns an array of $\omega_{n \to n+1}$ for $n = 0, \ldots,
-    N_\mathrm{fock} - 2$.
+- ``energy_levels(potential, n_fock)``: Diagonalizes the single-mode
+  Hamiltonian and returns sorted eigenvalues in rad/s.
+- ``transition_frequencies(potential, n_fock)``: Returns an array of
+  $\omega_{n \to n+1}$ for $n = 0, \ldots, N_\mathrm{fock} - 2$.
+- ``check_convergence(potential, n_fock, n_levels=5)``: Compares
+  eigenvalues at two truncation sizes and warns if not converged.
+- ``mode_hamiltonian(potential, ops, mode)``: Lifts a single-mode
+  Hamiltonian into the full composite Hilbert space at the given mode
+  index.
 
-``check_convergence(potential, n_fock, n_levels=5)``
-:   Compares eigenvalues at two truncation sizes and warns if not
-    converged.
+```python
+import numpy as np
+import tiqs
 
-``mode_hamiltonian(potential, ops, mode)``
-:   Lifts a single-mode Hamiltonian into the full composite Hilbert
-    space at the given mode index.
+pot = tiqs.DuffingPotential(
+    omega=2 * np.pi * 1e6,
+    anharmonicity=-2 * np.pi * 10e3,
+)
+
+# Eigenvalues in rad/s
+E = tiqs.energy_levels(pot, n_fock=20)
+
+# Transition frequencies -- constant for harmonic, varying for anharmonic
+freqs = tiqs.transition_frequencies(pot, n_fock=20)
+
+# Verify Fock-space truncation is adequate
+tiqs.check_convergence(pot, n_fock=20, n_levels=5)
+```
 
 ### References
 
