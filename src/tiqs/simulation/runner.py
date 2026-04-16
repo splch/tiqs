@@ -187,7 +187,7 @@ class SimulationRunner:
 
         if self._anharmonic_H is not None:
             if isinstance(H, list):
-                H = [H[0] + self._anharmonic_H] + H[1:]
+                H = [H[0] + self._anharmonic_H, *H[1:]]
             else:
                 H = H + self._anharmonic_H
 

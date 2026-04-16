@@ -8,12 +8,17 @@ and transition frequencies by diagonalizing it.
 .. include:: ../../docs/theory/potentials.md
 """
 
+from __future__ import annotations
+
 import warnings
 from dataclasses import dataclass
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import numpy as np
 import qutip
+
+if TYPE_CHECKING:
+    from tiqs.hilbert_space.operators import OperatorFactory
 
 from tiqs.constants import HBAR
 
@@ -95,8 +100,8 @@ class DuffingPotential:
 
     def single_mode_hamiltonian(self, n_fock: int) -> qutip.Qobj:
         n = qutip.num(n_fock)
-        I = qutip.qeye(n_fock)
-        return self.omega * n + (self.anharmonicity / 2) * n * (n - I)
+        eye = qutip.qeye(n_fock)
+        return self.omega * n + (self.anharmonicity / 2) * n * (n - eye)
 
 
 @dataclass(frozen=True)
@@ -151,10 +156,10 @@ class ArbitraryPotential:
     def single_mode_hamiltonian(self, n_fock: int) -> qutip.Qobj:
         a = qutip.destroy(n_fock)
         n = qutip.num(n_fock)
-        I = qutip.qeye(n_fock)
+        eye = qutip.qeye(n_fock)
         x_zpf = np.sqrt(HBAR / (2 * self.mass_kg * self.omega))
         x_op = x_zpf * (a + a.dag())
-        H_ref = self.omega * (n + 0.5 * I)
+        H_ref = self.omega * (n + 0.5 * eye)
         V_ref = 0.5 * self.mass_kg * self.omega**2 * x_op * x_op
         return H_ref - V_ref + self.v_func(x_op)
 
@@ -181,9 +186,7 @@ def energy_levels(potential: Potential, n_fock: int) -> np.ndarray:
     return np.sort(H.eigenenergies().real)
 
 
-def transition_frequencies(
-    potential: Potential, n_fock: int
-) -> np.ndarray:
+def transition_frequencies(potential: Potential, n_fock: int) -> np.ndarray:
     r"""Compute transition frequencies $\omega_{n \to n+1}$.
 
     Returns an array of length ``n_fock - 1`` where element $n$ is
@@ -246,7 +249,7 @@ def check_convergence(
 
 def mode_hamiltonian(
     potential: Potential,
-    ops: "OperatorFactory",
+    ops: OperatorFactory,
     mode: int,
 ) -> qutip.Qobj:
     r"""Lift a single-mode Hamiltonian to the full tensor-product space.
@@ -269,8 +272,6 @@ def mode_hamiltonian(
     qutip.Qobj
         Hamiltonian acting on the full composite Hilbert space.
     """
-    from tiqs.hilbert_space.operators import OperatorFactory  # noqa: F811
-
     n_fock = ops.hs.fock_dim(mode)
     H_single = potential.single_mode_hamiltonian(n_fock)
     return ops._full_operator(H_single, ops._mode_index(mode))

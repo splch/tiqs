@@ -2,7 +2,6 @@
 
 import numpy as np
 import pytest
-import qutip
 
 from tiqs.constants import ELECTRON_MASS
 from tiqs.potential import (
@@ -139,9 +138,7 @@ class TestArbitraryPotential:
         def v_harmonic(x_op):
             return 0.5 * m * omega**2 * x_op * x_op
 
-        arb = ArbitraryPotential(
-            v_func=v_harmonic, omega=omega, mass_kg=m
-        )
+        arb = ArbitraryPotential(v_func=v_harmonic, omega=omega, mass_kg=m)
         harm = HarmonicPotential(omega=omega)
         E_arb = energy_levels(arb, n_fock=15)
         E_harm = energy_levels(harm, n_fock=15)
@@ -158,9 +155,7 @@ class TestArbitraryPotential:
         def v_quartic(x_op):
             return 0.5 * m * omega**2 * x_op * x_op + lam * x_op**4
 
-        arb = ArbitraryPotential(
-            v_func=v_quartic, omega=omega, mass_kg=m
-        )
+        arb = ArbitraryPotential(v_func=v_quartic, omega=omega, mass_kg=m)
         harm = HarmonicPotential(omega=omega)
         E_arb = energy_levels(arb, n_fock=20)
         E_harm = energy_levels(harm, n_fock=20)
@@ -203,8 +198,7 @@ class TestCheckConvergence:
 
         def v_strong_quartic(x_op):
             return (
-                0.5 * ELECTRON_MASS * omega**2 * x_op * x_op
-                + 1e40 * x_op**4
+                0.5 * ELECTRON_MASS * omega**2 * x_op * x_op + 1e40 * x_op**4
             )
 
         pot = ArbitraryPotential(
@@ -243,6 +237,4 @@ class TestModeHamiltonian:
         pot = HarmonicPotential(omega=omega)
         H_pot = mode_hamiltonian(pot, ops, mode=0)
         H_expected = omega * ops.number(0)
-        np.testing.assert_allclose(
-            H_pot.full(), H_expected.full(), atol=1e-20
-        )
+        np.testing.assert_allclose(H_pot.full(), H_expected.full(), atol=1e-20)
