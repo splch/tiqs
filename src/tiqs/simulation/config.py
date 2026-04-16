@@ -4,6 +4,7 @@ noise parameters.
 
 from dataclasses import dataclass, field
 
+from tiqs.potential import Potential
 from tiqs.species.protocol import Species
 from tiqs.trap import Trap
 
@@ -38,6 +39,10 @@ class SimulationConfig:
         Off-resonant photon scattering rate. ``None`` = no scattering.
     n_bar_initial : float
         Initial mean phonon number (after cooling). 0 = ground state.
+    potentials : dict[int, Potential]
+        Anharmonic potentials per mode index. Modes not in this dict
+        default to harmonic. See ``DuffingPotential`` for transmon-like
+        anharmonicity.
     solver_options : dict[str, object]
         Additional options passed to the QuTiP solver.
     """
@@ -54,6 +59,7 @@ class SimulationConfig:
     t1_qubit: float | None = None
     photon_scattering_rate: float | None = None
     n_bar_initial: float = 0.0
+    potentials: dict[int, Potential] = field(default_factory=dict)
     solver_options: dict[str, object] = field(
         default_factory=lambda: {"max_step": 0.0, "nsteps": 5000}
     )

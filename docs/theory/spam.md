@@ -1,5 +1,9 @@
 ## State Preparation and Measurement
 
+State preparation and measurement (SPAM) bookend every quantum circuit.
+Their combined error floor bounds the fidelity of any gate
+characterization.
+
 ### State Preparation via Optical Pumping
 
 Qubits are initialized into a known state via **optical pumping**, a
@@ -29,6 +33,17 @@ During a detection window of 100-500 $\mu$s, the bright state yields
 $\sim 10$-$30$ collected photons (limited by $\sim 2$-$5\%$ total collection
 efficiency), while the dark state yields 0-1 background counts. A threshold
 discriminator separates the states.
+
+**Poisson threshold model**: Photon counts from the bright and dark states
+follow Poisson distributions with means
+$\mu_b = R_b\, t_\text{det}\, \eta_c$ and
+$\mu_d = R_d\, t_\text{det}\, \eta_c$, where $R_b$ and $R_d$ are the
+scattering rates and $\eta_c$ is the collection efficiency. The optimal
+threshold $n^*$ maximizes the readout fidelity:
+
+$$
+F_\text{readout} = \frac{1}{2}\Bigl[P(n \geq n^* \mid \mu_b) + P(n < n^* \mid \mu_d)\Bigr]
+$$
 
 ### Electron Shelving
 
@@ -60,3 +75,12 @@ Measuring ancilla qubits while preserving data qubits is critical for quantum
 error correction. In QCCD architectures, ions are physically shuttled to
 separated detection zones ($\sim 370\;\mu$m apart), reducing measurement
 crosstalk to $\sim 2 \times 10^{-5}$.
+
+### References
+
+1. Myerson, A.H. et al. "High-fidelity readout of trapped-ion qubits."
+   *Phys. Rev. Lett.* **100**, 200502 (2008).
+2. Noek, R. et al. "High speed, high fidelity detection of an atomic
+   hyperfine qubit." *Opt. Lett.* **38**, 4735 (2013).
+3. Pino, J.M. et al. "Demonstration of the trapped-ion quantum CCD
+   computer architecture." *Nature* **592**, 209 (2021).

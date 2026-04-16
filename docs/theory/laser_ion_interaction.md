@@ -68,6 +68,14 @@ $$
 Drives $|g, n\rangle \leftrightarrow |e, n{+}1\rangle$ at Rabi frequency
 $\eta\Omega\sqrt{n+1}$.
 
+**TIQS convention**: The Hamiltonians above use the textbook convention
+$\sigma_+ = |e\rangle\langle g|$. In the TIQS code (following QuTiP),
+$|0\rangle$ is the ground state and $|1\rangle$ the excited state, so
+$\sigma_+ = |0\rangle\langle 1|$ acts as de-excitation. The code therefore
+uses $\sigma_-$ for excitation: the red sideband coupling is
+$a\,\sigma_- + \text{h.c.}$ and the blue sideband coupling is
+$a^\dagger\sigma_- + \text{h.c.}$
+
 ### Exact Rabi Frequencies
 
 Beyond the Lamb-Dicke approximation, the exact Rabi frequency for the $s$-th
@@ -108,3 +116,10 @@ Beam geometry controls the coupling:
 
 - **Co-propagating** ($|\Delta k| \approx 0$): Pure carrier for single-qubit gates
 - **Counter-propagating** ($|\Delta k| \approx 2k$): Maximum motional coupling for entangling gates
+
+### References
+
+1. Leibfried, D. et al. "Quantum dynamics of single trapped ions."
+   *Rev. Mod. Phys.* **75**, 281 (2003).
+2. Wineland, D.J. et al. "Experimental issues in coherent quantum-state
+   manipulation of trapped atomic ions." *J. Res. NIST* **103**, 259 (1998).

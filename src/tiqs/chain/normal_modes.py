@@ -14,15 +14,17 @@ _COULOMB_PREFACTOR = ELECTRON_CHARGE**2 / (4 * PI * EPSILON_0)
 
 @dataclass
 class ModeGroup:
-    r"""A set of normal modes along one degree of freedom.
+    """A set of normal modes along one degree of freedom.
 
     Attributes
     ----------
     freqs : np.ndarray
-        Mode angular frequencies in rad/s, shape $(N,)$, sorted ascending.
+        Mode angular frequencies in rad/s, shape (N,), sorted
+        ascending.
     vectors : np.ndarray
-        Mode eigenvectors, shape $(N, N)$. Column $m$ is the participation
-        vector for mode $m$: ``vectors[i, m]`` $= b_{i,m}$.
+        Mode eigenvectors, shape (N, N). Column m is the
+        participation vector for mode m:
+        vectors[i, m] = b_{i,m}.
     """
 
     freqs: np.ndarray
@@ -31,16 +33,17 @@ class ModeGroup:
 
 @dataclass
 class NormalModeResult:
-    r"""Results of normal mode analysis.
+    """Results of normal mode analysis.
 
     Attributes
     ----------
     positions : np.ndarray
-        Equilibrium positions in meters, shape $(N,)$.
+        Equilibrium positions in meters, shape (N,).
     modes : dict[str, ModeGroup]
         Mode groups keyed by physical name. For a Paul trap:
-        ``"axial"``, ``"radial_x"``, ``"radial_y"``. For a Penning
-        trap: ``"axial"``, ``"modified_cyclotron"``, ``"magnetron"``.
+        ``"axial"``, ``"radial_x"``, ``"radial_y"``. For a
+        Penning trap: ``"axial"``, ``"modified_cyclotron"``,
+        ``"magnetron"``.
     """
 
     positions: np.ndarray
@@ -54,21 +57,20 @@ def _coulomb_hessian(
     mass_kg: float,
     axial: bool,
 ) -> np.ndarray:
-    r"""Build the Coulomb-coupled Hessian matrix for one direction.
+    """Build the Coulomb-coupled Hessian matrix for one direction.
 
-    The matrix elements are
-    $H_{ij} = \partial^2 V / (m\,\partial x_i\,\partial x_j)$
-    where $C = e^2 / (4\pi\epsilon_0\,m)$.
+    H_ij = d^2 V / (m * dx_i dx_j)  where  C = e^2 / (4*pi*eps0*m).
 
     For axial modes (focusing Coulomb coupling):
-
-    - Diagonal: $\omega_z^2 + \sum_{k \neq i} 2C / |z_i - z_k|^3$
-    - Off-diagonal: $-2C / |z_i - z_j|^3$
+        Diagonal:     omega_z^2 + sum_{k!=i} 2C / |z_i - z_k|^3
+        Off-diagonal: -2C / |z_i - z_j|^3
 
     For radial modes (defocusing Coulomb coupling):
+        Diagonal:     omega_r^2 - sum_{k!=i} C / |z_i - z_k|^3
+        Off-diagonal: +C / |z_i - z_j|^3
 
-    - Diagonal: $\omega_r^2 - \sum_{k \neq i} C / |z_i - z_k|^3$
-    - Off-diagonal: $+C / |z_i - z_j|^3$
+    Note the sign difference: radial Coulomb coupling is
+    repulsive/defocusing.
     """
     C = _COULOMB_PREFACTOR / mass_kg
     sign = -1 if axial else +1
@@ -81,10 +83,13 @@ def _coulomb_hessian(
             if k != i:
                 d3 = abs(pos[i] - pos[k]) ** 3
                 coulomb_sum += factor * C / d3
+                # axial: -2C/d^3, radial: +C/d^3
                 H[i, k] = sign * factor * C / d3
         if axial:
+            # omega_z^2 + sum 2C/|z_i - z_k|^3
             H[i, i] = omega_diag**2 + coulomb_sum
         else:
+            # omega_r^2 - sum C/|z_i - z_k|^3
             H[i, i] = omega_diag**2 - coulomb_sum
 
     return H

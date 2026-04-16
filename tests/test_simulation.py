@@ -96,3 +96,87 @@ class TestSimulationRunner:
         sz = runner.ops.sigma_z(0)
         final_sz = qutip.expect(sz, result.states[-1])
         assert final_sz < 1.0  # imperfect due to noise
+
+
+class TestAnharmonicSimulation:
+    def test_config_accepts_potentials(self):
+        """SimulationConfig can be created with a potentials dict."""
+        from tiqs.potential import DuffingPotential
+
+        trap = PaulTrap(
+            v_rf=300.0,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1.0e6,
+            species=get_species("Ca40"),
+        )
+        pot = DuffingPotential(
+            omega=TWO_PI * 1e6,
+            anharmonicity=-TWO_PI * 50e3,
+        )
+        config = SimulationConfig(
+            species=get_species("Ca40"),
+            trap=trap,
+            n_ions=1,
+            n_modes=1,
+            n_fock=15,
+            solver="sesolve",
+            potentials={0: pot},
+        )
+        assert 0 in config.potentials
+
+    def test_runner_with_duffing_potential(self):
+        """Carrier pulse with anharmonic mode still produces Rabi
+        oscillations (anharmonic correction is on the motion,
+        not the spin)."""
+        from tiqs.potential import DuffingPotential
+
+        trap = PaulTrap(
+            v_rf=300.0,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1.0e6,
+            species=get_species("Ca40"),
+        )
+        pot = DuffingPotential(
+            omega=TWO_PI * 1e6,
+            anharmonicity=-TWO_PI * 50e3,
+        )
+        config = SimulationConfig(
+            species=get_species("Ca40"),
+            trap=trap,
+            n_ions=1,
+            n_modes=1,
+            n_fock=15,
+            solver="sesolve",
+            potentials={0: pot},
+        )
+        runner = SimulationRunner(config)
+        result = runner.run_carrier_pulse(ion=0, theta=np.pi)
+        sz = runner.ops.sigma_z(0)
+        final_sz = qutip.expect(sz, result.states[-1])
+        assert final_sz == pytest.approx(-1.0, abs=0.15)
+
+    def test_no_potentials_backward_compatible(self):
+        """Simulations without potentials produce identical results."""
+        trap = PaulTrap(
+            v_rf=300.0,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1.0e6,
+            species=get_species("Ca40"),
+        )
+        config = SimulationConfig(
+            species=get_species("Ca40"),
+            trap=trap,
+            n_ions=1,
+            n_modes=1,
+            n_fock=15,
+            solver="sesolve",
+        )
+        assert config.potentials == {}
+        runner = SimulationRunner(config)
+        result = runner.run_carrier_pulse(ion=0, theta=np.pi)
+        sz = runner.ops.sigma_z(0)
+        final_sz = qutip.expect(sz, result.states[-1])
+        assert final_sz == pytest.approx(-1.0, abs=0.1)

@@ -75,6 +75,13 @@ $$
 where $\sigma_\phi = \cos\phi_s\;\sigma_x + \sin\phi_s\;\sigma_y$ and
 $\phi_s = (\phi_+ + \phi_-)/2$ is the spin basis phase.
 
+**Convention note**: This document uses the textbook convention with an
+explicit $1/2$ factor, giving coupling strength $\eta\Omega/2$. The TIQS
+code absorbs this factor into the Rabi frequency
+($\Omega_\text{code} = \Omega_\text{here}/2$), so all formulas below
+(displacement radius, geometric phase, drive strength) are self-consistent
+with each other but differ from the code by that factor of 2.
+
 #### Phase-Space Trajectories
 
 Each spin-pair state ($|{\uparrow\uparrow}\rangle$, $|{\downarrow\downarrow}\rangle$,
@@ -106,7 +113,7 @@ with $t_\text{gate} = 2\pi / \delta$.
 The entangling phase between ions $j$ and $k$ at gate time is:
 
 $$
-\chi_{j,k} = \sum_p \frac{\pi\, n_p\, \eta_{j,p}\, \eta_{k,p}\, \Omega_j\, \Omega_k}{2\delta_p^2}
+\chi_{j,k} = \sum_p \frac{\pi\, n_p\, \eta_{j,p}\, \eta_{k,p}\, \Omega_j\, \Omega_k}{\delta_p^2}
 $$
 
 For a maximally entangling gate: $\chi_{1,2} = \pi/4$, producing
@@ -129,7 +136,7 @@ The gate remains valid as long as $\eta\sqrt{\bar{n}} \ll 1$ (Lamb-Dicke regime)
 For a single-mode, constant-amplitude, single-loop gate:
 
 $$
-\Omega = \frac{\delta}{\eta\sqrt{2}}, \qquad
+\Omega = \frac{\delta}{2\,\eta}, \qquad
 t_\text{gate} = \frac{2\pi}{\delta}
 $$
 
@@ -180,3 +187,14 @@ making it more robust to path-length instabilities than the MS gate.
 | Single-qubit | $1.5 \times 10^{-7}$ | Oxford Ionics, ${}^{43}\text{Ca}^+$, microwave |
 | Two-qubit | $8.4 \times 10^{-5}$ | IonQ/Oxford Ionics, ${}^{43}\text{Ca}^+$, smooth gate |
 | Two-qubit (98-qubit system) | $7.9 \times 10^{-4}$ | Quantinuum Helios, ${}^{137}\text{Ba}^+$ |
+
+### References
+
+1. Cirac, J.I. & Zoller, P. "Quantum computations with cold trapped ions."
+   *Phys. Rev. Lett.* **74**, 4091 (1995).
+2. Molmer, K. & Sorensen, A. "Multiparticle entanglement of hot trapped ions."
+   *Phys. Rev. Lett.* **82**, 1835 (1999).
+3. Lee, P.J. et al. "Phase control of trapped ion quantum gates using a
+   geometric phase." *J. Opt. B* **7**, S371 (2005).
+4. Leibfried, D. et al. "Experimental demonstration of a robust, high-fidelity
+   geometric two ion-qubit phase gate." *Nature* **422**, 412 (2003).

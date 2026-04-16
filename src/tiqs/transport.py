@@ -1,4 +1,7 @@
-r"""QCCD transport: ion shuttling and crystal splitting."""
+r"""QCCD transport: ion shuttling and crystal splitting.
+
+.. include:: ../../docs/theory/transport.md
+"""
 
 import numpy as np
 import qutip
@@ -49,7 +52,8 @@ def shuttle_motional_excitation(
     float
         Estimated number of added motional quanta.
     """
-    # Number of trap periods during shuttling
+    # Currently only uses the adiabaticity-based model; `distance` is
+    # accepted for API compatibility with a future distance-dependent model.
     n_periods = trap_frequency * duration / (2 * np.pi)
     # For optimized waveforms, excitation decays exponentially with
     # the number of trap oscillation periods during transport.
@@ -65,12 +69,14 @@ def apply_shuttling_noise(
     mode: int,
     added_quanta: float,
 ) -> qutip.Qobj:
-    """Apply shuttling-induced motional excitation as thermal noise.
+    r"""Apply shuttling-induced motional excitation as thermal noise.
 
-    Models the effect of shuttling as adding 'added_quanta' mean
-    phonons to the specified mode via a thermal channel. Uses mesolve
-    with a creation-operator collapse operator calibrated to deposit
-    the desired number of quanta.
+    Models the effect of shuttling as depositing phonons into the
+    specified mode via a thermal channel. The rate is calibrated
+    so that ``added_quanta`` phonons are deposited starting from
+    vacuum. For non-vacuum initial states, the actual number of
+    added phonons will be larger due to stimulated emission
+    ($d\langle n\rangle/dt = \gamma(\langle n\rangle + 1)$).
 
     Parameters
     ----------

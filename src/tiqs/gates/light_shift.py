@@ -19,15 +19,15 @@ def light_shift_gate_hamiltonian(
     The AC Stark shift creates a $\sigma_z$-dependent force:
 
     $$
-    H_\mathrm{LS}(t) = \sum_j \eta_j \, F_j \, \sigma_{z,j}
+    H_\mathrm{LS}(t) = \sum_j \eta_j \, \Omega \, \sigma_{z,j}
     \left( a^\dagger e^{i \delta t} + a \, e^{-i \delta t} \right)
     $$
 
-    where $F_j = \eta_j \, \Omega$ is the effective force
-    strength. This generates a
-    $\sigma_z \otimes \sigma_z$ interaction (ZZ coupling),
-    which is inherently
-    insensitive to the optical phase of the laser beams.
+    As with ``ms_gate_hamiltonian``, the factor of $1/2$ from the
+    theory-doc convention is absorbed into $\Omega$.
+    This generates a $\sigma_z \otimes \sigma_z$ interaction
+    (ZZ coupling), which is inherently insensitive to the optical
+    phase of the laser beams.
 
     Parameters
     ----------

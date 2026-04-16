@@ -11,6 +11,16 @@ from tiqs.chain.normal_modes import ModeGroup, NormalModeResult, normal_modes
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
+from tiqs.potential import (
+    ArbitraryPotential,
+    DuffingPotential,
+    HarmonicPotential,
+    Potential,
+    check_convergence,
+    energy_levels,
+    mode_hamiltonian,
+    transition_frequencies,
+)
 from tiqs.simulation.config import SimulationConfig
 from tiqs.simulation.runner import SimulationRunner
 from tiqs.species.electron import ElectronSpecies
@@ -19,7 +29,10 @@ from tiqs.species.protocol import Species
 from tiqs.trap import PaulTrap, PenningTrap, Trap
 
 __all__ = [
+    "ArbitraryPotential",
+    "DuffingPotential",
     "ElectronSpecies",
+    "HarmonicPotential",
     "HilbertSpace",
     "IonSpecies",
     "ModeGroup",
@@ -27,13 +40,18 @@ __all__ = [
     "OperatorFactory",
     "PaulTrap",
     "PenningTrap",
+    "Potential",
     "SimulationConfig",
     "SimulationRunner",
     "Species",
     "StateFactory",
     "Trap",
+    "check_convergence",
+    "energy_levels",
     "equilibrium_positions",
     "get_species",
     "lamb_dicke_parameters",
+    "mode_hamiltonian",
     "normal_modes",
+    "transition_frequencies",
 ]

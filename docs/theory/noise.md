@@ -18,8 +18,8 @@ causing transitions between motional Fock states. This is the dominant
 **Lindblad operators** for each mode $p$:
 
 $$
-L_\text{heat} = \sqrt{\dot{\bar{n}}_p}\; a_p^\dagger, \qquad
-L_\text{cool} = \sqrt{\dot{\bar{n}}_p \cdot \frac{\bar{n}_\text{th}}{\bar{n}_\text{th}+1}}\; a_p
+L_\text{heat} = \sqrt{\dot{\bar{n}}_p\,(\bar{n}_\text{th}+1)}\; a_p^\dagger, \qquad
+L_\text{cool} = \sqrt{\dot{\bar{n}}_p\,\bar{n}_\text{th}}\; a_p
 $$
 
 where $\dot{\bar{n}}_p$ is the heating rate (phonons/second), related to the
@@ -54,8 +54,10 @@ $$
 L_\phi = \sqrt{\gamma_\phi / 2}\; \sigma_z
 $$
 
-The $T_2$ dephasing time is $T_2 = 2/\gamma_\phi$. For clock-state qubits
-with second-order magnetic sensitivity:
+The pure dephasing rate relates to the coherence time as
+$\gamma_\phi = 1/T_2 - 1/(2T_1)$; for hyperfine qubits where
+$T_1 \to \infty$, this simplifies to $\gamma_\phi = 1/T_2$.
+For clock-state qubits with second-order magnetic sensitivity:
 
 $$
 \gamma_\phi = 2\pi \left|\frac{d^2f}{dB^2}\right| \cdot 2B_0 \cdot \delta B_\text{rms}
@@ -133,3 +135,13 @@ The total Lindblad superoperator sums all channels:
 $$
 \mathcal{D}[\rho] = \sum_p \mathcal{D}_{\text{heat},p}[\rho] + \sum_p \mathcal{D}_{\text{deph},p}[\rho] + \sum_j \mathcal{D}_{\phi,j}[\rho] + \sum_j \mathcal{D}_{\text{decay},j}[\rho] + \sum_j \mathcal{D}_{\text{scatter},j}[\rho]
 $$
+
+### References
+
+1. Turchette, Q.A. et al. "Decoherence and decay of motional quantum states
+   of a trapped atom coupled to engineered reservoirs." *Phys. Rev. A*
+   **62**, 053807 (2000).
+2. Brownnutt, M. et al. "Ion-trap measurements of electric-field noise near
+   surfaces." *Rev. Mod. Phys.* **87**, 1419 (2015).
+3. Ozeri, R. et al. "Errors in trapped-ion quantum gates due to spontaneous
+   photon scattering." *Phys. Rev. A* **75**, 042329 (2007).
