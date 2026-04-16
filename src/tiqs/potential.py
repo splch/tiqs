@@ -113,14 +113,12 @@ class ArbitraryPotential:
     full Hamiltonian is then:
 
     $$
-    H = \omega\,(\hat{n} + \tfrac{1}{2})
-      - \frac{\omega}{4}(q^2 - 2\hat{n} - 1) + V(q)
-      = \frac{\omega}{4}(2\hat{n} + 1 - q^2) + V(q)
-      + \frac{\omega}{2}(\hat{n} + \tfrac{1}{2})
+    H = \underbrace{\omega\,(\hat{n} + \tfrac{1}{2})
+      - \frac{\omega}{4}\,q^2}_{T} + V(q)
     $$
 
-    which simplifies to the kinetic energy (in the reference basis)
-    plus the user-supplied potential.
+    where $T = \omega\,(\hat{n} + \tfrac{1}{2}) - \omega\,q^2/4$
+    is the kinetic energy expressed in the reference harmonic basis.
 
     For example, a quartic anharmonic oscillator with harmonic
     frequency $\omega$ and quartic coefficient $\lambda$ (in

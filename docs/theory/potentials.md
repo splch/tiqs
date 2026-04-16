@@ -97,7 +97,7 @@ frequency units** (rad/s, i.e. $\hbar = 1$).
 The kinetic energy in the reference harmonic basis is:
 
 $$
-T = \frac{\omega}{4}(2\hat{n} + 1 - q^2)
+T = \omega\,(\hat{n} + \tfrac{1}{2}) - \frac{\omega}{4}\,q^2
 $$
 
 The full Hamiltonian is $H = T + V(q)$. For a harmonic potential,
