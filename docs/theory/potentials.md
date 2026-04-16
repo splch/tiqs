@@ -1,119 +1,91 @@
-## Motional Potentials
+## Anharmonic Potentials
 
-In standard trapped-ion physics, each normal mode is a quantum harmonic
-oscillator with equally-spaced energy levels separated by $\hbar\omega$.
-This simplification enables the elegant sideband framework that underlies
-all cooling and gate protocols: the uniform level spacing means a single
-laser frequency addresses the $|n\rangle \to |n+1\rangle$ transition for
-all $n$, which is essential for resolved-sideband cooling and for the
-Molmer-Sorensen and light-shift entangling gates described in
-[gates.md](gates.md).
+Each normal mode of a trapped-ion chain is a quantum harmonic oscillator
+with equally spaced energy levels separated by $\hbar\omega$. The uniform
+spacing means a single laser frequency addresses the
+$|n\rangle \to |n{+}1\rangle$ transition for all $n$, which is essential
+for resolved-sideband cooling and for the Molmer-Sorensen and light-shift
+entangling gates.
 
-However, real trapping potentials can deviate from perfect harmonicity.
-Higher-order terms in the electrode potential, intentional anharmonic
-traps, or effective nonlinearities from strong drives produce
-**anharmonic** mode Hamiltonians where the energy level spacing is no
-longer uniform. Anharmonicity causes each sideband transition
-$|n\rangle \to |n+1\rangle$ to occur at a different frequency, so
-gate and cooling protocols designed for a harmonic spectrum acquire
-$n$-dependent errors. Quantifying these shifts is necessary for
-predicting gate infidelity in realistic traps and for designing
-protocols that compensate or exploit the nonlinearity.
+Real trapping potentials deviate from perfect harmonicity. Higher-order
+terms in the electrode potential, intentional anharmonic traps (e.g. for
+long ion chains or Penning-trap electrons), or effective nonlinearities
+from strong drives produce **anharmonic** mode Hamiltonians where each
+sideband transition $|n\rangle \to |n{+}1\rangle$ occurs at a slightly
+different frequency. Gate and cooling protocols designed for a harmonic
+spectrum then acquire $n$-dependent errors.
 
-TIQS provides three potential models -- `HarmonicPotential`,
-`DuffingPotential`, and `ArbitraryPotential` -- with a shared
-`Potential` protocol. Any class exposing `omega` and
-`single_mode_hamiltonian(n_fock)` satisfies the protocol and integrates
-with the utility functions `energy_levels()`,
-`transition_frequencies()`, `check_convergence()`, and
-`mode_hamiltonian()`.
-
-### Unit Convention
-
-The potential classes work in **angular-frequency units** (rad/s), with
-$\hbar = 1$ so that energies and frequencies are numerically identical.
-This differs from other parts of TIQS (and the other theory pages in
-this documentation) where $\hbar$ appears explicitly. For example, the
-motional Hamiltonian in [normal_modes.md](normal_modes.md) is written
-$H = \sum_p \hbar\omega_p(a_p^\dagger a_p + 1/2)$. To convert a
-potential-module eigenvalue $E_n$ to SI energy in joules, multiply by
-$\hbar$: $E_n^{(\mathrm{SI})} = \hbar\, E_n$. Within the potential
-module itself, the factor cancels everywhere, so all methods accept and
-return values in rad/s with no $\hbar$ bookkeeping.
+All potentials in TIQS work in angular-frequency units (rad/s) with
+$\hbar = 1$, so energies and frequencies are numerically identical.
+To recover SI energy, multiply by $\hbar$.
 
 ### Harmonic Potential
 
-The default model. The single-mode Hamiltonian is:
+The single-mode Hamiltonian for a harmonic oscillator is:
 
 $$
 H = \omega\,a^\dagger a
 $$
 
 Energy eigenvalues are $E_n = n\omega$ and all transition frequencies
-equal $\omega$. This is what TIQS uses implicitly when no potential is
-explicitly specified.
+equal $\omega$. This is the implicit default when no potential is
+specified.
 
 ### Duffing (Kerr) Potential
 
-A harmonic oscillator with a quartic nonlinearity, producing the
+A harmonic oscillator with a quartic nonlinearity produces the
 **Duffing** (also called **Kerr**) Hamiltonian:
 
 $$
 H = \omega\,\hat{n} + \frac{\alpha}{2}\,\hat{n}\,(\hat{n} - 1)
 $$
 
-where $\alpha$ is the **anharmonicity** parameter. The transition
-frequency from $|n\rangle$ to $|n+1\rangle$ shifts linearly with $n$:
+where $\alpha$ is the **anharmonicity** parameter (equivalently,
+$(\alpha/2)\,\hat{n}(\hat{n}-1) = (\alpha/2)\,a^{\dagger 2} a^2$).
+The transition frequency from $|n\rangle$ to $|n{+}1\rangle$ shifts
+linearly with $n$:
 
 $$
 \omega_{n \to n+1} = \omega + \alpha\,n
 $$
 
-- $\alpha < 0$: negative anharmonicity (higher levels are closer
-  together), as in transmon qubits or softening nonlinearities.
-- $\alpha > 0$: positive anharmonicity (higher levels are farther
-  apart), as in stiffening nonlinearities.
-
-The $|0\rangle \to |1\rangle$ transition remains at $\omega$ regardless
+For $\alpha < 0$ (negative anharmonicity), higher levels are closer
+together, as in transmon superconducting qubits or softening trap
+nonlinearities. For $\alpha > 0$ (positive anharmonicity), higher
+levels are farther apart, as in stiffening nonlinearities. The
+$|0\rangle \to |1\rangle$ transition remains at $\omega$ regardless
 of $\alpha$.
 
-For quantum computing, the Duffing model captures the leading-order
-effect of trap anharmonicity on gate fidelity. In a Molmer-Sorensen
-gate, the bichromatic drive is tuned to $\omega_0 \pm (\omega + \delta)$.
-When the motional mode is anharmonic, the transition
-$|n\rangle \to |n+1\rangle$ occurs at $\omega + \alpha n$ rather than
-$\omega$, so higher Fock states are progressively off-resonant from the
-gate drive. For typical trapped-ion parameters ($\alpha/\omega \sim
-10^{-6}$-$10^{-4}$), this shifts the phase-space closure condition and
-produces a residual spin-motion entanglement at the nominal gate time,
-limiting fidelity.
+**Effect on gate fidelity.** In a Molmer-Sorensen gate the bichromatic
+drive is tuned to $\omega_0 \pm (\omega_p + \delta)$. When the motional
+mode is anharmonic, the transition $|n\rangle \to |n{+}1\rangle$ occurs
+at $\omega_p + \alpha n$ rather than $\omega_p$, so higher Fock states
+are progressively off-resonant from the gate drive. This shifts the
+phase-space closure condition and produces residual spin-motion
+entanglement at the nominal gate time. For typical trapped-ion
+parameters ($|\alpha|/\omega \sim 10^{-6}$-$10^{-4}$), the effect is
+small but measurable.
 
 ### Arbitrary Potential
 
-For potentials that cannot be expressed as a simple polynomial in
-$\hat{n}$, the arbitrary potential constructs the Hamiltonian from a
-user-supplied function $V(q)$ defined in **dimensionless coordinates**,
-where $q = a + a^\dagger$ is the dimensionless position operator and
-$V(q)$ returns values in **angular frequency units** (rad/s). This is
-the primary tool for studying realistic electrode geometries (such as
-surface traps where higher-order multipole terms distort the potential)
-or engineered anharmonic traps used in Penning-trap electron experiments
-where the potential shape may be deliberately non-quadratic.
+For potentials that cannot be expressed as a polynomial in $\hat{n}$,
+TIQS constructs the Hamiltonian from a user-supplied function $V(q)$
+of the **dimensionless position operator** $q = a + a^\dagger$, where
+$V(q)$ returns values in angular-frequency units (rad/s).
 
 The kinetic energy in the reference harmonic basis is:
 
 $$
-T = \omega\,(\hat{n} + \tfrac{1}{2}) - \frac{\omega}{4}\,q^2
+T = \omega\bigl(\hat{n} + \tfrac{1}{2}\bigr) - \frac{\omega}{4}\,q^2
 $$
 
-The full Hamiltonian is $H = T + V(q)$. For a harmonic potential,
-$V(q) = \omega q^2/4$, and $H$ reduces to $\omega(\hat{n} + 1/2)$.
+The full Hamiltonian is $H = T + V(q)$. For a harmonic potential
+$V(q) = \omega\,q^2/4$, this reduces to $H = \omega(\hat{n} + 1/2)$.
 
-The function $V(q)$ must include the **full** potential, including any
-harmonic part. Working in dimensionless units avoids the catastrophic
+The function $V(q)$ must include the **full** potential, including the
+harmonic part. Working in dimensionless units avoids catastrophic
 cancellation that occurs when SI Joule-scale energies ($\sim 10^{-28}$)
-are added to rad/s-scale values ($\sim 10^{6}$) in QuTiP matrix
-arithmetic.
+are added to rad/s-scale values ($\sim 10^{6}$) in matrix arithmetic.
 
 For example, a quartic anharmonic oscillator:
 
@@ -121,38 +93,20 @@ $$
 V(q) = \frac{\omega}{4}\,q^2 + \lambda\,q^4
 $$
 
-where $\lambda$ is in rad/s per unit $q^4$.
+where $\lambda$ has units of rad/s per unit $q^4$.
 
-#### Convergence
+**Convergence.** The Fock-basis representation converges best when the
+reference frequency $\omega$ matches the curvature of $V(q)$ near its
+minimum. The `check_convergence()` utility compares eigenvalues at
+truncation dimension $N_\text{fock}$ versus $N_\text{fock} + 5$ and
+warns if any of the lowest levels differ by more than $10^{-6}$ relative
+tolerance.
 
-The Fock-basis representation converges best when the reference
-frequency $\omega$ matches the curvature of $V(q)$ near its minimum.
-The `check_convergence()` utility compares eigenvalues at truncation
-dimension $N_\text{fock}$ versus $N_\text{fock} + 5$ and warns if any
-of the lowest levels differ by more than $10^{-6}$ relative tolerance.
-
-#### Interaction Picture Caveat
-
-Simulations with arbitrary potentials should use the **Schrodinger
-picture** rather than the interaction picture. The anharmonic correction
-generally does not commute with the free harmonic Hamiltonian, so the
-standard rotating-frame transformations used in sideband physics do not
-apply directly.
-
-### Utility Functions
-
-The potentials module provides four helper functions that accept any
-object satisfying the `Potential` protocol:
-
-- `energy_levels(potential, n_fock)`: Diagonalizes the single-mode
-  Hamiltonian and returns sorted eigenvalues in rad/s.
-- `transition_frequencies(potential, n_fock)`: Returns an array of
-  $\omega_{n \to n+1}$ for $n = 0, \ldots, N_\text{fock} - 2$.
-- `check_convergence(potential, n_fock, n_levels)`: Compares eigenvalues
-  at two truncation sizes and warns if not converged.
-- `mode_hamiltonian(potential, ops, mode)`: Lifts a single-mode
-  Hamiltonian into the full composite Hilbert space at the given mode
-  index.
+**Interaction picture.** Simulations with arbitrary potentials should use
+the Schrodinger picture rather than the interaction picture. The
+anharmonic correction generally does not commute with the free harmonic
+Hamiltonian, so the standard rotating-frame transformations used in
+sideband physics do not apply directly.
 
 ### References
 
@@ -160,3 +114,7 @@ object satisfying the `Potential` protocol:
    Cooper pair box." *Phys. Rev. A* **76**, 042319 (2007).
 2. Krantz, P. et al. "A quantum engineer's guide to superconducting
    qubits." *Appl. Phys. Rev.* **6**, 021318 (2019).
+3. Home, J.P. "Quantum science and metrology with mixed-species ion
+   chains." *Adv. At. Mol. Opt. Phys.* **62**, 231 (2013).
+4. Lin, G.-D. et al. "Large-scale quantum computation in an anharmonic
+   linear ion trap." *Europhys. Lett.* **86**, 60004 (2009).

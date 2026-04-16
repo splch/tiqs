@@ -161,11 +161,10 @@ The instantaneous trap frequency drops to nearly zero, and the
 adiabatic condition $T \gg 2\pi/\omega$ becomes impossible to
 satisfy at that instant no matter how slowly the split is performed.
 
-This means there is always a "dangerous moment" during the split
-where the ions are weakly confined and susceptible to excitation.
-The practical consequence is that crystal splitting always produces
-more heating than a linear shuttle of comparable duration, and the
-excitation decays more slowly with increasing duration.
+This unavoidable passage through weak confinement means that
+crystal splitting always produces more heating than a linear
+shuttle of comparable duration, and the excitation decays more
+slowly with increasing duration.
 
 #### Excitation Model
 
@@ -179,19 +178,21 @@ $$
   2\,\exp\!\bigl(-\omega\,T_\text{split} / 5\bigr)
 $$
 
-The prefactor of 2 (compared to $\sim$5 for shuttling) and the
-slower decay constant (dividing by 5 rather than 3) reflect the
-intrinsically non-adiabatic nature of the frequency zero-crossing.
-A floor of 0.05 quanta is imposed for highly adiabatic splits
-($\omega\,T_\text{split} > 50$), representing residual excitation
-from waveform imperfections and finite electrode resolution that
-cannot be eliminated even with arbitrarily slow splitting.
+The slower exponential decay compared to linear shuttling reflects
+the intrinsically non-adiabatic nature of the frequency
+zero-crossing. A floor of 0.05 quanta is imposed for highly
+adiabatic splits ($\omega\,T_\text{split} > 50$), representing
+residual excitation from waveform imperfections and finite electrode
+resolution that cannot be eliminated even with arbitrarily slow
+splitting.
 
-Experimentally, optimized splitting protocols on surface traps
-achieve excitations of 0.02-0.1 quanta at durations of
-50-200 $\mu$s. The same Lindblad thermal noise channel described
-above is used to apply the splitting excitation to the quantum
-state.
+Experimentally, splitting a two-ion crystal in $\sim$55 $\mu$s
+produces $\sim$2 quanta of excitation per ion. Optimized protocols
+at longer durations (100-200 $\mu$s) reduce this to $\sim$1-2
+quanta, still significantly more than the sub-quantum excitation
+achievable with linear shuttling. The same Lindblad thermal noise
+channel described above is used to apply the splitting excitation
+to the quantum state.
 
 ### Error Budget Context
 
@@ -214,13 +215,13 @@ errors grow quadratically with $\bar{n}$.
 
 Sympathetic sideband cooling after transport restores the motional
 ground state, but at a cost: each cooling cycle takes 1-10 ms per
-mode (see [cooling.md](cooling.md)), and this recooling overhead can
-dominate total algorithm runtime. The Quantinuum H1 system, for
-example, spends roughly 68% of its execution time on recooling
-between transport steps. This makes transport excitation one of the
-key bottlenecks for scaling QCCD processors: reducing
-$\Delta\bar{n}$ per transport step directly reduces the recooling
-frequency needed and thus improves overall algorithm throughput.
+mode (see [cooling.md](cooling.md)), and this recooling overhead
+can dominate total algorithm runtime -- consuming as much as
+$\sim 68\%$ of the total duration in QCCD demonstrations. This
+makes transport excitation one of the key bottlenecks for scaling
+QCCD processors: reducing $\Delta\bar{n}$ per transport step
+directly reduces the recooling frequency needed and thus improves
+overall algorithm throughput.
 
 ### References
 
