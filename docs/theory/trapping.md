@@ -21,9 +21,9 @@ class Trap(Protocol):
     def is_stable(self) -> bool: ...
 ```
 
-Functions like ``normal_modes()`` and ``equilibrium_positions()`` accept any
-``Trap``-conforming object, so Paul and Penning traps are interchangeable at
-the API boundary.
+Functions like ``equilibrium_positions()`` accept any ``Trap``-conforming
+object. ``normal_modes()`` currently requires ``PaulTrap`` or ``PenningTrap``
+because transverse mode computation depends on trap-specific physics.
 
 ### Paul Traps
 
@@ -90,7 +90,7 @@ DC electrodes.
 The axial secular frequency from static endcap confinement is:
 
 $$
-\omega_z = \sqrt{\frac{2\, e\, \kappa\, U_\text{end}}{m\, z_0^2}}
+\omega_z = \sqrt{\frac{\kappa\, e\, U_\text{end}}{m\, z_0^2}}
 $$
 
 #### Pseudopotential and Trap Depth
