@@ -1,4 +1,7 @@
-r"""QCCD transport: ion shuttling and crystal splitting."""
+r"""QCCD transport: ion shuttling and crystal splitting.
+
+.. include:: ../../docs/theory/transport.md
+"""
 
 import numpy as np
 import qutip

@@ -80,11 +80,24 @@ $$
 
 This state is decoupled from the excited state and does not scatter photons.
 
-The steady-state phonon number:
+The EIT linewidth (width of the Fano absorption feature) is set by the Rabi
+frequencies and the natural linewidth $\Gamma$:
 
 $$
-\bar{n}_\text{EIT} \approx \left(\frac{\Gamma}{\omega_z}\right)^2
+\gamma_\text{EIT} \approx \frac{\Omega_{pr}^2\,\Gamma}{\Omega_p^2}
 $$
+
+When the dark state is imperfect, residual carrier absorption leaks through
+with a suppression factor $\epsilon \ll 1$. The practical steady-state phonon
+number is then:
+
+$$
+\bar{n}_\text{EIT} \approx \epsilon\,\frac{\gamma_\text{EIT}}{2\omega_z}
+$$
+
+In the ideal limit ($\epsilon \to 0$), the quantum backaction floor is
+$\bar{n}_\min \approx (\gamma_\text{EIT}/2\omega_z)^2$, analogous to the
+resolved-sideband result with $\gamma_\text{EIT}$ replacing $\Gamma_\text{eff}$.
 
 **Bandwidth advantage**: Unlike RSC (which cools one mode at a time), EIT
 cooling provides broad cooling bandwidth ($\sim \Omega_p$). By choosing

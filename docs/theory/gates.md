@@ -106,7 +106,7 @@ with $t_\text{gate} = 2\pi / \delta$.
 The entangling phase between ions $j$ and $k$ at gate time is:
 
 $$
-\chi_{j,k} = \sum_p \frac{\pi\, n_p\, \eta_{j,p}\, \eta_{k,p}\, \Omega_j\, \Omega_k}{2\delta_p^2}
+\chi_{j,k} = \sum_p \frac{\pi\, n_p\, \eta_{j,p}\, \eta_{k,p}\, \Omega_j\, \Omega_k}{\delta_p^2}
 $$
 
 For a maximally entangling gate: $\chi_{1,2} = \pi/4$, producing
@@ -129,7 +129,7 @@ The gate remains valid as long as $\eta\sqrt{\bar{n}} \ll 1$ (Lamb-Dicke regime)
 For a single-mode, constant-amplitude, single-loop gate:
 
 $$
-\Omega = \frac{\delta}{\eta\sqrt{2}}, \qquad
+\Omega = \frac{\delta}{2\,\eta}, \qquad
 t_\text{gate} = \frac{2\pi}{\delta}
 $$
 

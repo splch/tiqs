@@ -66,8 +66,11 @@ $$
 For optical qubits, the excited state decays at rate $\Gamma_D = 1/\tau_D$:
 
 $$
-L_\text{decay} = \sqrt{\Gamma_D}\; \sigma_-
+L_\text{decay} = \sqrt{\Gamma_D}\; \sigma_+
 $$
+
+In TIQS, $\sigma_+ = |0\rangle\langle 1|$ maps excited $|1\rangle$ to
+ground $|0\rangle$ (QuTiP convention where $|0\rangle$ is the ground state).
 
 Population in $|e\rangle$ decays to $|g\rangle$ at rate $\Gamma_D$, and
 coherence decays at $\Gamma_D / 2$. For ${}^{40}\text{Ca}^+$, $\tau_D = 1.17$ s.
@@ -81,7 +84,7 @@ causes spontaneous scattering with two components:
 errors:
 
 $$
-L_\text{Raman} = \sqrt{\Gamma_\text{Raman}(t)}\; \sigma_-
+L_\text{Raman} = \sqrt{\Gamma_\text{Raman}(t)}\; \sigma_+
 $$
 
 **Rayleigh scattering** (elastic) causes dephasing without population transfer.

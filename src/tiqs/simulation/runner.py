@@ -259,7 +259,7 @@ class SimulationRunner:
         For the MS gate the geometric phase is
 
         $$
-        \phi = 2\pi\left(\frac{\eta\,\Omega}{\delta}\right)^2 K
+        \phi = 4\pi K\left(\frac{\eta\,\Omega}{\delta}\right)^2
         $$
 
         where $K$ is the number of loops. For maximally entangling:
