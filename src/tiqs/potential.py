@@ -1,25 +1,17 @@
 r"""Motional potentials: harmonic, Duffing (Kerr), and arbitrary.
 
-The ``Potential`` protocol defines the shared interface for any
-motional potential. Concrete implementations provide the
-single-mode Hamiltonian; utility functions compute energy levels
-and transition frequencies by diagonalizing it.
-
 .. include:: ../../docs/theory/potentials.md
 """
-
-from __future__ import annotations
 
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol
+from typing import Protocol
 
 import numpy as np
 import qutip
 
-if TYPE_CHECKING:
-    from tiqs.hilbert_space.operators import OperatorFactory
+from tiqs.hilbert_space.operators import OperatorFactory
 
 
 class Potential(Protocol):
@@ -58,6 +50,7 @@ class HarmonicPotential:
     omega: float
 
     def single_mode_hamiltonian(self, n_fock: int) -> qutip.Qobj:
+        r"""Return $H = \omega\,a^\dagger a$ truncated to ``n_fock`` levels."""
         return self.omega * qutip.num(n_fock)
 
 
@@ -70,34 +63,24 @@ class DuffingPotential:
       + \frac{\alpha}{2}\,\hat{n}\,(\hat{n} - 1)
     $$
 
-    where $\alpha$ is the anharmonicity. For transmon-like systems,
-    $\alpha < 0$ (negative anharmonicity: higher transitions have
-    lower frequencies). For stiffening nonlinearities, $\alpha > 0$.
-
-    The transition frequency from $|n\rangle$ to $|n+1\rangle$ is:
-
-    $$
-    \omega_{n \to n+1} = \omega + \alpha\,n
-    $$
-
-    so $\alpha$ equals the frequency shift per excitation quantum.
-    The $|0\rangle \to |1\rangle$ transition is at $\omega$, the
-    $|1\rangle \to |2\rangle$ transition is at $\omega + \alpha$,
-    and so on.
+    The transition frequency from $|n\rangle$ to $|n+1\rangle$ is
+    $\omega + \alpha\,n$, so $\alpha$ is the frequency shift per
+    excitation quantum.
 
     Attributes
     ----------
     omega : float
         Fundamental oscillation angular frequency in rad/s.
     anharmonicity : float
-        Anharmonicity $\alpha$ in rad/s. Negative for transmon-like
-        (negative anharmonicity) systems, positive for stiffening.
+        Anharmonicity $\alpha$ in rad/s. Negative for softening
+        (transmon-like), positive for stiffening.
     """
 
     omega: float
     anharmonicity: float
 
     def single_mode_hamiltonian(self, n_fock: int) -> qutip.Qobj:
+        r"""Return the Duffing Hamiltonian truncated to ``n_fock`` levels."""
         n = qutip.num(n_fock)
         eye = qutip.qeye(n_fock)
         return self.omega * n + (self.anharmonicity / 2) * n * (n - eye)
@@ -107,52 +90,29 @@ class DuffingPotential:
 class ArbitraryPotential:
     r"""Arbitrary potential defined in dimensionless coordinates.
 
-    The user provides $V(q)$ as a function of the **dimensionless
-    position operator** $q = a + a^\dagger$, returning the potential
-    in **angular frequency units** (rad/s, i.e. $\hbar = 1$). The
-    full Hamiltonian is then:
+    The user supplies $V(q)$ as a callable of the dimensionless
+    position operator $q = a + a^\dagger$, returning the **full**
+    potential in angular frequency units (rad/s). The Hamiltonian is:
 
     $$
-    H = \underbrace{\omega\,(\hat{n} + \tfrac{1}{2})
-      - \frac{\omega}{4}\,q^2}_{T} + V(q)
+    H = \omega\,(\hat{n} + \tfrac{1}{2})
+      - \frac{\omega}{4}\,q^2 + V(q)
     $$
 
-    where $T = \omega\,(\hat{n} + \tfrac{1}{2}) - \omega\,q^2/4$
-    is the kinetic energy expressed in the reference harmonic basis.
+    For a quartic oscillator, for example,
+    $V(q) = \omega/4\,q^2 + \lambda\,q^4$. The harmonic term
+    must be included because $V$ is the full potential.
 
-    For example, a quartic anharmonic oscillator with harmonic
-    frequency $\omega$ and quartic coefficient $\lambda$ (in
-    rad/s per unit $q^4$):
-
-    $$
-    V(q) = \frac{\omega}{4}\,q^2 + \lambda\,q^4
-    $$
-
-    The $\omega/4\,q^2$ term is the harmonic part; it must be
-    included because $V(q)$ is the **full** potential.
-
-    Working in dimensionless units avoids catastrophic
-    cancellation that occurs when SI Joule-scale energies
-    ($\sim 10^{-28}$) are added to rad/s-scale energies
-    ($\sim 10^{6}$) in QuTiP matrix arithmetic.
-
-    Convergence of the Fock-basis representation depends on
-    ``n_fock``. Use ``check_convergence()`` to verify the
-    truncation. Choose ``omega`` to match the curvature of $V$
-    near its minimum for best convergence.
-
-    Simulations with ``ArbitraryPotential`` should use the
-    Schrodinger picture rather than the interaction picture,
-    because the anharmonic correction generally does not commute
-    with the free harmonic Hamiltonian.
+    Choose ``omega`` to match the curvature of $V$ near its
+    minimum for best Fock-basis convergence, and verify with
+    ``check_convergence()``.
 
     Attributes
     ----------
     v_func : callable
         ``V(q_op) -> qutip.Qobj`` where ``q_op`` is the
-        dimensionless position operator $q = a + a^\dagger$ as a
-        QuTiP Qobj. Returns the **full** potential in angular
-        frequency units (rad/s).
+        dimensionless position operator $q = a + a^\dagger$.
+        Must return the full potential in rad/s.
     omega : float
         Reference harmonic frequency in rad/s. Defines the Fock
         basis and sets the kinetic energy scale.
@@ -162,13 +122,12 @@ class ArbitraryPotential:
     omega: float
 
     def single_mode_hamiltonian(self, n_fock: int) -> qutip.Qobj:
+        r"""Return $T + V(q)$ truncated to ``n_fock`` levels."""
         a = qutip.destroy(n_fock)
         n = qutip.num(n_fock)
         eye = qutip.qeye(n_fock)
         q_op = a + a.dag()
-        # For the reference harmonic oscillator H_ref = omega*(n + 1/2),
-        # the potential is V_ref = omega/4 * q^2, so the kinetic
-        # energy is T = H_ref - V_ref = omega*(n + 1/2) - omega/4*q^2.
+        # T = H_ref - V_ref = omega*(n + 1/2) - omega/4 * q^2
         T = self.omega * (n + 0.5 * eye) - self.omega / 4 * q_op * q_op
         return T + self.v_func(q_op)
 

@@ -51,16 +51,9 @@ def shuttle_motional_excitation(
     -------
     float
         Estimated number of added motional quanta.
-
-    Notes
-    -----
-    The current implementation uses only the adiabaticity-based
-    exponential model (number of trap periods during transport).
-    The ``distance`` parameter is accepted for API compatibility
-    but does not affect the result. A future version may
-    incorporate the distance-dependent model.
     """
-    # Number of trap periods during shuttling
+    # Currently only uses the adiabaticity-based model; `distance` is
+    # accepted for API compatibility with a future distance-dependent model.
     n_periods = trap_frequency * duration / (2 * np.pi)
     # For optimized waveforms, excitation decays exponentially with
     # the number of trap oscillation periods during transport.
