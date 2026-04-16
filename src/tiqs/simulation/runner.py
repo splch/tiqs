@@ -15,6 +15,7 @@ from tiqs.hilbert_space.states import StateFactory
 from tiqs.interaction.hamiltonian import carrier_hamiltonian
 from tiqs.noise.motional import motional_heating_ops
 from tiqs.noise.qubit import qubit_dephasing_op, spontaneous_emission_op
+from tiqs.potential import mode_hamiltonian
 from tiqs.simulation.config import SimulationConfig
 from tiqs.species.ion import IonSpecies
 
@@ -72,6 +73,37 @@ class SimulationRunner:
         )
 
         self._c_ops = self._build_collapse_operators()
+        self._anharmonic_H = self._build_anharmonic_correction()
+
+    def _build_anharmonic_correction(self) -> qutip.Qobj | None:
+        """Build the anharmonic Hamiltonian correction.
+
+        For each mode with a configured potential, computes
+        ``H_correction = H_potential - omega * n``, the difference
+        between the full potential Hamiltonian and the harmonic part
+        already accounted for in the interaction picture.
+
+        For ``DuffingPotential`` this correction commutes with
+        the free Hamiltonian and is valid in the interaction
+        picture. For ``ArbitraryPotential`` the simulation should
+        use the Schrodinger picture.
+
+        Returns ``None`` if no potentials are configured.
+        """
+        if not self.config.potentials:
+            return None
+        axial_freqs = self.modes.modes["axial"].freqs
+        H_correction = 0 * self.ops.identity()
+        for mode_idx, potential in self.config.potentials.items():
+            H_full = mode_hamiltonian(potential, self.ops, mode_idx)
+            omega = (
+                axial_freqs[mode_idx]
+                if mode_idx < len(axial_freqs)
+                else potential.omega
+            )
+            H_harmonic = omega * self.ops.number(mode_idx)
+            H_correction = H_correction + (H_full - H_harmonic)
+        return H_correction
 
     def _build_collapse_operators(self) -> list[qutip.Qobj]:
         """Assemble collapse operators from the noise configuration.
@@ -152,6 +184,12 @@ class SimulationRunner:
         opts = dict(self.config.solver_options)
         if opts.get("max_step", 0) <= 0 and len(tlist) > 1:
             opts["max_step"] = (tlist[-1] - tlist[0]) / (len(tlist) * 2)
+
+        if self._anharmonic_H is not None:
+            if isinstance(H, list):
+                H = [H[0] + self._anharmonic_H] + H[1:]
+            else:
+                H = H + self._anharmonic_H
 
         solver = self.config.solver
         if solver == "sesolve" and not self._c_ops:
