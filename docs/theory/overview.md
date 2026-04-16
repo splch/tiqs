@@ -1,10 +1,12 @@
-## Trapped-Ion Quantum Computing
+## Trapped-Ion and Trapped-Electron Quantum Computing
 
-Trapped-ion quantum computers encode qubits in the internal electronic states
-of individual atomic ions, confined by electromagnetic traps under ultra-high
-vacuum, and manipulated with precisely controlled laser or microwave fields.
-The shared quantized vibrational motion of the ion chain serves as a quantum
-bus that mediates entangling interactions between any pair of qubits.
+Trapped-particle quantum computers encode qubits in the internal electronic
+states of individual atomic ions -- or the spin states of trapped electrons --
+confined by electromagnetic traps (Paul traps or Penning traps) under
+ultra-high vacuum, and manipulated with precisely controlled laser, microwave,
+or magnetic-gradient fields. The shared quantized vibrational motion of the
+particle chain serves as a quantum bus that mediates entangling interactions
+between any pair of qubits.
 
 As of early 2026, trapped-ion systems hold records for the highest gate
 fidelities of any qubit platform: single-qubit gate errors as low as
@@ -12,13 +14,14 @@ $1.5 \times 10^{-7}$ and two-qubit gate errors of $8.4 \times 10^{-5}$.
 
 ### The Physics Stack
 
-TIQS models the full trapped-ion physics stack from the ground up:
+TIQS models the full trapped-particle physics stack from the ground up:
 
 | Layer | Physics | TIQS Package |
 |-------|---------|--------------|
-| **Trapping** | Paul trap confinement, Mathieu equation, pseudopotential | `tiqs.trap.PaulTrap` |
+| **Trapping** | Paul and Penning trap confinement, Mathieu equation, pseudopotential | `tiqs.trap` |
 | **Ion chain** | Coulomb crystals, normal modes, Lamb-Dicke parameters | `tiqs.chain` |
 | **Species** | Atomic structure, transitions, qubit encoding | `tiqs.species` |
+| **Potentials** | Harmonic, Duffing (Kerr), and arbitrary anharmonic motional potentials | `tiqs.potential` |
 | **Cooling** | Doppler, resolved sideband, and EIT cooling | `tiqs.cooling` |
 | **Laser-ion** | Carrier and sideband Hamiltonians, Raman transitions | `tiqs.interaction` |
 | **Gates** | Single-qubit rotations, MS, CZ, light-shift | `tiqs.gates` |
@@ -31,22 +34,26 @@ TIQS models the full trapped-ion physics stack from the ground up:
 ```python
 import tiqs
 
-# Define a two-ion calcium-40 system
-trap = tiqs.PaulTrap(omega_rf=2 * 3.14159 * 30e6, v_rf=200.0, r_0=200e-6)
+# Define species and trap
 species = tiqs.get_species("Ca40")
+trap = tiqs.PaulTrap(
+    v_rf=200.0,
+    omega_rf=2 * 3.14159 * 30e6,
+    r0=200e-6,
+    species=species,
+    omega_axial=2 * 3.14159 * 1e6,
+)
 
 # Compute normal modes
-from tiqs.chain import normal_modes
-modes = normal_modes(num_ions=2, omega_axial=2 * 3.14159 * 1e6, species=species)
+modes = tiqs.normal_modes(n_ions=2, trap=trap)
+
+# Access axial mode frequencies and eigenvectors
+modes.modes["axial"].freqs
+modes.modes["axial"].vectors
 
 # Build Hilbert space and operators
-from tiqs.hilbert_space import HilbertSpace, OperatorFactory
-hs = HilbertSpace(num_ions=2, num_modes=2, n_max=10)
-ops = OperatorFactory(hs)
-
-# Construct and simulate a Molmer-Sorensen gate Hamiltonian
-from tiqs.gates import ms_gate_hamiltonian
-H, t_gate = ms_gate_hamiltonian(ops, modes, species)
+hs = tiqs.HilbertSpace(n_ions=2, n_modes=2, n_fock=10)
+ops = tiqs.OperatorFactory(hs)
 ```
 
 ### How Simulation Works

@@ -57,6 +57,23 @@ spectrum: cooling at 493 nm, repumping at 650 nm. The $5D_{5/2}$ metastable
 state has $\sim 30$ s lifetime for high-fidelity electron shelving. Quantinuum's
 Helios processor (2025) was the first commercial system using ${}^{137}\text{Ba}^+$.
 
+### The Species Protocol
+
+TIQS defines a structural ``Species`` protocol:
+
+```python
+class Species(Protocol):
+    @property
+    def mass_kg(self) -> float: ...
+
+    @property
+    def qubit_frequency_hz(self) -> float: ...
+```
+
+Both ``IonSpecies`` and ``ElectronSpecies`` satisfy this protocol. Any custom
+class exposing these two properties will be accepted by TIQS functions that
+take a ``Species`` argument (e.g. ``lamb_dicke_parameters()``).
+
 ### Trade-offs
 
 The fundamental trade-off: **heavier ions** (Ba$^+$, Yb$^+$) offer convenient
@@ -67,8 +84,8 @@ favors barium for its visible-wavelength scalability.
 
 ### Trapped Electrons
 
-Bare electrons confined in Paul traps are a candidate platform for quantum
-computing. The qubit is the electron spin-1/2 in an applied magnetic field,
+Bare electrons confined in Paul traps or Penning traps are a candidate
+platform for quantum computing. The qubit is the electron spin-1/2 in an applied magnetic field,
 with Zeeman splitting $f = g_e \mu_B B / h \approx 28$ GHz/T. Unlike atomic
 ions, electrons have no internal level structure, so cooling is resistive
 (via an RLC tank circuit) and spin-motion coupling is mediated by a magnetic
@@ -83,7 +100,7 @@ via `tiqs.ElectronSpecies`.
 | $T_1$ | $\infty$ (no decay channel) | $\infty$ (hyperfine) or $\sim$1 s (optical) |
 | Cooling | Resistive (RLC circuit) | Laser Doppler + sideband |
 | Spin-motion coupling | Magnetic field gradient | Laser wavevector |
-| Paul trap RF drive | 1-10 GHz | 10-100 MHz |
+| Trap drive | 1-10 GHz (Paul) or 1-5 T (Penning) | 10-100 MHz |
 | Secular frequencies | 30 MHz - 2 GHz | 1-5 MHz |
 
 The magnetic field gradient $dB/dz$ couples the electron spin to its motional

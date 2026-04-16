@@ -118,8 +118,64 @@ Typical values are $\eta \sim 0.05$-$0.2$. The **Lamb-Dicke regime**
 $\eta\sqrt{2\bar{n}+1} \ll 1$ ensures that sideband transitions are
 well-resolved and higher-order terms are suppressed.
 
+### The NormalModeResult Structure
+
+``normal_modes()`` returns a ``NormalModeResult`` dataclass with two fields:
+
+- ``positions``: equilibrium positions in meters, shape $(N,)$.
+- ``modes``: a dictionary mapping physical names to ``ModeGroup`` objects.
+
+Each ``ModeGroup`` contains:
+
+- ``freqs``: angular frequencies in rad/s, shape $(N,)$, sorted ascending.
+- ``vectors``: eigenvector matrix, shape $(N, N)$. Column $m$ is the
+  participation vector for mode $m$: ``vectors[i, m]`` $= b_{i,m}$.
+
+The dictionary keys depend on the trap type:
+
+| Trap type | Mode keys |
+|-----------|-----------|
+| ``PaulTrap`` | ``"axial"``, ``"radial_x"``, ``"radial_y"`` |
+| ``PenningTrap`` | ``"axial"``, ``"modified_cyclotron"``, ``"magnetron"`` |
+
+For Paul traps, ``radial_x`` and ``radial_y`` are identical (degenerate)
+unless a symmetry-breaking field is applied.
+
+```python
+import tiqs
+
+species = tiqs.get_species("Ca40")
+trap = tiqs.PaulTrap(
+    v_rf=200.0, omega_rf=2*3.14159*30e6,
+    r0=200e-6, species=species,
+    omega_axial=2*3.14159*1e6,
+)
+result = tiqs.normal_modes(n_ions=2, trap=trap)
+
+# Axial mode frequencies
+result.modes["axial"].freqs
+
+# Participation vector for axial COM mode (mode index 0)
+result.modes["axial"].vectors[:, 0]
+```
+
 ### Linear-to-Zigzag Transition
 
 The linear chain is stable when $\omega_\text{rad} > \omega_z \cdot c_N$,
 where $c_N$ is a critical ratio. For large $N$, $c_N \sim 0.73\, N^{0.86}$.
 Beyond this threshold, the chain buckles into a zigzag configuration.
+
+### Penning Trap Modes
+
+In a Penning trap, the three eigenmotions are axial oscillation, modified
+cyclotron motion, and magnetron drift. The **axial modes** of an $N$-ion
+crystal are computed identically to the Paul trap case: the Coulomb-coupled
+Hessian is diagonalized in the axial harmonic potential.
+
+The **transverse modes** (modified cyclotron and magnetron) are qualitatively
+different from Paul trap radial modes because the radial dynamics involve the
+Coriolis-like coupling from the magnetic field. TIQS currently computes
+Penning transverse modes in a **single-particle approximation**: all $N$
+ions share the same modified cyclotron frequency $\omega_+$ and magnetron
+frequency $\omega_-$. Full $N$-particle transverse mode analysis with
+rotating-frame Coulomb coupling is a planned extension.
