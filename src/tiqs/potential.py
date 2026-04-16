@@ -11,6 +11,7 @@ and transition frequencies by diagonalizing it.
 from __future__ import annotations
 
 import warnings
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
@@ -149,7 +150,7 @@ class ArbitraryPotential:
         Particle mass in kg.
     """
 
-    v_func: callable
+    v_func: Callable[[qutip.Qobj], qutip.Qobj]
     omega: float
     mass_kg: float
 
