@@ -67,15 +67,16 @@ $$
 \omega_{n \to n+1} = \omega + \alpha\,n
 $$
 
-- $\alpha < 0$: subharmonic (higher levels are closer together), as in
-  transmon qubits or softening mechanical oscillators.
-- $\alpha > 0$: superharmonic (higher levels are farther apart), as in
-  stiffening potentials.
+- $\alpha < 0$: negative anharmonicity (higher levels are closer
+  together), as in transmon qubits or softening nonlinearities.
+- $\alpha > 0$: positive anharmonicity (higher levels are farther
+  apart), as in stiffening nonlinearities.
 
 The $|0\rangle \to |1\rangle$ transition remains at $\omega$ regardless
 of $\alpha$.
 
 ```python
+import numpy as np
 import tiqs
 
 pot = tiqs.DuffingPotential(
@@ -172,3 +173,10 @@ apply directly.
 ``mode_hamiltonian(potential, ops, mode)``
 :   Lifts a single-mode Hamiltonian into the full composite Hilbert
     space at the given mode index.
+
+### References
+
+1. Koch, J. et al. "Charge-insensitive qubit design derived from the
+   Cooper pair box." *Phys. Rev. A* **76**, 042319 (2007).
+2. Krantz, P. et al. "A quantum engineer's guide to superconducting
+   qubits." *Appl. Phys. Rev.* **6**, 021318 (2019).

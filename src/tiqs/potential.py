@@ -71,8 +71,8 @@ class DuffingPotential:
     $$
 
     where $\alpha$ is the anharmonicity. For transmon-like systems,
-    $\alpha < 0$ (subharmonic: higher transitions have lower
-    frequencies). For stiffening nonlinearities, $\alpha > 0$.
+    $\alpha < 0$ (negative anharmonicity: higher transitions have
+    lower frequencies). For stiffening nonlinearities, $\alpha > 0$.
 
     The transition frequency from $|n\rangle$ to $|n+1\rangle$ is:
 
@@ -91,7 +91,7 @@ class DuffingPotential:
         Fundamental oscillation angular frequency in rad/s.
     anharmonicity : float
         Anharmonicity $\alpha$ in rad/s. Negative for transmon-like
-        (subharmonic) systems, positive for stiffening.
+        (negative anharmonicity) systems, positive for stiffening.
     """
 
     omega: float

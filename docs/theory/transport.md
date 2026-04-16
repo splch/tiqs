@@ -95,3 +95,12 @@ A single algorithmic layer may involve tens of transport steps,
 so even sub-quantum excitation per step can build up significantly.
 Recooling (sympathetic sideband cooling) after transport is
 therefore essential and can dominate total algorithm runtime.
+
+### References
+
+1. Bowler, R. et al. "Coherent diabatic ion transport and separation
+   in a multizone trap array." *Phys. Rev. Lett.* **109**, 080502 (2012).
+2. Walther, A. et al. "Controlling fast transport of cold trapped ions."
+   *Phys. Rev. Lett.* **109**, 080501 (2012).
+3. Pino, J.M. et al. "Demonstration of the trapped-ion quantum CCD
+   computer architecture." *Nature* **592**, 209 (2021).
