@@ -44,7 +44,7 @@ and ``mode_hamiltonian()``.
 The potential classes work in **angular-frequency units** (rad/s), with
 $\hbar = 1$ so that energies and frequencies are numerically identical.
 This differs from other parts of TIQS (and the other theory pages in
-this documentation) where $\hbar$ appears explicitly -- for example, the
+this documentation) where $\hbar$ appears explicitly. For example, the
 motional Hamiltonian in [normal_modes.md](normal_modes.md) is written
 $H = \sum_p \hbar\omega_p(a_p^\dagger a_p + 1/2)$. To convert a
 potential-module eigenvalue $E_n$ to SI energy in joules, multiply by
@@ -103,7 +103,7 @@ When the motional mode is anharmonic, the transition
 $|n\rangle \to |n+1\rangle$ occurs at $\omega + \alpha n$ rather than
 $\omega$, so higher Fock states are progressively off-resonant from the
 gate drive. For typical trapped-ion parameters ($\alpha/\omega \sim
-10^{-6}$--$10^{-4}$), this shifts the phase-space closure condition and
+10^{-6}$-$10^{-4}$), this shifts the phase-space closure condition and
 produces a residual spin-motion entanglement at the nominal gate time,
 limiting fidelity.
 
@@ -127,8 +127,8 @@ a user-supplied potential $V(q)$ defined in **dimensionless
 coordinates**, where $q = a + a^\dagger$ is the dimensionless
 position operator. The potential must return values in **angular
 frequency units** (rad/s). This class is the primary tool for
-studying realistic electrode geometries -- such as surface traps where
-higher-order multipole terms distort the potential -- or engineered
+studying realistic electrode geometries (such as surface traps where
+higher-order multipole terms distort the potential) or engineered
 anharmonic traps used in Penning-trap electron experiments where the
 potential shape may be deliberately non-quadratic.
 

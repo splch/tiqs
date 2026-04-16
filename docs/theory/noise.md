@@ -54,8 +54,11 @@ $$
 L_\phi = \sqrt{\gamma_\phi / 2}\; \sigma_z
 $$
 
-The $T_2$ dephasing time is $T_2 = 1/\gamma_\phi$. For clock-state qubits
-with second-order magnetic sensitivity:
+In the general case, the pure dephasing rate separates from relaxation as
+$\gamma_\phi = 1/T_2 - 1/(2T_1)$. For hyperfine qubits where
+$T_1 \to \infty$, this simplifies to $\gamma_\phi = 1/T_2$.
+
+For clock-state qubits with second-order magnetic sensitivity:
 
 $$
 \gamma_\phi = 2\pi \left|\frac{d^2f}{dB^2}\right| \cdot 2B_0 \cdot \delta B_\text{rms}
@@ -107,6 +110,10 @@ noise with spectral density $S_\phi$:
 $$
 L_\text{phase} = \sqrt{\pi S_\phi \Omega^2 / 2}\; \sigma_z
 $$
+
+In TIQS, the code takes the effective dephasing rate
+$\gamma = \pi S_\phi \Omega^2$ directly as a single parameter and
+constructs the operator as $L = \sqrt{\gamma/2}\;\sigma_z$.
 
 ### Laser Intensity Noise
 

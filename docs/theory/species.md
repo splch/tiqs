@@ -96,7 +96,7 @@ via `tiqs.ElectronSpecies`.
 |----------|----------|---------------------|
 | Mass | $9.1 \times 10^{-31}$ kg | $6.6 \times 10^{-26}$ kg |
 | Qubit encoding | Spin Zeeman | Optical or hyperfine |
-| Qubit frequency | Tunable via $B$ ($\sim$1-30 GHz) | Fixed ($\sim$1-13 GHz) |
+| Qubit frequency | Tunable via $B$ ($\sim$1-30 GHz) | Fixed: $\sim$1-13 GHz (hyperfine) or $\sim$411 THz (optical) |
 | $T_1$ | $\infty$ (no decay channel) | $\infty$ (hyperfine) or $\sim$1 s (optical) |
 | Cooling | Resistive (RLC circuit) | Laser Doppler + sideband |
 | Spin-motion coupling | Magnetic field gradient | Laser wavevector |
@@ -104,15 +104,19 @@ via `tiqs.ElectronSpecies`.
 | Secular frequencies | 30 MHz - 2 GHz | 1-5 MHz |
 
 The magnetic field gradient $dB/dz$ couples the electron spin to its motional
-mode:
+mode. Writing the quantized position as
+$\hat{z} = z_0(\hat{a} + \hat{a}^\dagger)$ where
+$z_0 = \sqrt{\hbar / 2m\omega_z}$, the gradient interaction is:
 
 $$
-H_\text{grad} = \frac{g_e \mu_B}{2} \frac{dB}{dz}\, \hat{z}\, \sigma_z
+H_\text{grad} = \frac{g_e \mu_B}{2} \frac{dB}{dz}\, z_0\bigl(\hat{a} + \hat{a}^\dagger\bigr)\, \sigma_z
 $$
 
-This is a $\sigma_z$-dependent force, making the **light-shift gate** the
-native entangling operation (rather than the MS gate, which requires additional
-microwave dressing to rotate the spin basis).
+This is a $\sigma_z$-dependent force with the same mathematical structure as
+the light-shift gate Hamiltonian (see [gates](gates.md)), making it the
+**native entangling operation** for gradient-coupled particles (rather than
+the MS gate, which requires additional microwave dressing to rotate the spin
+basis).
 
 ### References
 

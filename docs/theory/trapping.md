@@ -25,6 +25,32 @@ Functions like ``equilibrium_positions()`` accept any ``Trap``-conforming
 object. ``normal_modes()`` currently requires ``PaulTrap`` or ``PenningTrap``
 because transverse mode computation depends on trap-specific physics.
 
+Both ``PaulTrap`` and ``PenningTrap`` can be constructed either from a known
+axial frequency or from a DC voltage via the ``from_dc_voltage()`` class
+method:
+
+```python
+import numpy as np
+import tiqs
+
+species = tiqs.get_species("Ca40")
+
+# Construct with known axial frequency
+trap = tiqs.PaulTrap(
+    v_rf=200.0, omega_rf=2*np.pi*30e6,
+    r0=200e-6, species=species,
+    omega_axial=2*np.pi*1e6,
+)
+trap.is_stable()  # True
+
+# Construct from DC endcap voltage
+trap = tiqs.PaulTrap.from_dc_voltage(
+    v_rf=200.0, omega_rf=2*np.pi*30e6,
+    r0=200e-6, species=species,
+    u_dc_axial=10.0,
+)
+```
+
 ### Paul Traps
 
 A Paul trap confines charged particles using oscillating electric fields that
@@ -62,6 +88,16 @@ a = \frac{4\, e\, U_\text{DC}}{m\, \Omega_\text{RF}^2\, r_0^2}, \qquad
 q = \frac{2\, e\, V_\text{RF}}{m\, \Omega_\text{RF}^2\, r_0^2}
 $$
 
+TIQS computes $q$ from the RF parameters directly. For $a$, it uses a
+simplified model that accounts for radial defocusing from the axial DC
+potential:
+
+$$
+a \approx \frac{-2\,\omega_z^2}{\Omega_\text{RF}^2}
+$$
+
+This is negative because the axial DC field weakens radial confinement.
+
 Stable trapping occurs within bounded regions of the $(a, q)$ parameter space.
 Most experiments operate in the first stability region with $a \approx 0$ and
 $q \approx 0.1$-$0.4$, well below the stability boundary at $q = 0.908$.
@@ -71,10 +107,18 @@ $q \approx 0.1$-$0.4$, well below the stability boundary at $q = 0.908$.
 In the pseudopotential approximation (valid for $q \ll 1$), the ion's motion
 decomposes into two components:
 
-**Secular motion**: slow harmonic oscillation at the secular frequency:
+**Secular motion**: slow harmonic oscillation at the secular frequency. The
+full expression, which TIQS implements, includes the effect of the DC axial
+potential on the radial motion:
 
 $$
-\omega_\text{rad} = \frac{q\, \Omega_\text{RF}}{2\sqrt{2}}
+\omega_\text{rad} = \frac{\Omega_\text{RF}}{2}\sqrt{a + \frac{q^2}{2}}
+$$
+
+For typical operating parameters where $|a| \ll q^2/2$, this simplifies to:
+
+$$
+\omega_\text{rad} \approx \frac{q\, \Omega_\text{RF}}{2\sqrt{2}}
 $$
 
 This is the "useful" oscillatory motion that serves as the quantum bus, with
@@ -139,7 +183,20 @@ $$
 
 where $d$ is the characteristic trap dimension
 ($d^2 = (z_0^2 + r_0^2/2)/2$ for a hyperbolic trap) and $V_\mathrm{dc}$ is
-the DC trapping voltage.
+the DC trapping voltage. TIQS provides ``PenningTrap.from_dc_voltage()`` to
+construct from voltage, or you can pass ``omega_axial`` directly:
+
+```python
+import numpy as np
+import tiqs
+
+species = tiqs.ElectronSpecies(magnetic_field=1.0)
+trap = tiqs.PenningTrap(
+    magnetic_field=1.0, species=species,
+    d=1e-3, omega_axial=2*np.pi*100e6,
+)
+trap.is_stable()  # True
+```
 
 #### Radial Confinement
 
@@ -177,7 +234,9 @@ $$
 
 The last relation is the **Brown-Gabrielse invariance theorem**, which
 allows precision measurements of the cyclotron frequency without measuring
-all three eigenfrequencies individually.
+all three eigenfrequencies individually. TIQS exposes all three as
+properties: ``omega_cyclotron``, ``omega_modified_cyclotron``, and
+``omega_magnetron``.
 
 #### Stability Condition
 
@@ -212,3 +271,10 @@ Penning traps are particularly well-suited for trapping **bare electrons**:
    electron or ion in a Penning trap." *Rev. Mod. Phys.* **58**, 233 (1986).
 3. Jain, S. et al. "Penning micro-trap for quantum computing."
    *Nature* **627**, 510 (2024).
+4. Wineland, D.J. et al. "Experimental issues in coherent quantum-state
+   manipulation of trapped atomic ions." *J. Res. NIST* **103**, 259 (1998).
+5. Mintert, F. & Wunderlich, C. "Ion-trap quantum logic using
+   long-wavelength radiation." *Phys. Rev. Lett.* **87**, 257904 (2001).
+6. Ball, H. et al. "Site-resolved imaging of beryllium ion crystals in a
+   high-optical-access Penning trap with inbore optomechanics."
+   *Rev. Sci. Instrum.* **90**, 053103 (2019).

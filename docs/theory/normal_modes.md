@@ -35,20 +35,23 @@ For $N > 5$, numerical root-finding (Newton-Raphson) is required.
 ### Hessian Matrix and Normal Modes
 
 Expanding $V$ to second order around equilibrium yields the dynamical matrix.
+TIQS constructs the mass-normalized Hessian
+$A_{jk} = \frac{1}{m}\frac{\partial^2 V}{\partial z_j\, \partial z_k}$
+so that its eigenvalues are squared frequencies.
 For **axial modes**, the $N \times N$ Hessian has elements:
 
 $$
-\frac{A_{jj}}{m\omega_z^2} = 1 + 2\sum_{k \neq j} \frac{1}{|u_j - u_k|^3},
+\frac{A_{jj}}{\omega_z^2} = 1 + 2\sum_{k \neq j} \frac{1}{|u_j - u_k|^3},
 \qquad
-\frac{A_{jk}}{m\omega_z^2} = \frac{-2}{|u_j - u_k|^3}
+\frac{A_{jk}}{\omega_z^2} = \frac{-2}{|u_j - u_k|^3}
 $$
 
 For **radial modes** (transverse to the chain axis):
 
 $$
-\frac{A^x_{jj}}{m\omega_x^2} = 1 - \frac{\omega_z^2}{\omega_x^2}\sum_{k \neq j} \frac{1}{|u_j - u_k|^3},
+\frac{A^x_{jj}}{\omega_x^2} = 1 - \frac{\omega_z^2}{\omega_x^2}\sum_{k \neq j} \frac{1}{|u_j - u_k|^3},
 \qquad
-\frac{A^x_{jk}}{m\omega_x^2} = \frac{\omega_z^2}{\omega_x^2} \frac{1}{|u_j - u_k|^3}
+\frac{A^x_{jk}}{\omega_x^2} = \frac{\omega_z^2}{\omega_x^2} \frac{1}{|u_j - u_k|^3}
 $$
 
 Note the sign difference: Coulomb repulsion **stiffens** axial modes but
@@ -59,12 +62,15 @@ Note the sign difference: Coulomb repulsion **stiffens** axial modes but
 Diagonalizing $A$ yields $N$ normal modes:
 
 $$
-A\, \mathbf{b}^{(p)} = m\, \omega_p^2\, \mathbf{b}^{(p)}
+A\, \mathbf{b}^{(p)} = \omega_p^2\, \mathbf{b}^{(p)}
 $$
 
 where $\omega_p$ is the frequency of mode $p$ and
 $\mathbf{b}^{(p)} = (b_{1,p}, \ldots, b_{N,p})$ is the orthonormal
 participation vector describing how much each ion moves in that mode.
+The matrix $A$ has units of $\text{rad}^2/\text{s}^2$ (the mass is
+already divided out in the Hessian construction), so its eigenvalues are
+$\omega_p^2$ directly.
 
 The **center-of-mass (COM) mode** is always the lowest axial mode:
 
@@ -120,7 +126,7 @@ well-resolved and higher-order terms are suppressed.
 
 ### The NormalModeResult Structure
 
-``normal_modes()`` returns a ``NormalModeResult`` dataclass with two fields:
+``tiqs.normal_modes()`` returns a ``NormalModeResult`` dataclass with two fields:
 
 - ``positions``: equilibrium positions in meters, shape $(N,)$.
 - ``modes``: a dictionary mapping physical names to ``ModeGroup`` objects.
@@ -153,11 +159,17 @@ trap = tiqs.PaulTrap(
 )
 result = tiqs.normal_modes(n_ions=2, trap=trap)
 
-# Axial mode frequencies
+# Axial mode frequencies (rad/s, sorted ascending)
 result.modes["axial"].freqs
 
 # Participation vector for axial COM mode (mode index 0)
 result.modes["axial"].vectors[:, 0]
+
+# Lamb-Dicke parameters for counter-propagating Raman beams
+wavelength = 729e-9  # Ca+ S-D transition
+k_eff = 2 * 2 * np.pi / wavelength
+eta = tiqs.lamb_dicke_parameters(result, species, k_eff, direction="axial")
+# eta[i, m] is the Lamb-Dicke parameter for ion i, mode m
 ```
 
 ### Linear-to-Zigzag Transition
@@ -176,9 +188,13 @@ Hessian is diagonalized in the axial harmonic potential.
 The **transverse modes** (modified cyclotron and magnetron) are qualitatively
 different from Paul trap radial modes because the radial dynamics involve the
 Coriolis-like coupling from the magnetic field. TIQS currently computes
-Penning transverse modes in a **single-particle approximation**: all $N$
-ions share the same modified cyclotron frequency $\omega_+$ and magnetron
-frequency $\omega_-$. Full $N$-particle transverse mode analysis with
+Penning transverse modes in a **single-particle approximation**: each ion
+oscillates independently at the single-particle modified cyclotron frequency
+$\omega_+$ or magnetron frequency $\omega_-$ with no inter-ion coupling.
+In the returned ``ModeGroup``, ``freqs`` contains $N$ identical entries and
+``vectors`` is the $N \times N$ identity matrix (each "mode" is localized
+on one ion). A ``UserWarning`` is emitted when $N > 1$ to flag this
+approximation. Full $N$-particle transverse mode analysis with
 rotating-frame Coulomb coupling is a planned extension.
 
 ### References

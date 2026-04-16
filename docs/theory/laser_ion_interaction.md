@@ -68,6 +68,14 @@ $$
 Drives $|g, n\rangle \leftrightarrow |e, n{+}1\rangle$ at Rabi frequency
 $\eta\Omega\sqrt{n+1}$.
 
+> **Convention note**: The formulas above follow the standard textbook convention
+> where $\sigma_+ = |e\rangle\langle g|$ is the excitation operator. In the TIQS
+> code (which follows QuTiP), $|0\rangle$ is the ground state, $|1\rangle$ is
+> the excited state, and `sigma_plus` $= |0\rangle\langle 1|$ maps
+> $|1\rangle \to |0\rangle$. The code therefore uses `sigma_minus` ($= |1\rangle\langle 0|$)
+> for excitation: the red sideband coupling is `a * sigma_minus + h.c.` and the
+> blue sideband coupling is `a_dag * sigma_minus + h.c.`
+
 ### Exact Rabi Frequencies
 
 Beyond the Lamb-Dicke approximation, the exact Rabi frequency for the $s$-th

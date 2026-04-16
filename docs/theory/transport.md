@@ -24,8 +24,8 @@ Shuttling translates an ion (or a small crystal) from one trapping
 zone to another by smoothly sweeping the voltage waveform on the
 segmented DC electrodes so that the electrostatic potential minimum
 glides along the trap axis. The ion follows the moving well, but
-any imperfection in the waveform -- or any part of the motion that
-is too fast for the ion to follow smoothly -- kicks the ion away
+any imperfection in the waveform, or any part of the motion that
+is too fast for the ion to follow smoothly, kicks the ion away
 from the instantaneous potential minimum and deposits energy into
 its secular motion.
 
@@ -39,7 +39,7 @@ When $T \gg \tau_\text{sec}$ (many oscillation periods during
 transport), the ion has time to continuously "relax" into the
 instantaneous ground state of the moving well. Its wavepacket
 tracks the potential minimum without acquiring excess kinetic
-energy -- the quantum-mechanical version of a ball sitting calmly
+energy, the quantum-mechanical version of a ball sitting calmly
 at the bottom of a bowl that is carried slowly across a table.
 This is the **adiabatic limit**, and the residual excitation is
 exponentially small.
@@ -49,7 +49,7 @@ moves significantly between successive oscillation cycles. The ion
 cannot keep up, "sloshes" in the well, and ends the transport in a
 coherent state displaced from the new potential minimum. This
 displacement is a classical amplitude of oscillation that maps to
-a nonzero mean phonon number -- the motional excitation.
+a nonzero mean phonon number, the motional excitation.
 
 Quantitatively, for a transport waveform that has been optimized
 (smooth start and stop, minimum jerk), the residual excitation
@@ -117,7 +117,7 @@ with a single collapse operator that creates phonons.
 A collapse operator $L = \sqrt{\gamma}\; a^\dagger$ acting on a
 harmonic oscillator mode produces transitions
 $|n\rangle \to |n+1\rangle$ at rate $\gamma(n+1)$. The factor
-$(n+1)$ is the bosonic stimulated emission enhancement -- the more
+$(n+1)$ is the bosonic stimulated emission enhancement: the more
 phonons already present, the faster new ones are added, just as
 for photons in a laser cavity. The resulting equation of motion
 for the mean occupation is:
@@ -134,7 +134,7 @@ $$
 
 Starting from vacuum ($\langle n\rangle_0 = 0$), after a time
 $\tau$ the occupation is $\langle n\rangle(\tau) = e^{\gamma\tau} - 1$.
-We want exactly $\Delta\bar{n}$ quanta deposited, so inverting:
+Setting the deposited quanta to exactly $\Delta\bar{n}$ and inverting:
 
 $$
 \gamma = \frac{\ln(\Delta\bar{n} + 1)}{\tau}
@@ -151,7 +151,7 @@ basis decay), both of which degrade subsequent gate fidelities.
 
 #### Why Not Just Add Phonons Directly?
 
-One might ask why we use a master equation rather than simply
+One might ask why a master equation is used rather than simply
 replacing $\rho$ with a shifted thermal state. The Lindblad channel
 correctly handles the case where the motional mode is entangled
 with qubits or other modes: it acts locally on the affected
@@ -177,7 +177,7 @@ into a double well with a barrier between the two ions.
 During the transition from single well to double well, the axial
 confinement frequency passes through a near-zero minimum. At the
 critical point where the barrier first appears, the potential is
-nearly flat at its center -- roughly quartic rather than quadratic.
+nearly flat at its center, roughly quartic rather than quadratic.
 The instantaneous trap frequency drops to nearly zero, and the
 adiabatic condition $T \gg 2\pi/\omega$ becomes impossible to
 satisfy at that instant no matter how slowly the split is performed.
