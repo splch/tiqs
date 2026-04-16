@@ -59,7 +59,7 @@ Helios processor (2025) was the first commercial system using ${}^{137}\text{Ba}
 
 ### The Species Protocol
 
-TIQS defines a structural ``Species`` protocol:
+TIQS defines a structural `Species` protocol:
 
 ```python
 class Species(Protocol):
@@ -70,9 +70,9 @@ class Species(Protocol):
     def qubit_frequency_hz(self) -> float: ...
 ```
 
-Both ``IonSpecies`` and ``ElectronSpecies`` satisfy this protocol. Any custom
+Both `IonSpecies` and `ElectronSpecies` satisfy this protocol. Any custom
 class exposing these two properties will be accepted by TIQS functions that
-take a ``Species`` argument (e.g. ``lamb_dicke_parameters()``).
+take a `Species` argument (e.g. `lamb_dicke_parameters()`).
 
 ### Trade-offs
 
@@ -85,8 +85,9 @@ favors barium for its visible-wavelength scalability.
 ### Trapped Electrons
 
 Bare electrons confined in Paul traps or Penning traps are a candidate
-platform for quantum computing. The qubit is the electron spin-1/2 in an applied magnetic field,
-with Zeeman splitting $f = g_e \mu_B B / h \approx 28$ GHz/T. Unlike atomic
+platform for quantum computing. The qubit is the electron spin-1/2 in an
+applied magnetic field, with Zeeman splitting
+$f = g_e \mu_B B / h \approx 28$ GHz/T. Unlike atomic
 ions, electrons have no internal level structure, so cooling is resistive
 (via an RLC tank circuit) and spin-motion coupling is mediated by a magnetic
 field gradient rather than a laser wavevector. TIQS models trapped electrons
@@ -100,7 +101,7 @@ via `tiqs.ElectronSpecies`.
 | $T_1$ | $\infty$ (no decay channel) | $\infty$ (hyperfine) or $\sim$1 s (optical) |
 | Cooling | Resistive (RLC circuit) | Laser Doppler + sideband |
 | Spin-motion coupling | Magnetic field gradient | Laser wavevector |
-| Trap drive | 1-10 GHz (Paul) or 1-5 T (Penning) | 10-100 MHz |
+| Trap type | Paul (GHz RF) or Penning (1-5 T) | Paul (10-100 MHz RF) |
 | Secular frequencies | 30 MHz - 2 GHz | 1-5 MHz |
 
 The magnetic field gradient $dB/dz$ couples the electron spin to its motional

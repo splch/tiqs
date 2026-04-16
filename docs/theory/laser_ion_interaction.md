@@ -68,13 +68,13 @@ $$
 Drives $|g, n\rangle \leftrightarrow |e, n{+}1\rangle$ at Rabi frequency
 $\eta\Omega\sqrt{n+1}$.
 
-> **Convention note**: The formulas above follow the standard textbook convention
-> where $\sigma_+ = |e\rangle\langle g|$ is the excitation operator. In the TIQS
-> code (which follows QuTiP), $|0\rangle$ is the ground state, $|1\rangle$ is
-> the excited state, and `sigma_plus` $= |0\rangle\langle 1|$ maps
-> $|1\rangle \to |0\rangle$. The code therefore uses `sigma_minus` ($= |1\rangle\langle 0|$)
-> for excitation: the red sideband coupling is `a * sigma_minus + h.c.` and the
-> blue sideband coupling is `a_dag * sigma_minus + h.c.`
+**TIQS convention**: The Hamiltonians above use the textbook convention
+$\sigma_+ = |e\rangle\langle g|$. In the TIQS code (following QuTiP),
+$|0\rangle$ is the ground state and $|1\rangle$ the excited state, so
+$\sigma_+ = |0\rangle\langle 1|$ acts as de-excitation. The code therefore
+uses $\sigma_-$ for excitation: the red sideband coupling is
+$a\,\sigma_- + \text{h.c.}$ and the blue sideband coupling is
+$a^\dagger\sigma_- + \text{h.c.}$
 
 ### Exact Rabi Frequencies
 

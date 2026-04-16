@@ -1,55 +1,9 @@
 ## Trapping Physics
 
-TIQS supports two trap architectures: **Paul traps** using oscillating
-electric fields for radial confinement, and **Penning traps** using a static
-magnetic field for radial confinement with an electrostatic axial potential.
-Both conform to the ``Trap`` protocol, which requires ``omega_axial``,
-``species``, and ``is_stable()``.
-
-### The Trap Protocol
-
-TIQS defines a structural ``Trap`` protocol that any trap must satisfy:
-
-```python
-class Trap(Protocol):
-    @property
-    def omega_axial(self) -> float: ...
-
-    @property
-    def species(self) -> Species: ...
-
-    def is_stable(self) -> bool: ...
-```
-
-Functions like ``equilibrium_positions()`` accept any ``Trap``-conforming
-object. ``normal_modes()`` currently requires ``PaulTrap`` or ``PenningTrap``
-because transverse mode computation depends on trap-specific physics.
-
-Both ``PaulTrap`` and ``PenningTrap`` can be constructed either from a known
-axial frequency or from a DC voltage via the ``from_dc_voltage()`` class
-method:
-
-```python
-import numpy as np
-import tiqs
-
-species = tiqs.get_species("Ca40")
-
-# Construct with known axial frequency
-trap = tiqs.PaulTrap(
-    v_rf=200.0, omega_rf=2*np.pi*30e6,
-    r0=200e-6, species=species,
-    omega_axial=2*np.pi*1e6,
-)
-trap.is_stable()  # True
-
-# Construct from DC endcap voltage
-trap = tiqs.PaulTrap.from_dc_voltage(
-    v_rf=200.0, omega_rf=2*np.pi*30e6,
-    r0=200e-6, species=species,
-    u_dc_axial=10.0,
-)
-```
+Two trap architectures dominate charged-particle quantum computing:
+**Paul traps** using oscillating electric fields for radial confinement, and
+**Penning traps** using a static magnetic field for radial confinement with
+an electrostatic axial potential.
 
 ### Paul Traps
 
@@ -88,15 +42,13 @@ a = \frac{4\, e\, U_\text{DC}}{m\, \Omega_\text{RF}^2\, r_0^2}, \qquad
 q = \frac{2\, e\, V_\text{RF}}{m\, \Omega_\text{RF}^2\, r_0^2}
 $$
 
-TIQS computes $q$ from the RF parameters directly. For $a$, it uses a
-simplified model that accounts for radial defocusing from the axial DC
-potential:
+In practice, $a$ can be expressed in terms of the axial secular frequency
+rather than the DC voltage. Since the axial DC field weakens radial
+confinement, $a$ is negative:
 
 $$
 a \approx \frac{-2\,\omega_z^2}{\Omega_\text{RF}^2}
 $$
-
-This is negative because the axial DC field weakens radial confinement.
 
 Stable trapping occurs within bounded regions of the $(a, q)$ parameter space.
 Most experiments operate in the first stability region with $a \approx 0$ and
@@ -108,8 +60,8 @@ In the pseudopotential approximation (valid for $q \ll 1$), the ion's motion
 decomposes into two components:
 
 **Secular motion**: slow harmonic oscillation at the secular frequency. The
-full expression, which TIQS implements, includes the effect of the DC axial
-potential on the radial motion:
+full expression includes the effect of the DC axial potential on the radial
+motion:
 
 $$
 \omega_\text{rad} = \frac{\Omega_\text{RF}}{2}\sqrt{a + \frac{q^2}{2}}
@@ -183,20 +135,7 @@ $$
 
 where $d$ is the characteristic trap dimension
 ($d^2 = (z_0^2 + r_0^2/2)/2$ for a hyperbolic trap) and $V_\mathrm{dc}$ is
-the DC trapping voltage. TIQS provides ``PenningTrap.from_dc_voltage()`` to
-construct from voltage, or you can pass ``omega_axial`` directly:
-
-```python
-import numpy as np
-import tiqs
-
-species = tiqs.ElectronSpecies(magnetic_field=1.0)
-trap = tiqs.PenningTrap(
-    magnetic_field=1.0, species=species,
-    d=1e-3, omega_axial=2*np.pi*100e6,
-)
-trap.is_stable()  # True
-```
+the DC trapping voltage.
 
 #### Radial Confinement
 
@@ -234,9 +173,7 @@ $$
 
 The last relation is the **Brown-Gabrielse invariance theorem**, which
 allows precision measurements of the cyclotron frequency without measuring
-all three eigenfrequencies individually. TIQS exposes all three as
-properties: ``omega_cyclotron``, ``omega_modified_cyclotron``, and
-``omega_magnetron``.
+all three eigenfrequencies individually.
 
 #### Stability Condition
 

@@ -3,8 +3,8 @@
 Trapped-particle quantum computers encode qubits in the internal electronic
 states of individual atomic ions -- or the spin states of trapped electrons --
 confined by electromagnetic traps under ultra-high vacuum, and manipulated
-with precisely controlled laser, microwave, or magnetic-gradient fields. The
-shared quantized vibrational motion of the particle chain serves as a quantum
+with precisely controlled laser, microwave, or magnetic-field-gradient drives.
+The shared quantized vibrational motion of the particle chain serves as a quantum
 bus that mediates entangling interactions between any pair of qubits.
 
 Two trap architectures are supported. **Paul traps** confine charged particles
@@ -107,3 +107,7 @@ each decoherence channel and its collapse operator).
    challenges." *Appl. Phys. Rev.* **6**, 021314 (2019).
 3. Cirac, J.I. & Zoller, P. "Quantum computations with cold trapped ions."
    *Phys. Rev. Lett.* **74**, 4091 (1995).
+4. Rodriguez-Blanco, A. et al. "Penning micro-trap for quantum computing."
+   *Nature* **627**, 510 (2024).
+5. Ciaramicoli, G., Marzoli, I. & Tombesi, P. "Scalable quantum processor
+   with trapped electrons." *Phys. Rev. Lett.* **91**, 017901 (2003).

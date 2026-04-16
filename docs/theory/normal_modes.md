@@ -165,9 +165,9 @@ result.modes["axial"].freqs
 # Participation vector for axial COM mode (mode index 0)
 result.modes["axial"].vectors[:, 0]
 
-# Lamb-Dicke parameters for counter-propagating Raman beams
-wavelength = 729e-9  # Ca+ S-D transition
-k_eff = 2 * 2 * np.pi / wavelength
+# Lamb-Dicke parameters for the Ca+ 729 nm quadrupole transition
+wavelength = 729e-9
+k_eff = 2 * np.pi / wavelength
 eta = tiqs.lamb_dicke_parameters(result, species, k_eff, direction="axial")
 # eta[i, m] is the Lamb-Dicke parameter for ion i, mode m
 ```

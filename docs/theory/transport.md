@@ -1,7 +1,5 @@
 ## QCCD Transport Theory
 
-### Why Transport Matters
-
 A quantum charge-coupled device (QCCD) processor stores ions in a
 segmented linear trap with many zones: dedicated regions for gates,
 cooling, measurement, and storage. Because laser-driven entangling
@@ -29,32 +27,27 @@ is too fast for the ion to follow smoothly, kicks the ion away
 from the instantaneous potential minimum and deposits energy into
 its secular motion.
 
-#### Adiabaticity: the Central Concept
+#### Adiabaticity
 
 The key parameter governing shuttling quality is **adiabaticity**:
 the ratio of the transport duration $T$ to the ion's oscillation
 period $\tau_\text{sec} = 2\pi/\omega$.
 
 When $T \gg \tau_\text{sec}$ (many oscillation periods during
-transport), the ion has time to continuously "relax" into the
-instantaneous ground state of the moving well. Its wavepacket
-tracks the potential minimum without acquiring excess kinetic
-energy, the quantum-mechanical version of a ball sitting calmly
-at the bottom of a bowl that is carried slowly across a table.
-This is the **adiabatic limit**, and the residual excitation is
-exponentially small.
+transport), the ion continuously tracks the instantaneous ground
+state of the moving well. Its wavepacket follows the potential
+minimum without acquiring excess kinetic energy, and the residual
+excitation is exponentially small (the **adiabatic limit**).
 
 When $T \sim \tau_\text{sec}$ or shorter, the potential minimum
 moves significantly between successive oscillation cycles. The ion
-cannot keep up, "sloshes" in the well, and ends the transport in a
-coherent state displaced from the new potential minimum. This
-displacement is a classical amplitude of oscillation that maps to
-a nonzero mean phonon number, the motional excitation.
+cannot keep up and ends the transport in a coherent state displaced
+from the new potential minimum. This displacement maps to a nonzero
+mean phonon number.
 
-Quantitatively, for a transport waveform that has been optimized
-(smooth start and stop, minimum jerk), the residual excitation
-decays exponentially with the number of trap oscillation periods
-during the shuttle:
+For an optimized transport waveform (smooth start and stop, minimum
+jerk), the residual excitation decays exponentially with the number
+of trap oscillation periods during the shuttle:
 
 $$
 \Delta\bar{n} \sim \left(\frac{d}{x_\text{zpf}}\right)^2
@@ -79,10 +72,9 @@ $$
 $$
 
 with $A$ a geometry-dependent constant of order unity for optimized
-waveforms. This can be understood from dimensional analysis: the
-displacement error is proportional to the acceleration of the
-potential minimum ($\sim d/T^2$), measured in units of the trap's
-restoring acceleration ($\sim \omega^2 x_\text{zpf}$).
+waveforms. The displacement error is proportional to the acceleration
+of the potential minimum ($\sim d/T^2$), measured in units of the
+trap's restoring acceleration ($\sim \omega^2 x_\text{zpf}$).
 
 #### Practical Numbers
 
@@ -95,9 +87,7 @@ shuttle, safely in the exponentially suppressed regime. Fast
 $\sim$5-10 $\mu$s at the cost of more complex electrode control
 and tighter calibration requirements.
 
-### Modeling Transport as a Thermal Noise Channel
-
-#### Physical Picture
+### Thermal Noise Channel Model
 
 After the shuttle completes, the ion is in a coherent state
 displaced from the ground state of the final well. On the
@@ -112,15 +102,12 @@ TIQS therefore models shuttling as a thermal excitation channel
 applied to the affected motional mode: a Lindblad master equation
 with a single collapse operator that creates phonons.
 
-#### Derivation
-
 A collapse operator $L = \sqrt{\gamma}\; a^\dagger$ acting on a
 harmonic oscillator mode produces transitions
 $|n\rangle \to |n+1\rangle$ at rate $\gamma(n+1)$. The factor
 $(n+1)$ is the bosonic stimulated emission enhancement: the more
-phonons already present, the faster new ones are added, just as
-for photons in a laser cavity. The resulting equation of motion
-for the mean occupation is:
+phonons already present, the faster new ones are added. The
+resulting equation of motion for the mean occupation is:
 
 $$
 \frac{d\langle n\rangle}{dt} = \gamma\,(\langle n\rangle + 1)
@@ -142,27 +129,21 @@ $$
 
 The implementation uses a short fictitious evolution time
 $\tau = 1\;\mu$s (much shorter than any real dynamics) with the
-corresponding $\gamma$, so that QuTiP's ``mesolve`` integrates
-the Lindblad equation and maps the input density matrix $\rho$ to
-the post-transport state. This captures two effects
-simultaneously: the increase in mean phonon number and the loss
-of motional coherence (off-diagonal elements of $\rho$ in the Fock
-basis decay), both of which degrade subsequent gate fidelities.
+corresponding $\gamma$, so that the Lindblad master equation maps
+the input density matrix $\rho$ to the post-transport state. This
+captures two effects simultaneously: the increase in mean phonon
+number and the loss of motional coherence (off-diagonal elements of
+$\rho$ in the Fock basis decay), both of which degrade subsequent
+gate fidelities.
 
-#### Why Not Just Add Phonons Directly?
-
-One might ask why a master equation is used rather than simply
-replacing $\rho$ with a shifted thermal state. The Lindblad channel
-correctly handles the case where the motional mode is entangled
-with qubits or other modes: it acts locally on the affected
-subsystem within the full density matrix, preserving any
+The Lindblad channel is preferred over a simple state replacement
+because it correctly handles the case where the motional mode is
+entangled with qubits or other modes: it acts locally on the
+affected subsystem within the full density matrix, preserving any
 correlations that should survive while adding the appropriate
-decoherence. A simple state replacement would not handle entangled
-states correctly.
+decoherence.
 
 ### Crystal Splitting
-
-#### The Problem
 
 Many QCCD operations require separating a two-ion crystal into
 individual ions in distinct wells. For example, after a two-qubit
@@ -171,8 +152,6 @@ single-qubit operations or further transport. This splitting is
 physically more demanding than linear shuttling because the axial
 potential must be continuously reshaped from a single harmonic well
 into a double well with a barrier between the two ions.
-
-#### Why Splitting Is Harder Than Shuttling
 
 During the transition from single well to double well, the axial
 confinement frequency passes through a near-zero minimum. At the
@@ -216,8 +195,6 @@ state.
 
 ### Error Budget Context
 
-#### Accumulation Across an Algorithm
-
 In a full QCCD circuit, transport errors accumulate across the
 many shuttle and split operations required to bring ion pairs
 together for entangling gates and return them to their home zones.
@@ -235,39 +212,15 @@ Lamb-Dicke parameter $\eta \sim 0.1$, the Lamb-Dicke condition
 $\eta\sqrt{2\bar{n}+1} \ll 1$ starts to break down and gate
 errors grow quadratically with $\bar{n}$.
 
-#### The Recooling Bottleneck
-
 Sympathetic sideband cooling after transport restores the motional
 ground state, but at a cost: each cooling cycle takes 1-10 ms per
-mode (see the [cooling theory](cooling.md) section), and this
-recooling overhead can dominate total algorithm runtime. The
-Quantinuum H1 system, for example, spends roughly 68% of its
-execution time on recooling between transport steps. This makes
-transport excitation one of the key bottlenecks for scaling QCCD
-processors: reducing $\Delta\bar{n}$ per transport step directly
-reduces the recooling frequency needed and thus improves overall
-algorithm throughput.
-
-### Implementation Notes
-
-The ``shuttle_motional_excitation()`` function uses the
-exponential adiabaticity model, computing excitation from the
-number of trap oscillation periods during transport:
-$n_\text{periods} = \omega T / 2\pi$. The ``distance`` parameter
-is accepted for API forward-compatibility but does not yet affect
-the result; a future version may incorporate the
-distance-dependent prefactor.
-
-The ``apply_shuttling_noise()`` function wraps the thermal channel
-described above. It constructs a creation operator $a^\dagger$
-for the specified motional mode, computes $\gamma$ from the target
-$\Delta\bar{n}$, and runs ``mesolve`` for a short fictitious
-evolution to produce the post-transport density matrix.
-
-The ``split_crystal_excitation()`` function returns the splitting
-excitation estimate, which can then be fed into
-``apply_shuttling_noise()`` through the same thermal channel
-pathway.
+mode (see [cooling.md](cooling.md)), and this recooling overhead can
+dominate total algorithm runtime. The Quantinuum H1 system, for
+example, spends roughly 68% of its execution time on recooling
+between transport steps. This makes transport excitation one of the
+key bottlenecks for scaling QCCD processors: reducing
+$\Delta\bar{n}$ per transport step directly reduces the recooling
+frequency needed and thus improves overall algorithm throughput.
 
 ### References
 

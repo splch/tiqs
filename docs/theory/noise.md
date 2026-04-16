@@ -54,10 +54,9 @@ $$
 L_\phi = \sqrt{\gamma_\phi / 2}\; \sigma_z
 $$
 
-In the general case, the pure dephasing rate separates from relaxation as
-$\gamma_\phi = 1/T_2 - 1/(2T_1)$. For hyperfine qubits where
+The pure dephasing rate relates to the coherence time as
+$\gamma_\phi = 1/T_2 - 1/(2T_1)$; for hyperfine qubits where
 $T_1 \to \infty$, this simplifies to $\gamma_\phi = 1/T_2$.
-
 For clock-state qubits with second-order magnetic sensitivity:
 
 $$
@@ -69,11 +68,8 @@ $$
 For optical qubits, the excited state decays at rate $\Gamma_D = 1/\tau_D$:
 
 $$
-L_\text{decay} = \sqrt{\Gamma_D}\; \sigma_+
+L_\text{decay} = \sqrt{\Gamma_D}\; \sigma_-
 $$
-
-In TIQS, $\sigma_+ = |0\rangle\langle 1|$ maps excited $|1\rangle$ to
-ground $|0\rangle$ (QuTiP convention where $|0\rangle$ is the ground state).
 
 Population in $|e\rangle$ decays to $|g\rangle$ at rate $\Gamma_D$, and
 coherence decays at $\Gamma_D / 2$. For ${}^{40}\text{Ca}^+$, $\tau_D = 1.17$ s.
@@ -87,7 +83,7 @@ causes spontaneous scattering with two components:
 errors:
 
 $$
-L_\text{Raman} = \sqrt{\Gamma_\text{Raman}(t)}\; \sigma_+
+L_\text{Raman} = \sqrt{\Gamma_\text{Raman}(t)}\; \sigma_-
 $$
 
 **Rayleigh scattering** (elastic) causes dephasing without population transfer.
@@ -110,10 +106,6 @@ noise with spectral density $S_\phi$:
 $$
 L_\text{phase} = \sqrt{\pi S_\phi \Omega^2 / 2}\; \sigma_z
 $$
-
-In TIQS, the code takes the effective dephasing rate
-$\gamma = \pi S_\phi \Omega^2$ directly as a single parameter and
-constructs the operator as $L = \sqrt{\gamma/2}\;\sigma_z$.
 
 ### Laser Intensity Noise
 

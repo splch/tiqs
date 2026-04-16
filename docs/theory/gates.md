@@ -75,17 +75,12 @@ $$
 where $\sigma_\phi = \cos\phi_s\;\sigma_x + \sin\phi_s\;\sigma_y$ and
 $\phi_s = (\phi_+ + \phi_-)/2$ is the spin basis phase.
 
-> **Convention note (theory vs. code):** The Hamiltonian above uses the
-> textbook convention with an explicit $1/2$ factor, giving a coupling
-> strength $\eta\Omega/2$. The TIQS code (`ms_gate_hamiltonian`,
-> `light_shift_gate_hamiltonian`) absorbs this factor into the Rabi
-> frequency so that the coupling is $\eta\Omega_\text{code}$ with no
-> denominator, i.e. $\Omega_\text{code} = \Omega_\text{here}/2$. All
-> formulas in this document (displacement radius, geometric phase,
-> drive strength) use the textbook $\Omega$ and are self-consistent.
-> `SimulationRunner.run_ms_gate` handles the calibration automatically.
-> See the docstrings in `tiqs.gates.molmer_sorensen` and
-> `tiqs.gates.light_shift` for details.
+**Convention note**: This document uses the textbook convention with an
+explicit $1/2$ factor, giving coupling strength $\eta\Omega/2$. The TIQS
+code absorbs this factor into the Rabi frequency
+($\Omega_\text{code} = \Omega_\text{here}/2$), so all formulas below
+(displacement radius, geometric phase, drive strength) are self-consistent
+with each other but differ from the code by that factor of 2.
 
 #### Phase-Space Trajectories
 

@@ -1,8 +1,8 @@
 ## State Preparation and Measurement
 
-Initializing qubits to a known state and reading them out at the end of a
-circuit are the first and last operations in any quantum algorithm. Together
-they set the SPAM error floor that gates must stay below.
+State preparation and measurement (SPAM) bookend every quantum circuit.
+Their combined error floor bounds the fidelity of any gate
+characterization.
 
 ### State Preparation via Optical Pumping
 
@@ -39,7 +39,7 @@ follow Poisson distributions with means
 $\mu_b = R_b\, t_\text{det}\, \eta_c$ and
 $\mu_d = R_d\, t_\text{det}\, \eta_c$, where $R_b$ and $R_d$ are the
 scattering rates and $\eta_c$ is the collection efficiency. The optimal
-threshold $n^*$ minimizes the total error:
+threshold $n^*$ maximizes the readout fidelity:
 
 $$
 F_\text{readout} = \frac{1}{2}\Bigl[P(n \geq n^* \mid \mu_b) + P(n < n^* \mid \mu_d)\Bigr]
