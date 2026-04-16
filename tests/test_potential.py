@@ -214,3 +214,35 @@ class TestCheckConvergence:
         )
         with pytest.warns(UserWarning, match="not converged"):
             check_convergence(pot, n_fock=5)
+
+
+class TestModeHamiltonian:
+    def test_lifts_to_full_space(self):
+        """mode_hamiltonian produces an operator in the full
+        tensor-product space."""
+        from tiqs.hilbert_space.builder import HilbertSpace
+        from tiqs.hilbert_space.operators import OperatorFactory
+        from tiqs.potential import mode_hamiltonian
+
+        hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=10)
+        ops = OperatorFactory(hs)
+        pot = HarmonicPotential(omega=2 * np.pi * 1e6)
+        H = mode_hamiltonian(pot, ops, mode=0)
+        assert H.shape == (hs.total_dim, hs.total_dim)
+
+    def test_harmonic_matches_omega_times_number(self):
+        """mode_hamiltonian with HarmonicPotential should equal
+        omega * ops.number(mode)."""
+        from tiqs.hilbert_space.builder import HilbertSpace
+        from tiqs.hilbert_space.operators import OperatorFactory
+        from tiqs.potential import mode_hamiltonian
+
+        omega = 2 * np.pi * 1e6
+        hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=10)
+        ops = OperatorFactory(hs)
+        pot = HarmonicPotential(omega=omega)
+        H_pot = mode_hamiltonian(pot, ops, mode=0)
+        H_expected = omega * ops.number(0)
+        np.testing.assert_allclose(
+            H_pot.full(), H_expected.full(), atol=1e-20
+        )
