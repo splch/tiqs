@@ -12,8 +12,9 @@ $$
 
 where $N$ is the number of ions (each a two-level qubit with $\dim = 2$) and
 $M$ is the number of motional modes (each a truncated harmonic oscillator with
-$\dim = n_\text{max} + 1$). The total Hilbert space dimension is
-$2^N \times (n_\text{max} + 1)^M$.
+$\dim = n_\text{fock}$, containing Fock states $|0\rangle$ through
+$|n_\text{fock}-1\rangle$). The total Hilbert space dimension is
+$2^N \times n_\text{fock}^M$.
 
 Operators acting on individual subsystems are embedded into the full space via
 tensor products:

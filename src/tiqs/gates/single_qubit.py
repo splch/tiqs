@@ -223,7 +223,7 @@ def bb1_composite_gate(
     rabi_frequency: float = TWO_PI * 1e6,
 ) -> GatePulse:
     r"""BB1 (Broadband-1) composite pulse: compensates amplitude errors to
-    second order.
+    fourth order.
 
     $$
     \mathrm{BB1}(\theta) = R_0(\theta),\;

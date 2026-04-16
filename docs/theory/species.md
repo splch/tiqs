@@ -37,7 +37,7 @@ without dynamical decoupling.
 **${}^{171}\text{Yb}^+$** (nuclear spin $I = 1/2$): Qubit states
 $|F{=}0, m_F{=}0\rangle$ and $|F{=}1, m_F{=}0\rangle$ in the ${}^2S_{1/2}$
 manifold. Cooling via ${}^2S_{1/2} \to {}^2P_{1/2}$ at 369.5 nm (linewidth
-$\Gamma/2\pi \approx 23$ MHz). Repumper at 935 nm clears the metastable
+$\Gamma/2\pi \approx 19.6$ MHz). Repumper at 935 nm clears the metastable
 ${}^2D_{3/2}$ state. Gates driven by stimulated Raman transitions via 355 nm
 pulsed lasers or direct microwave drive at 12.6 GHz. Used by IonQ (Forte)
 and Quantinuum (H1, H2).

@@ -18,8 +18,8 @@ causing transitions between motional Fock states. This is the dominant
 **Lindblad operators** for each mode $p$:
 
 $$
-L_\text{heat} = \sqrt{\dot{\bar{n}}_p}\; a_p^\dagger, \qquad
-L_\text{cool} = \sqrt{\dot{\bar{n}}_p \cdot \frac{\bar{n}_\text{th}}{\bar{n}_\text{th}+1}}\; a_p
+L_\text{heat} = \sqrt{\dot{\bar{n}}_p\,(\bar{n}_\text{th}+1)}\; a_p^\dagger, \qquad
+L_\text{cool} = \sqrt{\dot{\bar{n}}_p\,\bar{n}_\text{th}}\; a_p
 $$
 
 where $\dot{\bar{n}}_p$ is the heating rate (phonons/second), related to the
@@ -54,7 +54,7 @@ $$
 L_\phi = \sqrt{\gamma_\phi / 2}\; \sigma_z
 $$
 
-The $T_2$ dephasing time is $T_2 = 2/\gamma_\phi$. For clock-state qubits
+The $T_2$ dephasing time is $T_2 = 1/\gamma_\phi$. For clock-state qubits
 with second-order magnetic sensitivity:
 
 $$
