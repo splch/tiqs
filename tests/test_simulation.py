@@ -157,6 +157,83 @@ class TestAnharmonicSimulation:
         final_sz = qutip.expect(sz, result.states[-1])
         assert final_sz == pytest.approx(-1.0, abs=0.15)
 
+    def test_runner_with_t1_qubit(self):
+        """t1_qubit adds spontaneous emission collapse operators."""
+        trap = PaulTrap(
+            v_rf=300.0,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1e6,
+            species=get_species("Ca40"),
+        )
+        config = SimulationConfig(
+            species=get_species("Ca40"),
+            trap=trap,
+            n_ions=1,
+            n_modes=1,
+            n_fock=5,
+            solver="mesolve",
+            t1_qubit=100e-6,
+        )
+        runner = SimulationRunner(config)
+        assert len(runner._c_ops) >= 1
+        result = runner.run_carrier_pulse(ion=0, theta=np.pi, n_steps=50)
+        assert len(result.states) > 0
+
+    def test_mcsolve_solver(self):
+        """mcsolve solver runs without error."""
+        trap = PaulTrap(
+            v_rf=300.0,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1e6,
+            species=get_species("Ca40"),
+        )
+        config = SimulationConfig(
+            species=get_species("Ca40"),
+            trap=trap,
+            n_ions=1,
+            n_modes=1,
+            n_fock=5,
+            solver="mcsolve",
+            heating_rate=1e3,
+        )
+        runner = SimulationRunner(config)
+        result = runner.run_carrier_pulse(ion=0, theta=np.pi, n_steps=50)
+        assert len(result.states) > 0
+
+    def test_anharmonic_ms_gate(self):
+        """Anharmonic correction applied to list-format (time-dependent)
+        Hamiltonian from MS gate."""
+        from tiqs.potential import DuffingPotential
+
+        trap = PaulTrap(
+            v_rf=300.0,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1.0e6,
+            species=get_species("Ca40"),
+        )
+        pot = DuffingPotential(
+            omega=TWO_PI * 1e6,
+            anharmonicity=-TWO_PI * 50e3,
+        )
+        config = SimulationConfig(
+            species=get_species("Ca40"),
+            trap=trap,
+            n_ions=2,
+            n_modes=1,
+            n_fock=15,
+            solver="sesolve",
+            potentials={0: pot},
+        )
+        runner = SimulationRunner(config)
+        result = runner.run_ms_gate(ions=[0, 1])
+        rho_spin = result.states[-1].ptrace([0, 1])
+        purity = (rho_spin * rho_spin).tr().real
+        # Should still entangle (purity < 1)
+        assert purity < 0.9
+
     def test_no_potentials_backward_compatible(self):
         """Simulations without potentials produce identical results."""
         trap = PaulTrap(

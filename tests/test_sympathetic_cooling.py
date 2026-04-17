@@ -106,9 +106,7 @@ class TestSympatheticDopplerNbar:
         axial = modes.modes["axial"]
         P = coolant_participation(axial, [0])
         n_bar = sympathetic_doppler_nbar(ca40, axial.freqs, P)
-        n_bar_standard = doppler_cooled_nbar(
-            ca40, axial.freqs[0] / TWO_PI
-        )
+        n_bar_standard = doppler_cooled_nbar(ca40, axial.freqs[0] / TWO_PI)
         assert n_bar[0] == pytest.approx(n_bar_standard, rel=1e-6)
 
     def test_lower_participation_higher_nbar(self, be9, ca40, ca40_trap):
@@ -164,9 +162,7 @@ class TestSympatheticCoolingRate:
         """rate_m1 / rate_m2 = P_m1 / P_m2 exactly."""
         P = np.array([0.8, 0.2])
         rates = sympathetic_cooling_rate(ca40, P)
-        assert rates[0] / rates[1] == pytest.approx(
-            P[0] / P[1], rel=1e-10
-        )
+        assert rates[0] / rates[1] == pytest.approx(P[0] / P[1], rel=1e-10)
 
     def test_rate_formula(self, ca40):
         """Direct formula check: rate = (Gamma/2) * P * s/(1+s)."""
@@ -307,8 +303,10 @@ class TestSimulationRunnerIntegration:
         rates = np.array([TWO_PI * 1e5])
         targets = np.array([0.5])
         rho_cooled = runner.run_sympathetic_cooling(
-            rho0, duration=50e-6,
-            cooling_rates=rates, n_bar_target=targets,
+            rho0,
+            duration=50e-6,
+            cooling_rates=rates,
+            n_bar_target=targets,
         )
         n_after = qutip.expect(n_op, rho_cooled)
         assert n_after < n_before
@@ -345,9 +343,7 @@ class TestSimulationRunnerIntegration:
         rho0 = runner.sf.thermal_state(n_bar=[0.0, 0.0])
         H = 0 * runner.ops.identity()
         tlist = np.linspace(0, 1e-3, 10)
-        result = qutip.mesolve(
-            H, rho0, tlist, c_ops=runner._c_ops
-        )
+        result = qutip.mesolve(H, rho0, tlist, c_ops=runner._c_ops)
         n0 = qutip.expect(runner.ops.number(0), result.states[-1])
         n1 = qutip.expect(runner.ops.number(1), result.states[-1])
         assert n1 > n0
@@ -426,9 +422,7 @@ class TestSimulationRunnerIntegration:
 
     def test_wrong_length_nbar_per_mode_raises(self, ca40, ca40_trap):
         """n_bar_initial_per_mode with wrong length raises."""
-        with pytest.raises(
-            ValueError, match="n_bar_initial_per_mode"
-        ):
+        with pytest.raises(ValueError, match="n_bar_initial_per_mode"):
             SimulationConfig(
                 species=ca40,
                 trap=ca40_trap,

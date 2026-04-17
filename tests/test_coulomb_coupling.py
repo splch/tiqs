@@ -126,6 +126,4 @@ class TestOptomechanicalCoupling:
         w_i = TWO_PI * 2e6
         L = 10e-6
         g0 = optomechanical_coupling(m_e, m_i, w_e, w_i, L)
-        assert g0 / TWO_PI == pytest.approx(
-            expected_khz * 1e3, rel=0.5
-        )
+        assert g0 / TWO_PI == pytest.approx(expected_khz * 1e3, rel=0.5)
