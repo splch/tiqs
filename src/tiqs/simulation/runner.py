@@ -8,6 +8,12 @@ import qutip
 from tiqs.chain.lamb_dicke import lamb_dicke_parameters
 from tiqs.chain.normal_modes import normal_modes
 from tiqs.constants import TWO_PI
+from tiqs.cooling.sympathetic import (
+    apply_sympathetic_cooling,
+    coolant_participation,
+    sympathetic_cooling_rate,
+    sympathetic_doppler_nbar,
+)
 from tiqs.gates.molmer_sorensen import ms_gate_duration, ms_gate_hamiltonian
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
@@ -67,6 +73,27 @@ class SimulationRunner:
         self.eta = lamb_dicke_parameters(
             self.modes, species_list, k_effs, "axial"
         )
+
+        if config.coolant_indices is not None:
+            axial = self.modes.modes["axial"]
+            self._coolant_participation = coolant_participation(
+                axial, config.coolant_indices
+            )
+            coolant_species = species_list[config.coolant_indices[0]]
+            n_m = min(config.n_modes, len(axial.freqs))
+            self._cooling_rates = sympathetic_cooling_rate(
+                coolant_species,
+                self._coolant_participation[:n_m],
+            )
+            self._n_bar_cooled = sympathetic_doppler_nbar(
+                coolant_species,
+                axial.freqs[:n_m],
+                self._coolant_participation[:n_m],
+            )
+        else:
+            self._coolant_participation = None
+            self._cooling_rates = None
+            self._n_bar_cooled = None
 
         self._c_ops = self._build_collapse_operators()
         self._anharmonic_H = self._build_anharmonic_correction()
@@ -133,11 +160,15 @@ class SimulationRunner:
         c_ops = []
         cfg = self.config
 
-        if cfg.heating_rate is not None and cfg.heating_rate > 0:
-            for m in range(cfg.n_modes):
-                c_ops.extend(
-                    motional_heating_ops(self.ops, m, cfg.heating_rate)
-                )
+        if cfg.heating_rates is not None:
+            h_rates = cfg.heating_rates
+        elif cfg.heating_rate is not None and cfg.heating_rate > 0:
+            h_rates = [cfg.heating_rate] * cfg.n_modes
+        else:
+            h_rates = []
+        for m, r in enumerate(h_rates):
+            if r > 0:
+                c_ops.extend(motional_heating_ops(self.ops, m, r))
 
         for i in range(cfg.n_ions):
             if cfg.t2_qubit is not None:
@@ -164,9 +195,12 @@ class SimulationRunner:
         qutip.Qobj
             Initial state for the simulation.
         """
-        n_bar = self.config.n_bar_initial
-        if n_bar > 0 or self._c_ops:
-            return self.sf.thermal_state(n_bar=[n_bar] * self.config.n_modes)
+        if self.config.n_bar_initial_per_mode is not None:
+            n_bars = self.config.n_bar_initial_per_mode
+        else:
+            n_bars = [self.config.n_bar_initial] * self.config.n_modes
+        if any(nb > 0 for nb in n_bars) or self._c_ops:
+            return self.sf.thermal_state(n_bar=n_bars)
         return self.sf.ground_state()
 
     def _solve(self, H, tlist, psi0=None):
@@ -326,3 +360,57 @@ class SimulationRunner:
         )
         tlist = np.linspace(0, tau, n_steps)
         return self._solve(H, tlist)
+
+    def run_sympathetic_cooling(
+        self,
+        rho: qutip.Qobj,
+        duration: float,
+        cooling_rates: np.ndarray | None = None,
+        n_bar_target: np.ndarray | None = None,
+    ) -> qutip.Qobj:
+        """Apply sympathetic cooling to a density matrix.
+
+        Uses the cooling rates and target phonon numbers computed
+        from ``config.coolant_indices``, or accepts explicit
+        overrides.
+
+        Parameters
+        ----------
+        rho : qutip.Qobj
+            Input density matrix.
+        duration : float
+            Cooling duration in seconds.
+        cooling_rates : np.ndarray or None
+            Per-mode cooling rates in 1/s. If ``None``, uses
+            rates from ``coolant_indices``.
+        n_bar_target : np.ndarray or None
+            Per-mode target phonon numbers. If ``None``, uses
+            the sympathetic Doppler limit.
+
+        Returns
+        -------
+        qutip.Qobj
+            Density matrix after cooling.
+
+        Raises
+        ------
+        ValueError
+            If no ``coolant_indices`` configured and no explicit
+            rates provided.
+        """
+        rates = (
+            cooling_rates if cooling_rates is not None else self._cooling_rates
+        )
+        targets = (
+            n_bar_target if n_bar_target is not None else self._n_bar_cooled
+        )
+        if rates is None or targets is None:
+            raise ValueError(
+                "No coolant_indices configured and no explicit "
+                "rates provided. Set coolant_indices in "
+                "SimulationConfig or pass cooling_rates and "
+                "n_bar_target."
+            )
+        return apply_sympathetic_cooling(
+            rho, self.ops, self.config.n_modes, rates, targets, duration
+        )

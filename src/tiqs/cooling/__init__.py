@@ -1,4 +1,5 @@
-r"""Cooling protocols: Doppler, resolved sideband, and EIT cooling.
+r"""Cooling protocols: Doppler, resolved sideband, EIT, and
+sympathetic cooling.
 
 .. include:: ../../../docs/theory/cooling.md
 """

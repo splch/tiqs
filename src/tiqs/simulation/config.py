@@ -65,6 +65,16 @@ class SimulationConfig:
     photon_scattering_rate: float | None = None
     n_bar_initial: float = 0.0
     potentials: dict[int, Potential] = field(default_factory=dict)
+    coolant_indices: list[int] | None = None
+    """Indices of coolant ions for sympathetic cooling. ``None`` =
+    no sympathetic cooling. When set, ``species`` must be a list
+    with the coolant species at these indices."""
+    heating_rates: list[float] | None = None
+    """Per-mode heating rates in quanta/s. When set, overrides the
+    scalar ``heating_rate``. Length must equal ``n_modes``."""
+    n_bar_initial_per_mode: list[float] | None = None
+    """Per-mode initial phonon numbers. When set, overrides the
+    scalar ``n_bar_initial``. Length must equal ``n_modes``."""
     solver_options: dict[str, object] = field(
         default_factory=lambda: {"max_step": 0.0, "nsteps": 5000}
     )
