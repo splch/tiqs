@@ -76,19 +76,16 @@ class SimulationRunner:
 
         if config.coolant_indices is not None:
             axial = self.modes.modes["axial"]
-            self._coolant_participation = coolant_participation(
-                axial, config.coolant_indices
-            )
+            p = coolant_participation(axial, config.coolant_indices)[
+                : config.n_modes
+            ]
+            f = axial.freqs[: config.n_modes]
             coolant_species = species_list[config.coolant_indices[0]]
-            n_m = config.n_modes
-            p = self._coolant_participation[:n_m]
-            f = axial.freqs[:n_m]
             self._cooling_rates = sympathetic_cooling_rate(coolant_species, p)
             self._n_bar_cooled = sympathetic_doppler_nbar(
                 coolant_species, f, p
             )
         else:
-            self._coolant_participation = None
             self._cooling_rates = None
             self._n_bar_cooled = None
 

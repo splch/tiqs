@@ -9,11 +9,9 @@ import numpy as np
 import pytest
 
 from tiqs.constants import (
-    ELECTRON_CHARGE,
+    COULOMB_CONSTANT,
     ELECTRON_MASS,
-    EPSILON_0,
     HBAR,
-    PI,
     TWO_PI,
 )
 from tiqs.interaction.coulomb_coupling import (
@@ -21,8 +19,6 @@ from tiqs.interaction.coulomb_coupling import (
     optomechanical_coupling,
 )
 from tiqs.species.ion import get_species
-
-_C = ELECTRON_CHARGE**2 / (4 * PI * EPSILON_0)
 
 
 class TestBeamSplitterCoupling:
@@ -34,7 +30,7 @@ class TestBeamSplitterCoupling:
         w2 = TWO_PI * 2e6
         L = 30e-6
         g = beam_splitter_coupling(m1, m2, w1, w2, L)
-        expected = _C / (L**3 * np.sqrt(m1 * m2 * w1 * w2))
+        expected = COULOMB_CONSTANT / (L**3 * np.sqrt(m1 * m2 * w1 * w2))
         assert g == pytest.approx(expected, rel=1e-10)
 
     def test_scales_as_L_cubed_inverse(self):
@@ -90,7 +86,7 @@ class TestOptomechanicalCoupling:
         g0 = optomechanical_coupling(m1, m2, w1, w2, L)
         x1 = np.sqrt(HBAR / (2 * m1 * w1))
         x2 = np.sqrt(HBAR / (2 * m2 * w2))
-        expected = 3 * _C * x1**2 * x2 / (HBAR * L**4)
+        expected = 3 * COULOMB_CONSTANT * x1**2 * x2 / (HBAR * L**4)
         assert g0 == pytest.approx(expected, rel=1e-10)
 
     def test_scales_as_L_fourth_inverse(self):
