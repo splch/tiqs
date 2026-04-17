@@ -234,20 +234,32 @@ class TestApplySympatheticCooling:
         )
 
     def test_long_duration_reaches_steady_state(self):
-        """Very long cooling drives n_bar toward the target."""
-        hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=15)
+        """Cooling a qubit+mode system to steady state preserves
+        qubit coherence and reaches the target phonon number."""
+        hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=10)
         ops = OperatorFactory(hs)
         sf = StateFactory(hs)
-        rho0 = sf.thermal_state(n_bar=[5.0])
-        n_op = ops.number(0)
+        # Qubit in superposition, mode thermally excited
+        plus = (sf.product_state([0], [0]) + sf.product_state([1], [0])).unit()
+        rho0 = qutip.ket2dm(plus)
+        # Heat the motional mode by hand: replace mode part with thermal
+        rho_q = rho0.ptrace(0)
+        rho_m = qutip.thermal_dm(10, 3.0)
+        rho0 = qutip.tensor(rho_q, rho_m)
 
         n_bar_target = np.array([0.5])
-        cooling_rates = np.array([TWO_PI * 1e4])
+        cooling_rates = np.array([TWO_PI * 500])
         rho_cooled = apply_sympathetic_cooling(
-            rho0, ops, cooling_rates, n_bar_target, duration=1e-3
+            rho0, ops, cooling_rates, n_bar_target, duration=10e-3
         )
-        n_final = qutip.expect(n_op, rho_cooled)
+
+        # Motional mode reaches target
+        n_final = qutip.expect(ops.number(0), rho_cooled)
         assert n_final == pytest.approx(n_bar_target[0], rel=0.3)
+
+        # Qubit coherence preserved
+        rho_q_after = rho_cooled.ptrace(0)
+        assert abs(rho_q_after[0, 1]) == pytest.approx(0.5, abs=0.01)
 
     def test_zero_duration_returns_unchanged(self, system):
         """Zero duration returns the same state."""

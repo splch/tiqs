@@ -259,13 +259,8 @@ def apply_sympathetic_cooling(
     if not c_ops:
         return rho
 
-    tlist = [0, duration]
-    nsteps = int(duration * cooling_rates.max() * 100) + 5000
-    result = qutip.mesolve(
-        qutip.qzero_like(rho),
-        rho,
-        tlist,
-        c_ops=c_ops,
-        options={"nsteps": nsteps},
-    )
+    H = qutip.qzero_like(rho)
+    n_steps = max(20, int(duration * cooling_rates.max()) + 2)
+    tlist = np.linspace(0, duration, n_steps)
+    result = qutip.mesolve(H, rho, tlist, c_ops=c_ops)
     return result.states[-1]
