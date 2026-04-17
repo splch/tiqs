@@ -58,6 +58,23 @@ class TestSingleQubitGates:
         sx = ops.sigma_x(0)
         assert qutip.expect(sx, final) == pytest.approx(-1.0, abs=0.05)
 
+    def test_negative_theta_reverses_rotation(self, single_ion):
+        """R_x(-pi/2) and R_x(+pi/2) produce opposite sigma_y."""
+        hs, ops, sf = single_ion
+        psi0 = sf.ground_state()
+        sy = ops.sigma_y(0)
+
+        g_pos = rx_gate(ops, ion=0, theta=np.pi / 2)
+        r_pos = qutip.sesolve(g_pos.hamiltonian, psi0, [0, g_pos.duration])
+        sy_pos = qutip.expect(sy, r_pos.states[-1])
+
+        g_neg = rx_gate(ops, ion=0, theta=-np.pi / 2)
+        r_neg = qutip.sesolve(g_neg.hamiltonian, psi0, [0, g_neg.duration])
+        sy_neg = qutip.expect(sy, r_neg.states[-1])
+
+        assert sy_pos == pytest.approx(-1.0, abs=0.01)
+        assert sy_neg == pytest.approx(+1.0, abs=0.01)
+
     def test_sk1_more_robust_than_bare(self, single_ion):
         """SK1 composite pulse should be less sensitive to Rabi
         frequency errors."""
