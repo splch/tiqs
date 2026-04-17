@@ -210,6 +210,17 @@ class TestApplySympatheticCooling:
         n_after = qutip.expect(n_op, rho_cooled)
         assert n_after < n_before
 
+    def test_accepts_ket_input(self, system):
+        """Ket input is converted to density matrix internally."""
+        ops, sf = system
+        psi0 = sf.ground_state()
+        cooling_rates = np.array([TWO_PI * 1e6])
+        n_bar_target = np.array([0.5])
+        rho_cooled = apply_sympathetic_cooling(
+            psi0, ops, cooling_rates, n_bar_target, duration=1e-6
+        )
+        assert rho_cooled.type == "oper"
+
     def test_qubit_coherence_preserved(self, system):
         """Sympathetic cooling must preserve qubit off-diagonal
         elements (coherence) since only motional operators are used."""
@@ -441,4 +452,24 @@ class TestSimulationRunnerIntegration:
                 n_ions=1,
                 n_modes=2,
                 n_bar_initial_per_mode=[1.0],
+            )
+
+    def test_empty_coolant_indices_raises(self, ca40, ca40_trap):
+        """Empty coolant_indices raises ValueError."""
+        with pytest.raises(ValueError, match="must not be empty"):
+            SimulationConfig(
+                species=ca40,
+                trap=ca40_trap,
+                n_ions=2,
+                coolant_indices=[],
+            )
+
+    def test_out_of_range_coolant_index_raises(self, ca40, ca40_trap):
+        """Out-of-range coolant index raises ValueError."""
+        with pytest.raises(ValueError, match="coolant index"):
+            SimulationConfig(
+                species=ca40,
+                trap=ca40_trap,
+                n_ions=2,
+                coolant_indices=[5],
             )

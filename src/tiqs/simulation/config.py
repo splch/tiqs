@@ -89,3 +89,12 @@ class SimulationConfig:
                 raise ValueError(
                     f"{name} length {len(value)} != n_modes {self.n_modes}"
                 )
+        if self.coolant_indices is not None:
+            if not self.coolant_indices:
+                raise ValueError("coolant_indices must not be empty")
+            for idx in self.coolant_indices:
+                if idx < 0 or idx >= self.n_ions:
+                    raise ValueError(
+                        f"coolant index {idx} out of range"
+                        f" [0, {self.n_ions})"
+                    )

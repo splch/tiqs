@@ -245,6 +245,8 @@ def apply_sympathetic_cooling(
     """
     if duration <= 0:
         return rho
+    if rho.isket:
+        rho = qutip.ket2dm(rho)
 
     c_ops = []
     for m, (rate, n_t) in enumerate(
