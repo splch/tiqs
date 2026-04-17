@@ -108,7 +108,9 @@ def sideband_cooling_simulate(
     c_ops = [np.sqrt(optical_pumping_rate) * sp]
 
     sf = StateFactory(ops.hs)
-    n_bar = [n_bar_initial if m == mode else 0.0 for m in range(ops.hs.n_modes)]
+    n_bar = [
+        n_bar_initial if m == mode else 0.0 for m in range(ops.hs.n_modes)
+    ]
     rho0 = sf.thermal_state(n_bar=n_bar)
 
     t_pi = np.pi / rsb_rabi if rsb_rabi > 0 else 1e-6

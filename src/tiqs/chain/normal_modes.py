@@ -72,7 +72,9 @@ def _dynamical_matrix(
 
     mass_geom = np.sqrt(masses[:, np.newaxis] * masses[np.newaxis, :])
     D = sign * factor * COULOMB_CONSTANT / (mass_geom * d3)
-    coulomb_diag = np.sum(factor * COULOMB_CONSTANT / (masses[:, np.newaxis] * d3), axis=1)
+    coulomb_diag = np.sum(
+        factor * COULOMB_CONSTANT / (masses[:, np.newaxis] * d3), axis=1
+    )
     if axial:
         np.fill_diagonal(D, omega_diag**2 + coulomb_diag)
     else:
