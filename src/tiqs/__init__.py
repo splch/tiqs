@@ -18,6 +18,10 @@ from tiqs.cooling.sympathetic import (
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
+from tiqs.interaction.coulomb_coupling import (
+    beam_splitter_coupling,
+    optomechanical_coupling,
+)
 from tiqs.potential import (
     ArbitraryPotential,
     DuffingPotential,
@@ -54,6 +58,7 @@ __all__ = [
     "StateFactory",
     "Trap",
     "apply_sympathetic_cooling",
+    "beam_splitter_coupling",
     "check_convergence",
     "coolant_participation",
     "energy_levels",
@@ -62,6 +67,7 @@ __all__ = [
     "lamb_dicke_parameters",
     "mode_hamiltonian",
     "normal_modes",
+    "optomechanical_coupling",
     "sympathetic_cooling_rate",
     "sympathetic_doppler_nbar",
     "sympathetic_sideband_nbar",
