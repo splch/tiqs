@@ -248,9 +248,9 @@ def apply_sympathetic_cooling(
         return rho
 
     c_ops = []
-    for m in range(len(cooling_rates)):
-        rate = cooling_rates[m]
-        n_t = n_bar_target[m]
+    for m, (rate, n_t) in enumerate(
+        zip(cooling_rates, n_bar_target, strict=True)
+    ):
         if rate <= 0:
             continue
         c_ops.append(np.sqrt(rate * (n_t + 1)) * ops.annihilate(m))

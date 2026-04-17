@@ -6,10 +6,8 @@ from dataclasses import dataclass
 import numpy as np
 
 from tiqs.chain.equilibrium import equilibrium_positions
-from tiqs.constants import ELECTRON_CHARGE, EPSILON_0, PI
+from tiqs.constants import COULOMB_CONSTANT, ELECTRON_CHARGE
 from tiqs.trap import PaulTrap, PenningTrap
-
-_COULOMB_PREFACTOR = ELECTRON_CHARGE**2 / (4 * PI * EPSILON_0)
 
 
 @dataclass
@@ -74,11 +72,11 @@ def _dynamical_matrix(
         for k in range(n_ions):
             if k != i:
                 d3 = abs(pos[i] - pos[k]) ** 3
-                coulomb_sum += factor * _COULOMB_PREFACTOR / (masses[i] * d3)
+                coulomb_sum += factor * COULOMB_CONSTANT / (masses[i] * d3)
                 D[i, k] = (
                     sign
                     * factor
-                    * _COULOMB_PREFACTOR
+                    * COULOMB_CONSTANT
                     / (np.sqrt(masses[i] * masses[k]) * d3)
                 )
         if axial:

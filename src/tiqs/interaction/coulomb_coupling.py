@@ -44,9 +44,7 @@ charged particles." *Phys. Rev. A* **95**, 022327 (2017).
 
 import numpy as np
 
-from tiqs.constants import ELECTRON_CHARGE, EPSILON_0, HBAR, PI
-
-_COULOMB_PREFACTOR = ELECTRON_CHARGE**2 / (4 * PI * EPSILON_0)
+from tiqs.constants import COULOMB_CONSTANT, HBAR
 
 
 def beam_splitter_coupling(
@@ -87,7 +85,7 @@ def beam_splitter_coupling(
     float
         Beam-splitter coupling strength in rad/s.
     """
-    return _COULOMB_PREFACTOR / (
+    return COULOMB_CONSTANT / (
         separation**3 * np.sqrt(mass_1 * mass_2 * omega_1 * omega_2)
     )
 
@@ -131,6 +129,4 @@ def optomechanical_coupling(
     """
     x_zpf_1 = np.sqrt(HBAR / (2 * mass_1 * omega_1))
     x_zpf_2 = np.sqrt(HBAR / (2 * mass_2 * omega_2))
-    return (
-        3 * _COULOMB_PREFACTOR * x_zpf_1**2 * x_zpf_2 / (HBAR * separation**4)
-    )
+    return 3 * COULOMB_CONSTANT * x_zpf_1**2 * x_zpf_2 / (HBAR * separation**4)

@@ -34,3 +34,6 @@ PI = np.pi
 
 TWO_PI = 2.0 * np.pi
 """2 pi, used for angular frequency conversions."""
+
+COULOMB_CONSTANT = ELECTRON_CHARGE**2 / (4.0 * np.pi * EPSILON_0)
+"""Coulomb constant $e^2 / (4\\pi\\epsilon_0)$ in J m."""
