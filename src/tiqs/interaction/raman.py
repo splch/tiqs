@@ -27,6 +27,14 @@ class RamanPair:
     detuning_from_excited: float
     excited_state_linewidth: float = 0.0
 
+    def __post_init__(self):
+        """Validate that the adiabatic elimination condition is met."""
+        if self.detuning_from_excited == 0:
+            raise ValueError(
+                "detuning_from_excited must be non-zero for the "
+                "adiabatic-elimination formula to apply"
+            )
+
     @property
     def effective_rabi_frequency(self) -> float:
         r"""Two-photon effective Rabi frequency.

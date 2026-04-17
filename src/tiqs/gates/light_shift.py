@@ -1,5 +1,6 @@
 """Light-shift (geometric phase) gate: sigma_z-dependent force."""
 
+from tiqs.gates.molmer_sorensen import _geometric_phase_hamiltonian
 from tiqs.hilbert_space.operators import OperatorFactory
 
 
@@ -46,18 +47,6 @@ def light_shift_gate_hamiltonian(
     list
         QuTiP list-format Hamiltonian.
     """
-    a = ops.annihilate(mode)
-    ad = ops.create(mode)
-
-    H_terms = []
-    for j, ion_idx in enumerate(ions):
-        sz_j = ops.sigma_z(ion_idx)
-        coupling = eta[j] * rabi_frequency
-
-        H_plus = coupling * ad * sz_j
-        H_minus = coupling * a * sz_j
-
-        H_terms.append([H_plus, f"exp(1j*{detuning}*t)"])
-        H_terms.append([H_minus, f"exp(-1j*{detuning}*t)"])
-
-    return H_terms
+    return _geometric_phase_hamiltonian(
+        ops, ions, mode, eta, rabi_frequency, detuning, ops.sigma_z
+    )

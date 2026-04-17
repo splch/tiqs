@@ -47,9 +47,7 @@ class OperatorFactory:
                 f"Subsystem index {subsystem_index} out of range"
                 f" [0, {n_subsystems})"
             )
-        op_list = [qutip.qeye(d) for d in dims]
-        op_list[subsystem_index] = op
-        return qutip.tensor(op_list)
+        return qutip.expand_operator(op, dims, subsystem_index)
 
     def _ion_index(self, ion: int) -> int:
         """Validate ion index and return subsystem index."""
@@ -238,6 +236,23 @@ class OperatorFactory:
         """
         a = self.annihilate(mode)
         return 1j * (a.dag() - a) / 2**0.5
+
+    def embed_mode_operator(self, op: qutip.Qobj, mode: int) -> qutip.Qobj:
+        """Embed a single-mode operator into the full Hilbert space.
+
+        Parameters
+        ----------
+        op : qutip.Qobj
+            Operator acting on one motional mode.
+        mode : int
+            Index of the target motional mode.
+
+        Returns
+        -------
+        qutip.Qobj
+            Operator acting on the full composite Hilbert space.
+        """
+        return self._full_operator(op, self._mode_index(mode))
 
     def identity(self) -> qutip.Qobj:
         """Identity operator on the full Hilbert space.

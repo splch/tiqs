@@ -253,7 +253,10 @@ def full_interaction_hamiltonian(
         sigma_phi = sp * np.exp(1j * phase) + sm * np.exp(-1j * phase)
         dw_correction = -(eta**2) * rabi_frequency / 2
         H_dw = dw_correction * sigma_phi * (n_op + 0.5 * ops.identity())
-        H_terms.append([H_dw, f"cos({detuning}*t)"])
+        if detuning == 0.0:
+            H_terms.append(H_dw)
+        else:
+            H_terms.append([H_dw, f"cos({detuning}*t)"])
 
         # Second red sideband: -eta^2*Omega/4 * a^2 * sm
         # (i*eta)^2/2! = -eta^2/2, times Omega/2 = -eta^2*Omega/4

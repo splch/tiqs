@@ -82,8 +82,7 @@ class DuffingPotential:
     def single_mode_hamiltonian(self, n_fock: int) -> qutip.Qobj:
         r"""Return the Duffing Hamiltonian truncated to ``n_fock`` levels."""
         n = qutip.num(n_fock)
-        eye = qutip.qeye(n_fock)
-        return self.omega * n + (self.anharmonicity / 2) * n * (n - eye)
+        return self.omega * n + (self.anharmonicity / 2) * n * (n - 1)
 
 
 @dataclass(frozen=True)
@@ -125,10 +124,9 @@ class ArbitraryPotential:
         r"""Return $T + V(q)$ truncated to ``n_fock`` levels."""
         a = qutip.destroy(n_fock)
         n = qutip.num(n_fock)
-        eye = qutip.qeye(n_fock)
         q_op = a + a.dag()
         # T = H_ref - V_ref = omega*(n + 1/2) - omega/4 * q^2
-        T = self.omega * (n + 0.5 * eye) - self.omega / 4 * q_op * q_op
+        T = self.omega * (n + 0.5) - self.omega / 4 * q_op * q_op
         return T + self.v_func(q_op)
 
 
@@ -245,4 +243,4 @@ def mode_hamiltonian(
     """
     n_fock = ops.hs.fock_dim(mode)
     H_single = potential.single_mode_hamiltonian(n_fock)
-    return ops._full_operator(H_single, ops._mode_index(mode))
+    return ops.embed_mode_operator(H_single, mode)

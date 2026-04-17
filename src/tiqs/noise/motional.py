@@ -3,7 +3,7 @@ r"""Motional decoherence: anomalous heating and motional dephasing."""
 import numpy as np
 import qutip
 
-from tiqs.constants import ELECTRON_CHARGE, HBAR
+from tiqs.constants import AMU, ELECTRON_CHARGE, HBAR
 from tiqs.hilbert_space.operators import OperatorFactory
 
 
@@ -96,7 +96,7 @@ def heating_rate_from_noise(
     spectral_density: float,
     distance: float,
     frequency: float,
-    mass_kg: float = 40 * 1.66e-27,
+    mass_kg: float = 39.96259098 * AMU,
     alpha: float = 1.0,
     reference_distance: float = 100e-6,
     reference_frequency: float = 1e6,

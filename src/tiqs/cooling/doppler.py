@@ -1,6 +1,5 @@
 """Doppler cooling: rate-equation estimate of final motional occupation."""
 
-from tiqs.constants import TWO_PI
 from tiqs.species.ion import IonSpecies
 
 
@@ -31,6 +30,4 @@ def doppler_cooled_nbar(
     float
         Mean phonon number after Doppler cooling.
     """
-    gamma = species.cooling_transition.linewidth  # rad/s
-    omega_trap = TWO_PI * trap_frequency_hz  # rad/s
-    return gamma / (2 * omega_trap)
+    return species.doppler_limit_nbar(trap_frequency_hz)

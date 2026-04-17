@@ -76,14 +76,11 @@ def cirac_zoller_gate(
     H2 = (rsb_rabi_b / 2) * (sm_b * a + sp_b * ad)
     t2 = TWO_PI / rsb_rabi_b
 
-    # Step 3: Reverse RSB pi-pulse on ion A (with phase shift pi)
-    H3 = (rsb_rabi_a / 2) * (
-        sm_a * a * np.exp(1j * np.pi) + sp_a * ad * np.exp(-1j * np.pi)
-    )
+    # Step 3: Reverse RSB pi-pulse on ion A (phase shift pi negates H1)
     t3 = np.pi / rsb_rabi_a
 
     return [
         GatePulse(hamiltonian=H1, duration=t1),
         GatePulse(hamiltonian=H2, duration=t2),
-        GatePulse(hamiltonian=H3, duration=t3),
+        GatePulse(hamiltonian=-H1, duration=t3),
     ]

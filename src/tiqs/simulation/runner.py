@@ -127,7 +127,7 @@ class SimulationRunner:
         if not self.config.potentials:
             return None
         axial_freqs = self.modes.modes["axial"].freqs
-        H_correction = 0 * self.ops.identity()
+        H_correction = qutip.qzero(self.hs.dims)
         for mode_idx, potential in self.config.potentials.items():
             H_full = mode_hamiltonian(potential, self.ops, mode_idx)
             omega = (
@@ -336,12 +336,12 @@ class SimulationRunner:
                 f"the Hamiltonian manually with ms_gate_hamiltonian."
             )
         eta_ions = [float(self.eta[i, mode]) for i in ions]
-        eta_avg = np.mean(eta_ions)
+        eta_geom = np.sqrt(eta_ions[0] * eta_ions[1])
 
         if detuning is None:
             detuning = TWO_PI * 1e3
 
-        Omega = detuning / (4 * eta_avg * np.sqrt(loops))
+        Omega = detuning / (4 * eta_geom * np.sqrt(loops))
         tau = ms_gate_duration(detuning, loops)
 
         H = ms_gate_hamiltonian(

@@ -26,11 +26,8 @@ class StateFactory:
         qutip.Qobj
             Tensor-product ket in the composite Hilbert space.
         """
-        parts = []
-        for _ in range(self.hs.n_ions):
-            parts.append(qutip.basis(2, 0))
-        for m in range(self.hs.n_modes):
-            parts.append(qutip.basis(self.hs.fock_dim(m), 0))
+        parts = [qutip.basis(2, 0) for _ in range(self.hs.n_ions)]
+        parts += [qutip.basis(self.hs.fock_dim(m), 0) for m in range(self.hs.n_modes)]
         return qutip.tensor(parts)
 
     def product_state(
@@ -62,11 +59,8 @@ class StateFactory:
                 f"Expected {self.hs.n_modes} fock states,"
                 f" got {len(fock_states)}"
             )
-        parts = []
-        for q in qubit_states:
-            parts.append(qutip.basis(2, q))
-        for m, n in enumerate(fock_states):
-            parts.append(qutip.basis(self.hs.fock_dim(m), n))
+        parts = [qutip.basis(2, q) for q in qubit_states]
+        parts += [qutip.basis(self.hs.fock_dim(m), n) for m, n in enumerate(fock_states)]
         return qutip.tensor(parts)
 
     def thermal_state(
@@ -97,9 +91,6 @@ class StateFactory:
                 f" got {len(qubit_states)}"
             )
 
-        parts = []
-        for q in qubit_states:
-            parts.append(qutip.ket2dm(qutip.basis(2, q)))
-        for m, nb in enumerate(n_bar):
-            parts.append(qutip.thermal_dm(self.hs.fock_dim(m), nb))
+        parts = [qutip.ket2dm(qutip.basis(2, q)) for q in qubit_states]
+        parts += [qutip.thermal_dm(self.hs.fock_dim(m), nb) for m, nb in enumerate(n_bar)]
         return qutip.tensor(parts)

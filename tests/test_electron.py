@@ -23,12 +23,12 @@ from tiqs.chain.normal_modes import normal_modes
 from tiqs.constants import (
     BOHR_MAGNETON,
     BOLTZMANN,
+    COULOMB_CONSTANT,
     ELECTRON_CHARGE,
     ELECTRON_G_FACTOR,
     ELECTRON_MASS,
     EPSILON_0,
     HBAR,
-    PI,
     TWO_PI,
 )
 from tiqs.gates.light_shift import light_shift_gate_hamiltonian
@@ -301,8 +301,7 @@ class TestElectronAnalyticalExactness:
         )
         pos = equilibrium_positions(2, trap)
         l_scale = (
-            ELECTRON_CHARGE**2
-            / (4 * PI * EPSILON_0 * ELECTRON_MASS * omega_z**2)
+            COULOMB_CONSTANT / (ELECTRON_MASS * omega_z**2)
         ) ** (1 / 3)
         d_analytical = 2 * (1 / 2) ** (2 / 3) * l_scale
         d_measured = pos[1] - pos[0]
@@ -407,8 +406,7 @@ class TestElectronAnalyticalExactness:
         for freq_mhz, l0_um in [(30, 19.25), (300, 4.15)]:
             omega = TWO_PI * freq_mhz * 1e6
             l0 = (
-                ELECTRON_CHARGE**2
-                / (4 * PI * EPSILON_0 * ELECTRON_MASS * omega**2)
+                COULOMB_CONSTANT / (ELECTRON_MASS * omega**2)
             ) ** (1 / 3)
             assert l0 == pytest.approx(l0_um * 1e-6, rel=0.01)
 
@@ -470,7 +468,7 @@ class TestElectronAnalyticalExactness:
         sf = StateFactory(hs)
         Omega = TWO_PI * 500e3
         H = carrier_hamiltonian(ops, 0, Omega)
-        tlist = np.linspace(0, 4 * PI / Omega, 400)
+        tlist = np.linspace(0, 4 * np.pi / Omega, 400)
         result = qutip.sesolve(
             H,
             sf.ground_state(),

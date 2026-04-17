@@ -4,6 +4,7 @@ import numpy as np
 import qutip
 
 from tiqs.hilbert_space.operators import OperatorFactory
+from tiqs.hilbert_space.states import StateFactory
 
 
 def sideband_cooling_nbar(
@@ -106,17 +107,9 @@ def sideband_cooling_simulate(
     # Optical pumping: dissipative |1> -> |0> using sigmap = |0><1|
     c_ops = [np.sqrt(optical_pumping_rate) * sp]
 
-    hs = ops.hs
-    # Build rho0 matching the full Hilbert space dimensions
-    parts = []
-    for _i in range(hs.n_ions):
-        parts.append(qutip.ket2dm(qutip.basis(2, 0)))
-    for m in range(hs.n_modes):
-        if m == mode:
-            parts.append(qutip.thermal_dm(hs.fock_dim(m), n_bar_initial))
-        else:
-            parts.append(qutip.ket2dm(qutip.basis(hs.fock_dim(m), 0)))
-    rho0 = qutip.tensor(parts)
+    sf = StateFactory(ops.hs)
+    n_bar = [n_bar_initial if m == mode else 0.0 for m in range(ops.hs.n_modes)]
+    rho0 = sf.thermal_state(n_bar=n_bar)
 
     t_pi = np.pi / rsb_rabi if rsb_rabi > 0 else 1e-6
     t_pump = 5.0 / optical_pumping_rate
