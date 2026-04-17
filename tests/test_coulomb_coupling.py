@@ -16,6 +16,7 @@ from tiqs.constants import (
 )
 from tiqs.interaction.coulomb_coupling import (
     beam_splitter_coupling,
+    coulomb_self_kerr,
     optomechanical_coupling,
 )
 from tiqs.species.ion import get_species
@@ -127,3 +128,49 @@ class TestOptomechanicalCoupling:
         g0 = optomechanical_coupling(m1, m2, w1, w2, L)
         x_zpf1 = np.sqrt(HBAR / (2 * m1 * w1))
         assert g0 == pytest.approx(3 * g_bs * x_zpf1 / L, rel=1e-10)
+
+
+class TestCoulombSelfKerr:
+    def test_formula_direct(self):
+        """Direct check: alpha_C = 12C * x_zpf^4 / (hbar * L^5).
+        Osada et al. Eq. 12."""
+        m = ELECTRON_MASS
+        w = TWO_PI * 800e6
+        L = 10e-6
+        alpha_C = coulomb_self_kerr(m, w, L)
+        x = np.sqrt(HBAR / (2 * m * w))
+        expected = 12 * COULOMB_CONSTANT * x**4 / (HBAR * L**5)
+        assert alpha_C > 0
+        assert alpha_C == pytest.approx(expected, rel=1e-10)
+
+    def test_scales_as_L_fifth_inverse(self):
+        """Coupling scales as 1/L^5."""
+        m = ELECTRON_MASS
+        w = TWO_PI * 1e9
+        a1 = coulomb_self_kerr(m, w, 10e-6)
+        a2 = coulomb_self_kerr(m, w, 20e-6)
+        assert a1 / a2 == pytest.approx(32.0, rel=1e-10)
+
+    def test_relation_to_optomechanical(self):
+        """alpha_C = 2 * g0 * x_zpf1^2 / (x_zpf2 * L).
+        Both derive from successive orders of the same Taylor
+        expansion: g0 from x^2*y (1/L^4), alpha_C from x^4 (1/L^5)."""
+        m1 = ELECTRON_MASS
+        m2 = get_species("Be9").mass_kg
+        w1 = TWO_PI * 800e6
+        w2 = TWO_PI * 2e6
+        L = 10e-6
+        g0 = optomechanical_coupling(m1, m2, w1, w2, L)
+        alpha_C = coulomb_self_kerr(m1, w1, L)
+        x1 = np.sqrt(HBAR / (2 * m1 * w1))
+        x2 = np.sqrt(HBAR / (2 * m2 * w2))
+        assert alpha_C == pytest.approx(2 * g0 * x1**2 / (x2 * L), rel=1e-10)
+
+    def test_lighter_particle_larger_kerr(self):
+        """Lighter particle has larger zero-point motion and thus
+        stronger Kerr anharmonicity at the same frequency."""
+        m_e = ELECTRON_MASS
+        m_be = get_species("Be9").mass_kg
+        w = TWO_PI * 10e6
+        L = 50e-6
+        assert coulomb_self_kerr(m_e, w, L) > coulomb_self_kerr(m_be, w, L)

@@ -27,7 +27,6 @@ from tiqs.constants import (
     ELECTRON_CHARGE,
     ELECTRON_G_FACTOR,
     ELECTRON_MASS,
-    EPSILON_0,
     HBAR,
     TWO_PI,
 )
@@ -300,9 +299,7 @@ class TestElectronAnalyticalExactness:
             species=e,
         )
         pos = equilibrium_positions(2, trap)
-        l_scale = (
-            COULOMB_CONSTANT / (ELECTRON_MASS * omega_z**2)
-        ) ** (1 / 3)
+        l_scale = (COULOMB_CONSTANT / (ELECTRON_MASS * omega_z**2)) ** (1 / 3)
         d_analytical = 2 * (1 / 2) ** (2 / 3) * l_scale
         d_measured = pos[1] - pos[0]
         assert d_measured == pytest.approx(d_analytical, rel=0.001)
@@ -405,9 +402,7 @@ class TestElectronAnalyticalExactness:
         evaluated at frequencies from Huang et al. 2025."""
         for freq_mhz, l0_um in [(30, 19.25), (300, 4.15)]:
             omega = TWO_PI * freq_mhz * 1e6
-            l0 = (
-                COULOMB_CONSTANT / (ELECTRON_MASS * omega**2)
-            ) ** (1 / 3)
+            l0 = (COULOMB_CONSTANT / (ELECTRON_MASS * omega**2)) ** (1 / 3)
             assert l0 == pytest.approx(l0_um * 1e-6, rel=0.01)
 
     def test_zpf_at_multiple_frequencies(self):

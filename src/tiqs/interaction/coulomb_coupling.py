@@ -34,6 +34,17 @@ This is the coupling in
 $H_\mathrm{int} = \hbar\,g_0\,\hat{n}_1\,(a_2 + a_2^\dagger)$,
 as in Osada et al. Phys. Rev. Research 4, 033245 (2022).
 
+**Coulomb self-Kerr** from the $x_1^4$ term:
+
+$$
+\alpha_C = \frac{12C}{\hbar L^5}\,x_{\mathrm{zpf},1}^4
+$$
+
+This is the pure Coulomb contribution to the self-Kerr
+anharmonicity in
+$H_\mathrm{Kerr} = -(\hbar\alpha/2)\,\hat{n}_1(\hat{n}_1-1)$,
+corresponding to Osada et al. Eq. 12.
+
 References
 ----------
 Osada, A. et al. "Feasibility study on ground-state cooling
@@ -118,7 +129,7 @@ def optomechanical_coupling(
     corresponding to the first term of Osada et al. Eq. 10.
     Real traps have an additional correction from the effective
     potential anharmonicity (the second term in Eq. 10) that
-    depends on trap geometry and can be comparable in magnitude.
+    depends on trap geometry and can be comparable or dominant.
 
     Parameters
     ----------
@@ -138,3 +149,48 @@ def optomechanical_coupling(
     x_zpf_1 = np.sqrt(HBAR / (2 * mass_1 * omega_1))
     x_zpf_2 = np.sqrt(HBAR / (2 * mass_2 * omega_2))
     return 6 * COULOMB_CONSTANT * x_zpf_1**2 * x_zpf_2 / (HBAR * separation**4)
+
+
+def coulomb_self_kerr(
+    mass: float,
+    omega: float,
+    separation: float,
+) -> float:
+    r"""Coulomb self-Kerr anharmonicity from a nearby trapped
+    particle.
+
+    The $x^4$ term in the Taylor expansion of the Coulomb
+    potential between two separated particles produces an
+    anharmonic (Kerr) shift on the motional mode of particle 1:
+
+    $$
+    \alpha_C = \frac{12\,e^2}{4\pi\epsilon_0\,\hbar\,L^5}
+      \,x_{\mathrm{zpf}}^4
+    $$
+
+    This enters the Hamiltonian as
+    $-(\hbar\alpha/2)\,\hat{n}(\hat{n}-1)$, shifting the
+    $|n\rangle \to |n+1\rangle$ transition frequency by
+    $-\alpha$ per excitation quantum (Osada et al. Eq. 12).
+
+    This is the pure Coulomb contribution. Real traps have
+    additional contributions from the effective potential
+    anharmonicity ($\alpha_K$) that depend on trap geometry.
+
+    Parameters
+    ----------
+    mass : float
+        Mass of the particle whose mode acquires the Kerr
+        shift, in kg.
+    omega : float
+        Secular angular frequency of that particle in rad/s.
+    separation : float
+        Equilibrium inter-particle distance in meters.
+
+    Returns
+    -------
+    float
+        Coulomb self-Kerr strength in rad/s.
+    """
+    x_zpf = np.sqrt(HBAR / (2 * mass * omega))
+    return 12 * COULOMB_CONSTANT * x_zpf**4 / (HBAR * separation**5)

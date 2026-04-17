@@ -20,6 +20,7 @@ from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
 from tiqs.interaction.coulomb_coupling import (
     beam_splitter_coupling,
+    coulomb_self_kerr,
     optomechanical_coupling,
 )
 from tiqs.potential import (
@@ -61,6 +62,7 @@ __all__ = [
     "beam_splitter_coupling",
     "check_convergence",
     "coolant_participation",
+    "coulomb_self_kerr",
     "energy_levels",
     "equilibrium_positions",
     "get_species",

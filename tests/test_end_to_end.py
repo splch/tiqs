@@ -905,9 +905,7 @@ class TestAnalyticalExactness:
             species=ca,
         )
         pos = equilibrium_positions(2, trap)
-        l_scale = (
-            COULOMB_CONSTANT / (ca.mass_kg * omega_z**2)
-        ) ** (1 / 3)
+        l_scale = (COULOMB_CONSTANT / (ca.mass_kg * omega_z**2)) ** (1 / 3)
         # Analytical: u1 = -u2, u1 = -(1/2)^(2/3) ~ -0.6300
         u_analytical = (1 / 2) ** (2 / 3)  # ~0.6300
         d_analytical = 2 * u_analytical * l_scale
