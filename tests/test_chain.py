@@ -50,18 +50,12 @@ class TestEquilibriumPositions:
     def test_three_ion_dimensionless_offset(self, ca40_trap):
         """[James1998] Table I: outer ions at u = +/-(5/4)^(1/3)
         in dimensionless units."""
-        from tiqs.constants import ELECTRON_CHARGE, EPSILON_0, PI
+        from tiqs.constants import COULOMB_CONSTANT
 
         pos = equilibrium_positions(3, ca40_trap)
         length_scale = (
-            ELECTRON_CHARGE**2
-            / (
-                4
-                * PI
-                * EPSILON_0
-                * ca40_trap.species.mass_kg
-                * ca40_trap.omega_axial**2
-            )
+            COULOMB_CONSTANT
+            / (ca40_trap.species.mass_kg * ca40_trap.omega_axial**2)
         ) ** (1 / 3)
         u_outer = pos[2] / length_scale
         assert u_outer == pytest.approx((5 / 4) ** (1 / 3), rel=1e-3)

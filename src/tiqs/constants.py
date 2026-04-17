@@ -29,9 +29,6 @@ BOHR_MAGNETON = 9.2740100783e-24
 ELECTRON_G_FACTOR = 2.00231930436256
 """Electron spin g-factor."""
 
-PI = np.pi
-"""Pi."""
-
 TWO_PI = 2.0 * np.pi
 """2 pi, used for angular frequency conversions."""
 

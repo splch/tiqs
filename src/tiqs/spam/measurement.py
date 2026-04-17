@@ -29,17 +29,8 @@ def fluorescence_probabilities(
     list[float]
         Probability of bright ($|0\rangle$) for each ion.
     """
-    if state.isket:
-        rho = qutip.ket2dm(state)
-    else:
-        rho = state
-
-    probs = []
-    for ion in ions:
-        rho_ion = rho.ptrace(ion)
-        p_bright = rho_ion[0, 0].real  # |0><0| element
-        probs.append(p_bright)
-    return probs
+    rho = qutip.ket2dm(state) if state.isket else state
+    return [rho.ptrace(ion)[0, 0].real for ion in ions]
 
 
 def sample_measurement(
@@ -82,8 +73,7 @@ def sample_measurement(
 
     # Extract diagonal of the density matrix in the computational
     # basis. This gives P(bitstring) for each bitstring.
-    probs = np.array([rho_ions[i, i].real for i in range(dim)])
-    probs = np.maximum(probs, 0.0)
+    probs = np.maximum(rho_ions.diag().real, 0.0)
     probs /= probs.sum()
 
     # Sample one bitstring from the joint distribution
@@ -134,14 +124,10 @@ def measurement_fidelity(
     n_bright = bright_photon_rate * detection_window * collection_efficiency
     n_dark = dark_photon_rate * detection_window * collection_efficiency
 
-    best_fid = 0.0
-    for threshold in range(max(1, int(n_bright) + 5)):
-        p_correct_bright = 1 - poisson.cdf(threshold - 1, n_bright)
-        p_correct_dark = poisson.cdf(threshold - 1, n_dark)
-        fid = 0.5 * (p_correct_bright + p_correct_dark)
-        best_fid = max(best_fid, fid)
-
-    return best_fid
+    thresholds = np.arange(1, max(2, int(n_bright) + 5))
+    p_correct_bright = 1 - poisson.cdf(thresholds - 1, n_bright)
+    p_correct_dark = poisson.cdf(thresholds - 1, n_dark)
+    return float(np.max(0.5 * (p_correct_bright + p_correct_dark)))
 
 
 def mid_circuit_measurement(
@@ -174,16 +160,8 @@ def mid_circuit_measurement(
     dims = ops.hs.dims
 
     # Projectors: P_0 = |0><0|, P_1 = |1><1| on the measured ion
-    proj_0_local = qutip.ket2dm(qutip.basis(2, 0))
-    proj_1_local = qutip.ket2dm(qutip.basis(2, 1))
-
-    op_list_0 = [qutip.qeye(d) for d in dims]
-    op_list_0[ion] = proj_0_local
-    P0 = qutip.tensor(op_list_0)
-
-    op_list_1 = [qutip.qeye(d) for d in dims]
-    op_list_1[ion] = proj_1_local
-    P1 = qutip.tensor(op_list_1)
+    P0 = qutip.expand_operator(qutip.ket2dm(qutip.basis(2, 0)), dims, ion)
+    P1 = qutip.expand_operator(qutip.ket2dm(qutip.basis(2, 1)), dims, ion)
 
     p0 = (P0 * rho).tr().real
     p1 = (P1 * rho).tr().real

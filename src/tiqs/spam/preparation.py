@@ -63,7 +63,7 @@ def prepare_qubit(
         Final density matrix after pumping.
     """
     c_ops = optical_pumping_ops(ops, ion, pumping_rate)
-    H = 0 * ops.identity()
+    H = qutip.qzero(ops.hs.dims)
     tlist = np.linspace(0, duration, 20)
     result = qutip.mesolve(H, initial_state, tlist, c_ops=c_ops)
     return result.states[-1]

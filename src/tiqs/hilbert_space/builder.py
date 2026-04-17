@@ -69,4 +69,8 @@ class HilbertSpace:
         int
             Truncated Fock space dimension for the requested mode.
         """
+        if mode_index < 0 or mode_index >= self.n_modes:
+            raise IndexError(
+                f"Mode index {mode_index} out of range [0, {self.n_modes})"
+            )
         return self._fock_dims[mode_index]

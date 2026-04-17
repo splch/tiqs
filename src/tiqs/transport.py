@@ -105,7 +105,7 @@ def apply_shuttling_noise(
     t_evolve = 1e-6
     rate = np.log(added_quanta + 1) / t_evolve
     c_ops = [np.sqrt(rate) * ad]
-    H = 0 * ops.identity()
+    H = qutip.qzero(ops.hs.dims)
     tlist = [0, t_evolve]
     result = qutip.mesolve(H, rho, tlist, c_ops=c_ops)
     return result.states[-1]

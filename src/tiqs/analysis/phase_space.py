@@ -31,16 +31,11 @@ def motional_wigner(
     if xvec is None:
         xvec = np.linspace(-5, 5, 100)
 
-    if state.isket:
-        rho = qutip.ket2dm(state)
-    else:
-        rho = state
-
     # The subsystem index for mode_index is offset by the number of qubits.
     # Convention: [qubit_0, ..., qubit_{n-1}, mode_0, mode_1, ...]
     n_qubits = len(qubit_indices)
     subsystem_index = n_qubits + mode_index
-    rho_mode = rho.ptrace(subsystem_index)
+    rho_mode = state.ptrace(subsystem_index)
     return qutip.wigner(rho_mode, xvec, xvec)
 
 
@@ -67,19 +62,19 @@ def phase_space_trajectory(
     tuple[np.ndarray, np.ndarray]
         (x_mean, p_mean) arrays of mean position and momentum.
     """
-    x_vals = []
-    p_vals = []
-
     n_qubits = len(qubit_indices)
     subsystem_index = n_qubits + mode_index
 
+    # Hoist operator construction out of loop (dimension is constant)
+    dim = states[0].ptrace(subsystem_index).shape[0]
+    a = qutip.destroy(dim)
+    x_op = (a + a.dag()) / np.sqrt(2)
+    p_op = 1j * (a.dag() - a) / np.sqrt(2)
+
+    x_vals = []
+    p_vals = []
     for state in states:
-        rho = qutip.ket2dm(state) if state.isket else state
-        rho_mode = rho.ptrace(subsystem_index)
-        dim = rho_mode.shape[0]
-        a = qutip.destroy(dim)
-        x_op = (a + a.dag()) / np.sqrt(2)
-        p_op = 1j * (a.dag() - a) / np.sqrt(2)
+        rho_mode = state.ptrace(subsystem_index)
         x_vals.append(qutip.expect(x_op, rho_mode))
         p_vals.append(qutip.expect(p_op, rho_mode))
 

@@ -33,10 +33,10 @@ from tiqs.chain.normal_modes import NormalModeResult, normal_modes
 from tiqs.constants import (
     AMU,
     BOLTZMANN,
+    COULOMB_CONSTANT,
     ELECTRON_CHARGE,
     EPSILON_0,
     HBAR,
-    PI,
     SPEED_OF_LIGHT,
     TWO_PI,
 )
@@ -133,9 +133,7 @@ class TestIsingQuantumSimulation:
         """Exercise every species, every property, every constant."""
         assert HBAR > 0 and ELECTRON_CHARGE > 0 and BOLTZMANN > 0
         assert SPEED_OF_LIGHT > 0 and AMU > 0 and EPSILON_0 > 0
-        assert (
-            pytest.approx(np.pi) == PI and pytest.approx(2 * np.pi) == TWO_PI
-        )
+        assert pytest.approx(2 * np.pi) == TWO_PI
 
         for name in ["Yb171", "Ca40", "Ca43", "Ba137", "Be9", "Sr88"]:
             s = get_species(name)
@@ -908,7 +906,7 @@ class TestAnalyticalExactness:
         )
         pos = equilibrium_positions(2, trap)
         l_scale = (
-            ELECTRON_CHARGE**2 / (4 * PI * EPSILON_0 * ca.mass_kg * omega_z**2)
+            COULOMB_CONSTANT / (ca.mass_kg * omega_z**2)
         ) ** (1 / 3)
         # Analytical: u1 = -u2, u1 = -(1/2)^(2/3) ~ -0.6300
         u_analytical = (1 / 2) ** (2 / 3)  # ~0.6300
@@ -956,7 +954,7 @@ class TestAnalyticalExactness:
         sf = StateFactory(hs)
         Omega = TWO_PI * 500e3
         H = carrier_hamiltonian(ops, 0, Omega)
-        tlist = np.linspace(0, 4 * PI / Omega, 400)
+        tlist = np.linspace(0, 4 * np.pi / Omega, 400)
         result = qutip.sesolve(
             H, sf.ground_state(), tlist, e_ops=[ops.sigma_z(0)]
         )
@@ -973,7 +971,7 @@ class TestAnalyticalExactness:
             psi0 = qutip.tensor(qutip.basis(2, 0), qutip.basis(15, n))
             target = qutip.tensor(qutip.basis(2, 1), qutip.basis(15, n - 1))
             expected_rabi = eta * Omega * np.sqrt(n)
-            t_pi = PI / expected_rabi
+            t_pi = np.pi / expected_rabi
             r = qutip.sesolve(H, psi0, np.linspace(0, t_pi, 100))
             fid = abs(r.states[-1].overlap(target)) ** 2
             assert fid > 0.98, f"RSB pi-pulse failed for n={n}: fid={fid:.4f}"

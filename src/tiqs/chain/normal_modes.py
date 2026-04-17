@@ -66,23 +66,19 @@ def _dynamical_matrix(
     sign = -1 if axial else +1
     factor = 2 if axial else 1
 
-    D = np.zeros((n_ions, n_ions))
-    for i in range(n_ions):
-        coulomb_sum = 0.0
-        for k in range(n_ions):
-            if k != i:
-                d3 = abs(pos[i] - pos[k]) ** 3
-                coulomb_sum += factor * COULOMB_CONSTANT / (masses[i] * d3)
-                D[i, k] = (
-                    sign
-                    * factor
-                    * COULOMB_CONSTANT
-                    / (np.sqrt(masses[i] * masses[k]) * d3)
-                )
-        if axial:
-            D[i, i] = omega_diag[i] ** 2 + coulomb_sum
-        else:
-            D[i, i] = omega_diag[i] ** 2 - coulomb_sum
+    diff = np.abs(pos[:, np.newaxis] - pos[np.newaxis, :])
+    np.fill_diagonal(diff, np.inf)
+    d3 = diff**3
+
+    mass_geom = np.sqrt(masses[:, np.newaxis] * masses[np.newaxis, :])
+    D = sign * factor * COULOMB_CONSTANT / (mass_geom * d3)
+    coulomb_diag = np.sum(
+        factor * COULOMB_CONSTANT / (masses[:, np.newaxis] * d3), axis=1
+    )
+    if axial:
+        np.fill_diagonal(D, omega_diag**2 + coulomb_diag)
+    else:
+        np.fill_diagonal(D, omega_diag**2 - coulomb_diag)
 
     return D
 
