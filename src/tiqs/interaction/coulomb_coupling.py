@@ -100,23 +100,29 @@ def optomechanical_coupling(
     r"""Optomechanical Coulomb coupling between two separated
     trapped particles.
 
-    From the $x_1^2 x_2$ term in the Taylor expansion:
+    The $x_1^2 x_2$ cross term in the Taylor expansion of
+    $V = -C/(L + x_1 - x_2)$ has coefficient $3C/L^4$.
+    Quantizing $x_i = x_{\mathrm{zpf},i}(a_i + a_i^\dagger)$
+    and keeping the number-operator part
+    $(a + a^\dagger)^2 \to 2\hat{n} + 1$ gives:
 
     $$
-    g_0 = \frac{3\,e^2}{4\pi\epsilon_0\,\hbar\,L^4}
+    g_0 = \frac{6\,e^2}{4\pi\epsilon_0\,\hbar\,L^4}
       \,x_{\mathrm{zpf},1}^2\,x_{\mathrm{zpf},2}
     $$
 
-    where $x_{\mathrm{zpf},i} = \sqrt{\hbar / 2 m_i \omega_i}$.
-    This drives the interaction
-    $g_0\,a_1^\dagger a_1 (a_2 + a_2^\dagger)$: the phonon number
-    of particle 1 exerts a force on particle 2.
+    This is the pure Coulomb contribution to the coupling in
+    $H_\mathrm{int} = \hbar\,g_0\,\hat{n}_1\,(a_2 + a_2^\dagger)$,
+    corresponding to the first term of Osada et al. Eq. 10.
+    Real traps have an additional correction from the effective
+    potential anharmonicity (the second term in Eq. 10) that
+    depends on trap geometry and can be comparable in magnitude.
 
     Parameters
     ----------
     mass_1, mass_2 : float
         Particle masses in kg. Particle 1 is the one whose
-        phonon number couples (the "cavity" in optomechanics).
+        phonon number couples to particle 2.
     omega_1, omega_2 : float
         Secular angular frequencies in rad/s.
     separation : float
@@ -129,4 +135,4 @@ def optomechanical_coupling(
     """
     x_zpf_1 = np.sqrt(HBAR / (2 * mass_1 * omega_1))
     x_zpf_2 = np.sqrt(HBAR / (2 * mass_2 * omega_2))
-    return 3 * COULOMB_CONSTANT * x_zpf_1**2 * x_zpf_2 / (HBAR * separation**4)
+    return 6 * COULOMB_CONSTANT * x_zpf_1**2 * x_zpf_2 / (HBAR * separation**4)
