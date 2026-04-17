@@ -15,8 +15,13 @@ class SimulationConfig:
 
     Attributes
     ----------
-    species : Species
-        Trapped particle species for all qubits.
+    species : Species or list[Species]
+        Trapped particle species. A single ``Species`` applies to
+        all ions. A list provides per-ion species for mixed-species
+        chains (e.g. ``[get_species("Be9"), get_species("Ca40")]``).
+        ``trap.species`` is the reference species for
+        electrode-derived quantities (spring constant, Mathieu
+        parameters).
     trap : Trap
         Trap configuration.
     n_ions : int
@@ -47,7 +52,7 @@ class SimulationConfig:
         Additional options passed to the QuTiP solver.
     """
 
-    species: Species
+    species: Species | list[Species]
     trap: Trap
     n_ions: int
     n_modes: int = 1

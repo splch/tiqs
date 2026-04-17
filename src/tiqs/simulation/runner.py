@@ -43,7 +43,14 @@ class SimulationRunner:
         """
         self.config = config
 
-        self.modes = normal_modes(config.n_ions, config.trap)
+        species_list = (
+            config.species
+            if isinstance(config.species, list)
+            else [config.species] * config.n_ions
+        )
+
+        masses = np.array([s.mass_kg for s in species_list])
+        self.modes = normal_modes(config.n_ions, config.trap, masses)
 
         self.hs = HilbertSpace(
             n_ions=config.n_ions,
@@ -56,24 +63,23 @@ class SimulationRunner:
         # Derive effective wavevector from species laser properties.
         # 400 nm fallback is a typical UV wavelength for species without
         # a defined laser transition (e.g. electrons with gradient coupling).
-        if isinstance(config.species, IonSpecies):
-            if config.species.qubit_wavelength is not None:
-                # Optical qubit: single beam, k_eff = 2*pi/lambda
-                k_eff = TWO_PI / config.species.qubit_wavelength
-            elif config.species.raman_wavelength is not None:
-                # Hyperfine qubit with counter-propagating Raman beams:
-                # k_eff = 2 * 2*pi/lambda
-                k_eff = 2 * TWO_PI / config.species.raman_wavelength
-            else:
-                k_eff = TWO_PI / 400e-9
-        else:
-            k_eff = TWO_PI / 400e-9
+        k_effs = [self._species_k_eff(s) for s in species_list]
         self.eta = lamb_dicke_parameters(
-            self.modes, config.species, k_eff, "axial"
+            self.modes, species_list, k_effs, "axial"
         )
 
         self._c_ops = self._build_collapse_operators()
         self._anharmonic_H = self._build_anharmonic_correction()
+
+    @staticmethod
+    def _species_k_eff(species) -> float:
+        """Effective wavevector from a species' laser properties."""
+        if isinstance(species, IonSpecies):
+            if species.qubit_wavelength is not None:
+                return TWO_PI / species.qubit_wavelength
+            elif species.raman_wavelength is not None:
+                return 2 * TWO_PI / species.raman_wavelength
+        return TWO_PI / 400e-9
 
     def _build_anharmonic_correction(self) -> qutip.Qobj | None:
         """Build the anharmonic Hamiltonian correction.
