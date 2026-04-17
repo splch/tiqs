@@ -141,15 +141,24 @@ def _diagonalize_to_modes(
 
 
 def _penning_transverse_modes(
-    n_ions: int, omega_transverse: float
+    n_ions: int, omega_transverse: np.ndarray
 ) -> ModeGroup:
     """Compute transverse modes for a Penning trap (single-particle
     approximation).
 
-    For a single-particle or weakly-coupled chain, the transverse modes
-    are approximately at the single-particle frequency. Full N-particle
-    Penning mode structure with rotation-frame Coulomb coupling is a
-    future extension.
+    Each ion gets its own transverse frequency, which may differ
+    in mixed-species chains (mass-dependent cyclotron and magnetron
+    frequencies). The modes are localized on individual ions with
+    no inter-particle coupling. Full N-particle Penning mode
+    structure with rotating-frame Coulomb coupling is a future
+    extension.
+
+    Parameters
+    ----------
+    n_ions : int
+        Number of ions.
+    omega_transverse : np.ndarray
+        Per-ion transverse frequency, shape (N,).
     """
     if n_ions > 1:
         warnings.warn(
@@ -157,8 +166,9 @@ def _penning_transverse_modes(
             "Inter-particle coupling is not included.",
             stacklevel=3,
         )
-    freqs = np.full(n_ions, omega_transverse)
-    vectors = np.eye(n_ions)
+    order = np.argsort(omega_transverse)
+    freqs = omega_transverse[order]
+    vectors = np.eye(n_ions)[:, order]
     return ModeGroup(freqs=freqs, vectors=vectors)
 
 
@@ -189,7 +199,9 @@ def normal_modes(
         Per-ion masses in kg, shape ``(n_ions,)``. When ``None``
         (default), all ions use ``trap.species.mass_kg``. For
         mixed-species chains, pass an array with different masses
-        (e.g. ``np.array([m_Be, m_Ca])``).
+        (e.g. ``np.array([m_Be, m_Ca])``). The ordering matches
+        the sorted equilibrium positions: ``masses[0]`` is the
+        leftmost ion, ``masses[-1]`` the rightmost.
 
     Returns
     -------
@@ -199,10 +211,7 @@ def normal_modes(
     Raises
     ------
     ValueError
-        If ``masses`` has the wrong shape or a species is radially
-        unstable.
-    NotImplementedError
-        If mixed masses are used with a ``PenningTrap``.
+        If ``masses`` has the wrong shape or a species is unstable.
     """
     if masses is None:
         masses = np.full(n_ions, trap.species.mass_kg)
@@ -214,7 +223,6 @@ def normal_modes(
             )
 
     pos = equilibrium_positions(n_ions, trap)
-    is_mixed = not np.all(masses == masses[0])
 
     # Axial spring constant K = m_ref * omega_z_ref^2 is mass-independent
     # (K = kappa * e * U_dc / z_0^2 for DC confinement).
@@ -225,20 +233,25 @@ def normal_modes(
     axial = _diagonalize_to_modes(n_ions, omega_z, D_axial)
 
     if isinstance(trap, PenningTrap):
-        if is_mixed:
-            raise NotImplementedError(
-                "Mixed-species normal modes are not yet supported "
-                "for Penning traps. Penning transverse modes currently "
-                "use a single-particle approximation."
+        # Per-ion cyclotron frequency: omega_c_i = eB / m_i.
+        omega_c = ELECTRON_CHARGE * trap.magnetic_field / masses
+        omega_c_half = omega_c / 2
+        disc = omega_c_half**2 - omega_z**2 / 2
+        unstable = np.where(disc < 0)[0]
+        if len(unstable) > 0:
+            raise ValueError(
+                f"Penning-unstable ions at indices {unstable.tolist()}: "
+                f"omega_c < sqrt(2)*omega_z. Heavier species may "
+                f"require a stronger magnetic field."
             )
+        omega_plus = omega_c_half + np.sqrt(disc)
+        omega_minus = omega_c_half - np.sqrt(disc)
         modes = {
             "axial": axial,
             "modified_cyclotron": _penning_transverse_modes(
-                n_ions, trap.omega_modified_cyclotron
+                n_ions, omega_plus
             ),
-            "magnetron": _penning_transverse_modes(
-                n_ions, trap.omega_magnetron
-            ),
+            "magnetron": _penning_transverse_modes(n_ions, omega_minus),
         }
     elif isinstance(trap, PaulTrap):
         # Per-ion radial frequency from mass-dependent Mathieu parameters.
