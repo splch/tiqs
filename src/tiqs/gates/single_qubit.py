@@ -44,8 +44,8 @@ def rx_gate(
 
     $R_x(\theta) = e^{-i \theta \sigma_x / 2}$,
     implemented as
-    $H = \frac{\Omega}{2}\sigma_x$
-    for time $t = \theta / \Omega$.
+    $H = \mathrm{sign}(\theta)\,\frac{\Omega}{2}\sigma_x$
+    for time $t = |\theta| / \Omega$.
 
     Parameters
     ----------
@@ -63,7 +63,8 @@ def rx_gate(
     GatePulse
         Gate with the X-rotation Hamiltonian and duration.
     """
-    H = (rabi_frequency / 2) * ops.sigma_x(ion)
+    sign = 1 if theta >= 0 else -1
+    H = sign * (rabi_frequency / 2) * ops.sigma_x(ion)
     duration = abs(theta) / rabi_frequency
     return GatePulse(hamiltonian=H, duration=duration)
 
@@ -94,7 +95,8 @@ def ry_gate(
     GatePulse
         Gate with the Y-rotation Hamiltonian and duration.
     """
-    H = (rabi_frequency / 2) * ops.sigma_y(ion)
+    sign = 1 if theta >= 0 else -1
+    H = sign * (rabi_frequency / 2) * ops.sigma_y(ion)
     duration = abs(theta) / rabi_frequency
     return GatePulse(hamiltonian=H, duration=duration)
 
@@ -125,7 +127,8 @@ def rz_gate(
     GatePulse
         Gate with the Z-rotation Hamiltonian and duration.
     """
-    H = (rabi_frequency / 2) * ops.sigma_z(ion)
+    sign = 1 if phi >= 0 else -1
+    H = sign * (rabi_frequency / 2) * ops.sigma_z(ion)
     duration = abs(phi) / rabi_frequency
     return GatePulse(hamiltonian=H, duration=duration)
 

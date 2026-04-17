@@ -8,9 +8,20 @@ Lowest-level trapped-ion quantum computing simulation built on QuTiP.
 from tiqs.chain.equilibrium import equilibrium_positions
 from tiqs.chain.lamb_dicke import lamb_dicke_parameters
 from tiqs.chain.normal_modes import ModeGroup, NormalModeResult, normal_modes
+from tiqs.cooling.sympathetic import (
+    apply_sympathetic_cooling,
+    coolant_participation,
+    sympathetic_cooling_rate,
+    sympathetic_doppler_nbar,
+    sympathetic_sideband_nbar,
+)
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
+from tiqs.interaction.coulomb_coupling import (
+    beam_splitter_coupling,
+    optomechanical_coupling,
+)
 from tiqs.potential import (
     ArbitraryPotential,
     DuffingPotential,
@@ -46,12 +57,19 @@ __all__ = [
     "Species",
     "StateFactory",
     "Trap",
+    "apply_sympathetic_cooling",
+    "beam_splitter_coupling",
     "check_convergence",
+    "coolant_participation",
     "energy_levels",
     "equilibrium_positions",
     "get_species",
     "lamb_dicke_parameters",
     "mode_hamiltonian",
     "normal_modes",
+    "optomechanical_coupling",
+    "sympathetic_cooling_rate",
+    "sympathetic_doppler_nbar",
+    "sympathetic_sideband_nbar",
     "transition_frequencies",
 ]

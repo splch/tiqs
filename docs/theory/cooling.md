@@ -106,12 +106,78 @@ cooled simultaneously, demonstrated for 40+ ions in $< 300\;\mu$s.
 
 ### Sympathetic Cooling
 
-A co-trapped ion of a **different species** (e.g., ${}^{138}\text{Ba}^+$
-coolant with ${}^{171}\text{Yb}^+$ data qubits) is laser-cooled without
-disturbing the computational qubits' internal states. The Coulomb interaction
-couples the motional modes of both species, enabling indirect cooling. This
-is critical in QCCD architectures where frequent ion transport heats the
-motional modes.
+A co-trapped ion of a **different species** (the *coolant*) is laser-cooled
+while the computational qubits are cooled **indirectly** through the Coulomb
+interaction that couples all ions via shared normal modes. The cooling laser
+addresses only the coolant species (far off-resonance from qubit transitions),
+so qubit quantum states are preserved.
+
+#### Coolant participation
+
+The cooling rate of mode $m$ depends on how much the coolant ions participate
+in that mode. The **coolant participation** is:
+
+$$
+P_m = \sum_{k \in \text{coolant}} |b_{k,m}|^2
+$$
+
+where $b_{k,m}$ is the mass-weighted eigenvector component of coolant ion $k$
+in mode $m$. Since the eigenvectors are orthonormal,
+$\sum_i |b_{i,m}|^2 = 1$ for every mode, so $0 \le P_m \le 1$. When all
+ions are coolants (single-species chain), $P_m = 1$.
+
+Modes where the coolant has near-zero participation are called **spectator
+modes** and cannot be efficiently cooled sympathetically.
+
+#### Sympathetic Doppler limit
+
+The steady-state phonon number per mode under sympathetic Doppler cooling is:
+
+$$
+\bar{n}_m = \frac{\Gamma}{2\,\omega_m\,P_m}
+$$
+
+where $\Gamma$ is the coolant cooling-transition linewidth and $\omega_m$ is
+the mode frequency. The factor $1/P_m$ arises because the effective cooling
+rate on mode $m$ is reduced by $P_m$ compared to direct cooling. When
+$P_m = 1$, this reduces to the standard Doppler limit $\Gamma/(2\omega)$.
+
+#### Cooling rate
+
+At optimum detuning $\Delta = -\Gamma/2$ and saturation parameter
+$s = I/I_\text{sat}$:
+
+$$
+\Gamma_m^\text{cool} = \frac{\Gamma}{2}\,\frac{s}{1+s}\,P_m
+$$
+
+Each mode's phonon number relaxes exponentially toward the Doppler limit:
+
+$$
+\bar{n}(t) = \bar{n}_\text{ss}
+  + (\bar{n}_0 - \bar{n}_\text{ss})\,e^{-\Gamma_m^\text{cool}\,t}
+$$
+
+#### Sympathetic sideband cooling limit
+
+After Doppler pre-cooling, resolved sideband cooling on the coolant ion
+further reduces the phonon number:
+
+$$
+\bar{n}_m^\text{SBC} = \frac{1}{P_m}
+  \left(\frac{\gamma_\text{eff}}{2\,\omega_m}\right)^2
+$$
+
+#### Species pairing considerations
+
+The mass ratio between coolant and qubit species controls the normal mode
+structure. Similar masses ($m_\text{cool}/m_\text{qubit} \approx 1$)
+maximize mode hybridization, giving all modes significant coolant
+participation. Disparate masses cause modes to localize on one species,
+creating spectator modes. Common pairings include ${}^9\text{Be}^+$ /
+${}^{40}\text{Ca}^+$, ${}^{138}\text{Ba}^+$ / ${}^{171}\text{Yb}^+$,
+and same-element isotope pairs like ${}^{40}\text{Ca}^+$ /
+${}^{43}\text{Ca}^+$.
 
 ### References
 
@@ -121,3 +187,8 @@ motional modes.
    the 3D zero-point energy." *Phys. Rev. Lett.* **75**, 4011 (1995).
 3. Lechner, R. et al. "Electromagnetically-induced-transparency ground-state
    cooling of long ion strings." *Phys. Rev. A* **93**, 053401 (2016).
+4. Sosnova, K. et al. "Character of motional modes for entanglement and
+   sympathetic cooling of mixed-species trapped-ion chains." *Phys. Rev. A*
+   **103**, 012610 (2021).
+5. Bruzewicz, C.D. et al. "Trapped-ion quantum computing: Progress and
+   challenges." *Appl. Phys. Rev.* **6**, 021314 (2019).

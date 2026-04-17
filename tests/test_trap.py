@@ -56,6 +56,20 @@ class TestPaulTrap:
         )
         assert not trap.is_stable()
 
+    def test_unstable_trap_omega_radial_raises(self):
+        """Accessing omega_radial when beta^2 <= 0 raises ValueError.
+        Strong axial (25 MHz) with weak RF (10 V) makes radial
+        confinement impossible."""
+        trap = PaulTrap(
+            v_rf=10.0,
+            omega_rf=2 * np.pi * 30e6,
+            r0=0.5e-3,
+            omega_axial=2 * np.pi * 25e6,
+            species=get_species("Yb171"),
+        )
+        with pytest.raises(ValueError, match="unstable"):
+            _ = trap.omega_radial
+
     def test_radial_exceeds_axial(self, yb_trap):
         """Radial frequency should exceed axial for linear chain stability."""
         assert yb_trap.omega_radial > yb_trap.omega_axial

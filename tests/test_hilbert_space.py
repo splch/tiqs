@@ -26,6 +26,12 @@ class TestHilbertSpace:
         hs = HilbertSpace(n_ions=2, n_modes=2, n_fock=[10, 5])
         assert hs.dims == [2, 2, 10, 5]
 
+    def test_zero_ions_pure_bosonic(self):
+        """n_ions=0 gives a purely bosonic Hilbert space."""
+        hs = HilbertSpace(n_ions=0, n_modes=2, n_fock=10)
+        assert hs.dims == [10, 10]
+        assert hs.total_dim == 100
+
 
 class TestOperatorFactory:
     @pytest.fixture
@@ -79,6 +85,16 @@ class TestOperatorFactory:
         with pytest.raises(IndexError):
             ops.annihilate(5)
 
+    def test_zero_ions_operators(self):
+        """OperatorFactory works with n_ions=0 (pure bosonic)."""
+        hs = HilbertSpace(n_ions=0, n_modes=2, n_fock=5)
+        ops = OperatorFactory(hs)
+        a = ops.annihilate(0)
+        assert a.shape == (25, 25)
+        assert ops.number(1).isherm
+        with pytest.raises(IndexError):
+            ops.sigma_z(0)
+
 
 class TestStateFactory:
     @pytest.fixture
@@ -115,3 +131,16 @@ class TestStateFactory:
         psi = sf.ground_state()
         sz0 = qutip.tensor(qutip.sigmaz(), qutip.qeye(2), qutip.qeye(10))
         assert qutip.expect(sz0, psi) == pytest.approx(1.0)
+
+    def test_zero_ions_states(self):
+        """StateFactory works with n_ions=0 (pure bosonic)."""
+        hs = HilbertSpace(n_ions=0, n_modes=2, n_fock=10)
+        sf = StateFactory(hs)
+        psi = sf.ground_state()
+        assert psi.type == "ket"
+        assert psi.shape == (100, 1)
+        psi2 = sf.product_state(qubit_states=[], fock_states=[3, 0])
+        assert psi2.type == "ket"
+        rho = sf.thermal_state(n_bar=[2.0, 0.5])
+        assert rho.type == "oper"
+        assert rho.tr() == pytest.approx(1.0, abs=1e-10)

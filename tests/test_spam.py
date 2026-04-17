@@ -65,6 +65,20 @@ class TestMeasurement:
         assert len(bits) == 2
         assert all(b in [0, 1] for b in bits)
 
+    def test_spam_error_flips_bits(self, system):
+        """Non-zero spam_error causes some bit flips."""
+        hs, ops, sf = system
+        psi = sf.ground_state()
+        rng = np.random.default_rng(42)
+        # With 50% error rate, roughly half the bits should flip
+        flipped = 0
+        n_shots = 200
+        for _ in range(n_shots):
+            bits = sample_measurement(psi, ions=[0], rng=rng, spam_error=0.5)
+            flipped += bits[0]
+        # Ground state is |0>, so flipped bits = 1s
+        assert 50 < flipped < 150
+
     def test_measurement_fidelity_perfect(self):
         fid = measurement_fidelity(
             bright_photon_rate=1e7,

@@ -56,3 +56,13 @@ class TestCrystalSplitting:
         fast = split_crystal_excitation(2 * np.pi * 1e6, 20e-6)
         slow = split_crystal_excitation(2 * np.pi * 1e6, 200e-6)
         assert slow <= fast
+
+    def test_very_adiabatic_split_reaches_floor(self):
+        """Extremely adiabatic split (adiabaticity > 50) returns 0.05."""
+        delta_n = split_crystal_excitation(2 * np.pi * 1e6, 10e-3)
+        assert delta_n == pytest.approx(0.05)
+
+    def test_non_adiabatic_split_heats_more(self):
+        """Non-adiabatic split (adiabaticity <= 50) heats above floor."""
+        delta_n = split_crystal_excitation(2 * np.pi * 1e3, 1e-3)
+        assert delta_n > 0.05

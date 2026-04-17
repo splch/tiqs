@@ -29,8 +29,8 @@ class HilbertSpace:
 
     def __post_init__(self):
         """Validate inputs and expand ``n_fock`` to per-mode dimensions."""
-        if self.n_ions < 1:
-            raise ValueError(f"n_ions must be >= 1, got {self.n_ions}")
+        if self.n_ions < 0:
+            raise ValueError(f"n_ions must be >= 0, got {self.n_ions}")
         if self.n_modes < 1:
             raise ValueError(f"n_modes must be >= 1, got {self.n_modes}")
         if isinstance(self.n_fock, int):

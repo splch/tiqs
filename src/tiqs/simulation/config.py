@@ -48,6 +48,16 @@ class SimulationConfig:
         Anharmonic potentials per mode index. Modes not in this dict
         default to harmonic. See ``DuffingPotential`` for transmon-like
         anharmonicity.
+    coolant_indices : list[int] or None
+        Indices of coolant ions for sympathetic cooling. ``None`` =
+        no sympathetic cooling. When set, ``species`` must be a list
+        with the coolant species at these indices.
+    heating_rates : list[float] or None
+        Per-mode heating rates in quanta/s. When set, overrides the
+        scalar ``heating_rate``. Length must equal ``n_modes``.
+    n_bar_initial_per_mode : list[float] or None
+        Per-mode initial phonon numbers. When set, overrides the
+        scalar ``n_bar_initial``. Length must equal ``n_modes``.
     solver_options : dict[str, object]
         Additional options passed to the QuTiP solver.
     """
@@ -65,6 +75,27 @@ class SimulationConfig:
     photon_scattering_rate: float | None = None
     n_bar_initial: float = 0.0
     potentials: dict[int, Potential] = field(default_factory=dict)
+    coolant_indices: list[int] | None = None
+    heating_rates: list[float] | None = None
+    n_bar_initial_per_mode: list[float] | None = None
     solver_options: dict[str, object] = field(
         default_factory=lambda: {"max_step": 0.0, "nsteps": 5000}
     )
+
+    def __post_init__(self):
+        for name in ("heating_rates", "n_bar_initial_per_mode"):
+            value = getattr(self, name)
+            if value is not None and len(value) != self.n_modes:
+                raise ValueError(
+                    f"{name} length {len(value)} != n_modes {self.n_modes}"
+                )
+        if self.coolant_indices is not None:
+            if not self.coolant_indices:
+                raise ValueError("coolant_indices must not be empty")
+            if len(set(self.coolant_indices)) != len(self.coolant_indices):
+                raise ValueError("coolant_indices contains duplicates")
+            for idx in self.coolant_indices:
+                if idx < 0 or idx >= self.n_ions:
+                    raise ValueError(
+                        f"coolant index {idx} out of range [0, {self.n_ions})"
+                    )
