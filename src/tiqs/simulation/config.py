@@ -83,20 +83,9 @@ class SimulationConfig:
     )
 
     def __post_init__(self):
-        if (
-            self.heating_rates is not None
-            and len(self.heating_rates) != self.n_modes
-        ):
-            raise ValueError(
-                f"heating_rates length {len(self.heating_rates)}"
-                f" != n_modes {self.n_modes}"
-            )
-        if (
-            self.n_bar_initial_per_mode is not None
-            and len(self.n_bar_initial_per_mode) != self.n_modes
-        ):
-            raise ValueError(
-                f"n_bar_initial_per_mode length"
-                f" {len(self.n_bar_initial_per_mode)}"
-                f" != n_modes {self.n_modes}"
-            )
+        for name in ("heating_rates", "n_bar_initial_per_mode"):
+            value = getattr(self, name)
+            if value is not None and len(value) != self.n_modes:
+                raise ValueError(
+                    f"{name} length {len(value)} != n_modes {self.n_modes}"
+                )

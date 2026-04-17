@@ -76,8 +76,7 @@ def coolant_participation(
     np.ndarray
         Coolant participation per mode, shape ``(n_modes,)``.
     """
-    vectors = mode_group.vectors
-    return np.sum(vectors[coolant_indices, :] ** 2, axis=0)
+    return np.sum(mode_group.vectors[coolant_indices, :] ** 2, axis=0)
 
 
 def sympathetic_doppler_nbar(
@@ -260,8 +259,7 @@ def apply_sympathetic_cooling(
     if not c_ops:
         return rho
 
-    H = 0 * ops.identity()
-    n_steps = max(2, int(duration * cooling_rates.max() * 10) + 2)
+    n_steps = int(duration * cooling_rates.max() * 10) + 2
     tlist = np.linspace(0, duration, n_steps)
-    result = qutip.mesolve(H, rho, tlist, c_ops=c_ops)
+    result = qutip.mesolve(qutip.qzero_like(rho), rho, tlist, c_ops=c_ops)
     return result.states[-1]

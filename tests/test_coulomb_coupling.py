@@ -111,28 +111,21 @@ class TestOptomechanicalCoupling:
         g_21 = optomechanical_coupling(m2, m1, w2, w1, L)
         assert g_12 != pytest.approx(g_21, rel=0.1)
 
-    def test_osada_table_ii_800mhz_10um(self):
-        """Osada Table II: omega_e/(2pi) = 800 MHz, L = 10 um,
-        omega_i/(2pi) = 2 MHz gives g_0/(2pi) ~ 33 kHz."""
+    @pytest.mark.parametrize(
+        ("freq_mhz", "expected_khz"),
+        [(800, 33), (500, 39)],
+    )
+    def test_osada_table_ii(self, freq_mhz, expected_khz):
+        """Osada Table II: g_0/(2pi) for electron-Be9+ at L = 10 um.
+        Our formula gives the pure Coulomb term without the
+        trap-anharmonicity correction (Eq. 10 second term), so
+        we check order-of-magnitude agreement."""
         m_e = ELECTRON_MASS
         m_i = get_species("Be9").mass_kg
-        w_e = TWO_PI * 800e6
+        w_e = TWO_PI * freq_mhz * 1e6
         w_i = TWO_PI * 2e6
         L = 10e-6
         g0 = optomechanical_coupling(m_e, m_i, w_e, w_i, L)
-        # Paper states g_0/(2pi) = 33 kHz. Our formula gives
-        # the pure Coulomb term without the trap-anharmonicity
-        # correction (the second term in Eq. 10), so we check
-        # order-of-magnitude agreement.
-        assert g0 / TWO_PI == pytest.approx(33e3, rel=0.5)
-
-    def test_osada_table_ii_500mhz_10um(self):
-        """Osada Table II: omega_e/(2pi) = 500 MHz, L = 10 um
-        gives g_0/(2pi) ~ 39 kHz."""
-        m_e = ELECTRON_MASS
-        m_i = get_species("Be9").mass_kg
-        w_e = TWO_PI * 500e6
-        w_i = TWO_PI * 2e6
-        L = 10e-6
-        g0 = optomechanical_coupling(m_e, m_i, w_e, w_i, L)
-        assert g0 / TWO_PI == pytest.approx(39e3, rel=0.5)
+        assert g0 / TWO_PI == pytest.approx(
+            expected_khz * 1e3, rel=0.5
+        )
