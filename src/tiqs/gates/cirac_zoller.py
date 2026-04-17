@@ -28,6 +28,15 @@ def cirac_zoller_gate(
 
     REQUIRES the motional mode to be in the ground state $|n=0\rangle$.
 
+    .. note::
+       The original Cirac-Zoller protocol uses a third auxiliary
+       internal level for step 2, preventing leakage into higher
+       Fock states. This two-level implementation approximates
+       step 2 with the qubit RSB transition, which is exact for
+       input states $|00\rangle$, $|01\rangle$, $|10\rangle$ but
+       introduces Fock-state leakage for $|11\rangle$. Use the
+       Molmer-Sorensen gate for high-fidelity two-qubit operations.
+
     Parameters
     ----------
     ops : OperatorFactory

@@ -255,13 +255,13 @@ def full_interaction_hamiltonian(
         H_dw = dw_correction * sigma_phi * (n_op + 0.5 * ops.identity())
         H_terms.append([H_dw, f"cos({detuning}*t)"])
 
-        # Second red sideband: eta^2 * Omega / 4 * a^2 * sm
-        # From: -eta^2/2 (from expansion) * Omega/2 (from Rabi) = eta^2*Omega/4
+        # Second red sideband: -eta^2 * Omega / 4 * a^2 * sm
+        # From: -eta^2/2 (from expansion) * Omega/2 (from Rabi) = -eta^2*Omega/4
         H_2rsb_op = (
-            (eta**2 * rabi_frequency / 4) * a * a * sm * np.exp(1j * phase)
+            -(eta**2 * rabi_frequency / 4) * a * a * sm * np.exp(1j * phase)
         )
         H_2rsb_hc = (
-            (eta**2 * rabi_frequency / 4) * ad * ad * sp * np.exp(-1j * phase)
+            -(eta**2 * rabi_frequency / 4) * ad * ad * sp * np.exp(-1j * phase)
         )
         rsb2_det = detuning - 2 * mode_frequency
         H_terms.append([H_2rsb_op, f"exp(1j*{rsb2_det}*t)"])

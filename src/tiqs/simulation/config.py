@@ -95,6 +95,5 @@ class SimulationConfig:
             for idx in self.coolant_indices:
                 if idx < 0 or idx >= self.n_ions:
                     raise ValueError(
-                        f"coolant index {idx} out of range"
-                        f" [0, {self.n_ions})"
+                        f"coolant index {idx} out of range [0, {self.n_ions})"
                     )
