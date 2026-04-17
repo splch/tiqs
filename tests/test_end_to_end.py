@@ -268,7 +268,7 @@ class TestIsingQuantumSimulation:
         assert hs2.total_dim == 200
 
         with pytest.raises(ValueError):
-            HilbertSpace(n_ions=0, n_modes=1)
+            HilbertSpace(n_ions=-1, n_modes=1)
         with pytest.raises(ValueError):
             HilbertSpace(n_ions=1, n_modes=0)
 
