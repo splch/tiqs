@@ -48,19 +48,13 @@ def ca40_trap(ca40):
 class TestCoolantParticipation:
     """Analytical exactness tests for coolant participation."""
 
-    def test_single_species_all_coolant(self, ca40_trap):
+    @pytest.mark.parametrize("n_ions", [2, 3])
+    def test_single_species_all_coolant(self, ca40_trap, n_ions):
         """When all ions are coolants, P_m = 1 for every mode.
         Follows from eigenvector orthonormality: sum_i |b_{i,m}|^2 = 1."""
-        modes = normal_modes(2, ca40_trap)
+        modes = normal_modes(n_ions, ca40_trap)
         axial = modes.modes["axial"]
-        P = coolant_participation(axial, [0, 1])
-        np.testing.assert_allclose(P, 1.0, atol=1e-10)
-
-    def test_single_species_three_ions(self, ca40_trap):
-        """Orthonormality holds for 3-ion chain too."""
-        modes = normal_modes(3, ca40_trap)
-        axial = modes.modes["axial"]
-        P = coolant_participation(axial, [0, 1, 2])
+        P = coolant_participation(axial, list(range(n_ions)))
         np.testing.assert_allclose(P, 1.0, atol=1e-10)
 
     def test_coolant_plus_logic_equals_one(self, be9, ca40, ca40_trap):
@@ -122,14 +116,12 @@ class TestSympatheticDopplerNbar:
         masses = np.array([be9.mass_kg, ca40.mass_kg])
         modes = normal_modes(2, ca40_trap, masses=masses)
         axial = modes.modes["axial"]
-        # Use Ca40 as coolant (heavier, less participation in mode 1)
+        # Ca40 (heavier coolant at index 1) has higher participation
+        # in COM mode (0) than stretch mode (1)
         P = coolant_participation(axial, [1])
+        assert P[0] > P[1]
         n_bar = sympathetic_doppler_nbar(ca40, axial.freqs, P)
-        # Mode with lower participation has higher n_bar
-        if P[0] > P[1]:
-            assert n_bar[0] < n_bar[1]
-        else:
-            assert n_bar[0] > n_bar[1]
+        assert n_bar[0] < n_bar[1]
 
     def test_nbar_scales_as_inverse_participation(self, ca40, ca40_trap):
         """n_bar_m is exactly proportional to 1/P_m at fixed omega."""
@@ -205,13 +197,11 @@ class TestApplySympatheticCooling:
     @pytest.fixture
     def system(self):
         hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=20)
-        ops = OperatorFactory(hs)
-        sf = StateFactory(hs)
-        return hs, ops, sf
+        return OperatorFactory(hs), StateFactory(hs)
 
     def test_cooling_reduces_phonon_number(self, system):
         """Starting from n_bar=5, cooling should reduce phonon number."""
-        hs, ops, sf = system
+        ops, sf = system
         rho0 = sf.thermal_state(n_bar=[5.0])
         n_op = ops.number(0)
         n_before = qutip.expect(n_op, rho0)
@@ -219,7 +209,7 @@ class TestApplySympatheticCooling:
         cooling_rates = np.array([TWO_PI * 1e6])
         n_bar_target = np.array([0.5])
         rho_cooled = apply_sympathetic_cooling(
-            rho0, ops, 1, cooling_rates, n_bar_target, duration=1e-6
+            rho0, ops, cooling_rates, n_bar_target, duration=1e-6
         )
         n_after = qutip.expect(n_op, rho_cooled)
         assert n_after < n_before
@@ -227,7 +217,7 @@ class TestApplySympatheticCooling:
     def test_qubit_coherence_preserved(self, system):
         """Sympathetic cooling must preserve qubit off-diagonal
         elements (coherence) since only motional operators are used."""
-        hs, ops, sf = system
+        ops, sf = system
         # Create a superposition state: (|0> + |1>)/sqrt(2) on ion 0
         plus = (
             sf.product_state([0, 0], [0]) + sf.product_state([1, 0], [0])
@@ -237,7 +227,7 @@ class TestApplySympatheticCooling:
         cooling_rates = np.array([TWO_PI * 1e6])
         n_bar_target = np.array([0.1])
         rho_cooled = apply_sympathetic_cooling(
-            rho0, ops, 1, cooling_rates, n_bar_target, duration=1e-6
+            rho0, ops, cooling_rates, n_bar_target, duration=1e-6
         )
 
         # Qubit coherence: off-diagonal of single-qubit reduced state
@@ -258,17 +248,17 @@ class TestApplySympatheticCooling:
         n_bar_target = np.array([0.5])
         cooling_rates = np.array([TWO_PI * 1e4])
         rho_cooled = apply_sympathetic_cooling(
-            rho0, ops, 1, cooling_rates, n_bar_target, duration=1e-3
+            rho0, ops, cooling_rates, n_bar_target, duration=1e-3
         )
         n_final = qutip.expect(n_op, rho_cooled)
         assert n_final == pytest.approx(n_bar_target[0], rel=0.3)
 
     def test_zero_duration_returns_unchanged(self, system):
         """Zero duration returns the same state."""
-        hs, ops, sf = system
+        ops, sf = system
         rho0 = sf.thermal_state(n_bar=[5.0])
         rho_out = apply_sympathetic_cooling(
-            rho0, ops, 1, np.array([1e6]), np.array([0.1]), duration=0.0
+            rho0, ops, np.array([1e6]), np.array([0.1]), duration=0.0
         )
         assert (rho_out - rho0).norm() == pytest.approx(0.0, abs=1e-12)
 
@@ -283,7 +273,7 @@ class TestApplySympatheticCooling:
         cooling_rates = np.array([TWO_PI * 5e6, TWO_PI * 0.5e6])
         n_bar_target = np.array([0.1, 0.1])
         rho_cooled = apply_sympathetic_cooling(
-            rho0, ops, 2, cooling_rates, n_bar_target, duration=1e-6
+            rho0, ops, cooling_rates, n_bar_target, duration=1e-6
         )
 
         n0 = qutip.expect(ops.number(0), rho_cooled)

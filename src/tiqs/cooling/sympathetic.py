@@ -196,7 +196,6 @@ def sympathetic_cooling_rate(
 def apply_sympathetic_cooling(
     rho: qutip.Qobj,
     ops: OperatorFactory,
-    n_modes: int,
     cooling_rates: np.ndarray,
     n_bar_target: np.ndarray,
     duration: float,
@@ -233,8 +232,6 @@ def apply_sympathetic_cooling(
         Input density matrix.
     ops : OperatorFactory
         Operator factory for the composite Hilbert space.
-    n_modes : int
-        Number of motional modes to cool.
     cooling_rates : np.ndarray
         Per-mode cooling rates in 1/s, shape ``(n_modes,)``.
     n_bar_target : np.ndarray
@@ -251,7 +248,7 @@ def apply_sympathetic_cooling(
         return rho
 
     c_ops = []
-    for m in range(n_modes):
+    for m in range(len(cooling_rates)):
         rate = cooling_rates[m]
         n_t = n_bar_target[m]
         if rate <= 0:

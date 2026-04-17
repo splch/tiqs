@@ -80,15 +80,12 @@ class SimulationRunner:
                 axial, config.coolant_indices
             )
             coolant_species = species_list[config.coolant_indices[0]]
-            n_m = min(config.n_modes, len(axial.freqs))
-            self._cooling_rates = sympathetic_cooling_rate(
-                coolant_species,
-                self._coolant_participation[:n_m],
-            )
+            n_m = config.n_modes
+            p = self._coolant_participation[:n_m]
+            f = axial.freqs[:n_m]
+            self._cooling_rates = sympathetic_cooling_rate(coolant_species, p)
             self._n_bar_cooled = sympathetic_doppler_nbar(
-                coolant_species,
-                axial.freqs[:n_m],
-                self._coolant_participation[:n_m],
+                coolant_species, f, p
             )
         else:
             self._coolant_participation = None
@@ -412,5 +409,5 @@ class SimulationRunner:
                 "n_bar_target."
             )
         return apply_sympathetic_cooling(
-            rho, self.ops, self.config.n_modes, rates, targets, duration
+            rho, self.ops, rates, targets, duration
         )
