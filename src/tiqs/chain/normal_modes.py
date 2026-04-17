@@ -57,46 +57,13 @@ def _dynamical_matrix(
     masses: np.ndarray,
     axial: bool,
 ) -> np.ndarray:
-    r"""Build the mass-weighted dynamical matrix for one direction.
+    r"""Build the mass-weighted dynamical matrix $D = M^{-1/2} V M^{-1/2}$.
 
-    Constructs $D = M^{-1/2}\,V\,M^{-1/2}$ where $V$ is the potential
-    energy Hessian and $M = \mathrm{diag}(m_1, \ldots, m_N)$.
-    Diagonalizing $D$ gives normal mode frequencies and mass-weighted
-    eigenvectors that satisfy $e^T e = I$.
-
-    For axial modes (focusing Coulomb coupling):
-
-        $D_{ii} = \omega_{z,i}^2
-        + \sum_{k \neq i} \frac{2\,C}{m_i\,|z_i - z_k|^3}$
-
-        $D_{ij} = \frac{-2\,C}{\sqrt{m_i\,m_j}\,|z_i - z_j|^3}$
-
-    For radial modes (defocusing Coulomb coupling):
-
-        $D_{ii} = \omega_{r,i}^2
-        - \sum_{k \neq i} \frac{C}{m_i\,|z_i - z_k|^3}$
-
-        $D_{ij} = \frac{+C}{\sqrt{m_i\,m_j}\,|z_i - z_j|^3}$
-
-    where $C = e^2/(4\pi\epsilon_0)$ is the mass-independent Coulomb
-    prefactor.
-
-    For single-species chains (all $m_i = m$, all
-    $\omega_{\mathrm{diag},i} = \omega$), this reduces to the standard
-    Hessian $H = V/m$.
-
-    Parameters
-    ----------
-    n_ions : int
-        Number of ions.
-    pos : np.ndarray
-        Equilibrium positions, shape (N,).
-    omega_diag : np.ndarray
-        Per-ion bare oscillation frequency, shape (N,).
-    masses : np.ndarray
-        Per-ion masses in kg, shape (N,).
-    axial : bool
-        ``True`` for axial modes, ``False`` for radial.
+    For axial modes: $D_{ii} = \omega_{z,i}^2 + \sum 2C/(m_i\,d^3)$,
+    $D_{ij} = -2C/(\sqrt{m_i m_j}\,d^3)$.
+    For radial: signs flip and factor changes from 2 to 1.
+    $C = e^2/(4\pi\epsilon_0)$ is mass-independent.
+    Reduces to $H = V/m$ for single-species chains.
     """
     sign = -1 if axial else +1
     factor = 2 if axial else 1
@@ -125,11 +92,7 @@ def _dynamical_matrix(
 def _diagonalize_to_modes(
     n_ions: int, omega_diag: np.ndarray, D: np.ndarray
 ) -> ModeGroup:
-    """Diagonalize a dynamical matrix into a ModeGroup.
-
-    For a single ion, returns the bare frequency and trivial eigenvector
-    without diagonalization.
-    """
+    """Diagonalize a dynamical matrix into a ModeGroup."""
     if n_ions == 1:
         return ModeGroup(
             freqs=np.array([omega_diag[0]]),
@@ -143,22 +106,10 @@ def _diagonalize_to_modes(
 def _penning_transverse_modes(
     n_ions: int, omega_transverse: np.ndarray
 ) -> ModeGroup:
-    """Compute transverse modes for a Penning trap (single-particle
-    approximation).
+    """Per-ion transverse modes (single-particle approximation).
 
-    Each ion gets its own transverse frequency, which may differ
-    in mixed-species chains (mass-dependent cyclotron and magnetron
-    frequencies). The modes are localized on individual ions with
-    no inter-particle coupling. Full N-particle Penning mode
-    structure with rotating-frame Coulomb coupling is a future
-    extension.
-
-    Parameters
-    ----------
-    n_ions : int
-        Number of ions.
-    omega_transverse : np.ndarray
-        Per-ion transverse frequency, shape (N,).
+    Full N-particle mode structure with rotating-frame Coulomb
+    coupling is a future extension.
     """
     if n_ions > 1:
         warnings.warn(
@@ -180,14 +131,9 @@ def normal_modes(
     r"""Compute all normal modes of an N-ion crystal.
 
     Constructs the mass-weighted dynamical matrix
-    $D = M^{-1/2}\,V\,M^{-1/2}$ of the total potential (harmonic
-    trap + Coulomb) evaluated at the equilibrium positions, then
-    diagonalizes it to find mode frequencies and participation
-    vectors. For single-species chains this is equivalent to
-    the standard Hessian approach. Axial modes are computed
-    identically for all trap types; transverse modes use
-    trap-specific physics (radial pseudopotential for Paul traps,
-    cyclotron/magnetron frequencies for Penning traps).
+    $D = M^{-1/2}\,V\,M^{-1/2}$ and diagonalizes it. Axial modes
+    are computed identically for all trap types; transverse modes
+    use trap-specific physics.
 
     Parameters
     ----------
@@ -197,21 +143,13 @@ def normal_modes(
         Trap configuration.
     masses : np.ndarray or None, optional
         Per-ion masses in kg, shape ``(n_ions,)``. When ``None``
-        (default), all ions use ``trap.species.mass_kg``. For
-        mixed-species chains, pass an array with different masses
-        (e.g. ``np.array([m_Be, m_Ca])``). The ordering matches
-        the sorted equilibrium positions: ``masses[0]`` is the
-        leftmost ion, ``masses[-1]`` the rightmost.
+        (default), all ions use ``trap.species.mass_kg``.
+        Ordering matches sorted equilibrium positions.
 
     Returns
     -------
     NormalModeResult
         Equilibrium positions and mode groups keyed by physical name.
-
-    Raises
-    ------
-    ValueError
-        If ``masses`` has the wrong shape or a species is unstable.
     """
     if masses is None:
         masses = np.full(n_ions, trap.species.mass_kg)

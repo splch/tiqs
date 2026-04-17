@@ -223,27 +223,42 @@ class TestLambDicke:
         assert eta_be > eta_yb
 
 
+@pytest.fixture
+def be9():
+    return get_species("Be9")
+
+
+@pytest.fixture
+def ca40():
+    return get_species("Ca40")
+
+
+@pytest.fixture
+def mixed_trap(ca40):
+    """Paul trap configured for Ca40 (reference species)."""
+    return PaulTrap(
+        v_rf=300.0,
+        omega_rf=TWO_PI * 30e6,
+        r0=0.5e-3,
+        omega_axial=TWO_PI * 1.0e6,
+        species=ca40,
+    )
+
+
+@pytest.fixture
+def penning_trap(ca40):
+    from tiqs.trap import PenningTrap
+
+    return PenningTrap(
+        magnetic_field=7.0,
+        species=ca40,
+        d=5e-3,
+        omega_axial=TWO_PI * 0.5e6,
+    )
+
+
 class TestMixedSpeciesNormalModes:
     """Mixed-species chain tests using the mass-weighted dynamical matrix."""
-
-    @pytest.fixture
-    def be9(self):
-        return get_species("Be9")
-
-    @pytest.fixture
-    def ca40(self):
-        return get_species("Ca40")
-
-    @pytest.fixture
-    def mixed_trap(self, ca40):
-        """Paul trap configured for Ca40 (reference species)."""
-        return PaulTrap(
-            v_rf=300.0,
-            omega_rf=TWO_PI * 30e6,
-            r0=0.5e-3,
-            omega_axial=TWO_PI * 1.0e6,
-            species=ca40,
-        )
 
     def test_uniform_masses_matches_single_species(self, ca40, mixed_trap):
         """Passing explicit uniform masses must reproduce the default."""
@@ -335,36 +350,20 @@ class TestMixedSpeciesNormalModes:
         with pytest.raises(ValueError, match="masses must have shape"):
             normal_modes(2, mixed_trap, masses=np.array([1.0, 2.0, 3.0]))
 
-    def test_penning_mixed_species_axial(self, be9, ca40):
+    def test_penning_mixed_species_axial(self, be9, ca40, penning_trap):
         """Mixed-species Penning axial modes use the dynamical matrix."""
-        from tiqs.trap import PenningTrap
-
-        trap = PenningTrap(
-            magnetic_field=7.0,
-            species=ca40,
-            d=5e-3,
-            omega_axial=TWO_PI * 0.5e6,
-        )
         masses = np.array([be9.mass_kg, ca40.mass_kg])
-        result = normal_modes(2, trap, masses=masses)
+        result = normal_modes(2, penning_trap, masses=masses)
 
         axial = result.modes["axial"]
         assert axial.freqs.shape == (2,)
         assert axial.freqs[0] > 0
         assert axial.freqs[1] > axial.freqs[0]
 
-    def test_penning_mixed_species_transverse(self, be9, ca40):
+    def test_penning_mixed_species_transverse(self, be9, ca40, penning_trap):
         """Mixed-species Penning transverse modes have per-ion frequencies."""
-        from tiqs.trap import PenningTrap
-
-        trap = PenningTrap(
-            magnetic_field=7.0,
-            species=ca40,
-            d=5e-3,
-            omega_axial=TWO_PI * 0.5e6,
-        )
         masses = np.array([be9.mass_kg, ca40.mass_kg])
-        result = normal_modes(2, trap, masses=masses)
+        result = normal_modes(2, penning_trap, masses=masses)
 
         cyc = result.modes["modified_cyclotron"]
         mag = result.modes["magnetron"]
@@ -375,36 +374,26 @@ class TestMixedSpeciesNormalModes:
         # Both magnetron frequencies are positive
         assert mag.freqs[0] > 0
 
-    def test_paul_radial_instability_raises(self, ca40):
-        """Very heavy species can be radially unstable: small Mathieu q
-        means weak RF confinement, and DC defocusing dominates."""
+    def test_paul_radial_instability_raises(self, ca40, mixed_trap):
+        """Very heavy species can be radially unstable."""
         from tiqs.constants import AMU
 
-        trap = PaulTrap(
-            v_rf=300.0,
-            omega_rf=TWO_PI * 30e6,
-            r0=0.5e-3,
-            omega_axial=TWO_PI * 1.0e6,
-            species=ca40,
-        )
-        # 1000 AMU is heavy enough that q ~ 0.007, beta_sq < 0
         masses = np.array([ca40.mass_kg, 1000 * AMU])
         with pytest.raises(ValueError, match="Radially unstable"):
-            normal_modes(2, trap, masses=masses)
+            normal_modes(2, mixed_trap, masses=masses)
 
     def test_penning_instability_raises(self, ca40):
         """Heavy species can be Penning-unstable at low B field."""
         from tiqs.trap import PenningTrap
 
-        trap = PenningTrap(
+        weak_trap = PenningTrap(
             magnetic_field=0.01,
             species=ca40,
             d=5e-3,
             omega_axial=TWO_PI * 0.5e6,
         )
-        masses = np.array([ca40.mass_kg, ca40.mass_kg])
         with pytest.raises(ValueError, match="Penning-unstable"):
-            normal_modes(2, trap, masses=masses)
+            normal_modes(2, weak_trap, masses=np.array([ca40.mass_kg] * 2))
 
     def test_three_ion_mixed_chain(self, be9, ca40, mixed_trap):
         """Three-ion mixed chain exercises the general N-body dynamical
@@ -426,24 +415,6 @@ class TestMixedSpeciesNormalModes:
 
 class TestMixedSpeciesLambDicke:
     """Lamb-Dicke parameters for mixed-species chains."""
-
-    @pytest.fixture
-    def be9(self):
-        return get_species("Be9")
-
-    @pytest.fixture
-    def ca40(self):
-        return get_species("Ca40")
-
-    @pytest.fixture
-    def mixed_trap(self, ca40):
-        return PaulTrap(
-            v_rf=300.0,
-            omega_rf=TWO_PI * 30e6,
-            r0=0.5e-3,
-            omega_axial=TWO_PI * 1.0e6,
-            species=ca40,
-        )
 
     def test_per_ion_mass_lighter_ion_larger_eta(self, be9, ca40, mixed_trap):
         """Be9 (lighter) gets a larger Lamb-Dicke parameter than Ca40

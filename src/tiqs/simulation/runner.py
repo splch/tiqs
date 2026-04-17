@@ -43,15 +43,11 @@ class SimulationRunner:
         """
         self.config = config
 
-        if isinstance(config.species, list):
-            if len(config.species) != config.n_ions:
-                raise ValueError(
-                    f"species list length {len(config.species)} "
-                    f"!= n_ions {config.n_ions}"
-                )
-            species_list = config.species
-        else:
-            species_list = [config.species] * config.n_ions
+        species_list = (
+            config.species
+            if isinstance(config.species, list)
+            else [config.species] * config.n_ions
+        )
 
         masses = np.array([s.mass_kg for s in species_list])
         self.modes = normal_modes(config.n_ions, config.trap, masses)
@@ -77,11 +73,7 @@ class SimulationRunner:
 
     @staticmethod
     def _species_k_eff(species) -> float:
-        """Derive effective wavevector from a species' laser properties.
-
-        400 nm fallback is a typical UV wavelength for species without
-        a defined laser transition (e.g. electrons with gradient coupling).
-        """
+        """Effective wavevector from a species' laser properties."""
         if isinstance(species, IonSpecies):
             if species.qubit_wavelength is not None:
                 return TWO_PI / species.qubit_wavelength

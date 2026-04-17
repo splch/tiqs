@@ -26,9 +26,6 @@ def lamb_dicke_parameters(
     $\omega_m$ is the mode frequency, and
     $k_{\mathrm{eff},i}$ is the effective wavevector for ion $i$.
 
-    For single-species chains (scalar ``species`` and ``k_eff``),
-    all ions share the same mass and wavevector.
-
     Parameters
     ----------
     modes : NormalModeResult
