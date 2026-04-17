@@ -263,6 +263,15 @@ def normal_modes(
         )
         a = -2 * omega_z**2 / trap.omega_rf**2
         beta_sq = a + q**2 / 2
+        large_q = np.where(q > 0.4)[0]
+        if len(large_q) > 0:
+            warnings.warn(
+                f"Mathieu q > 0.4 for ions at indices "
+                f"{large_q.tolist()} (q = {q[large_q].tolist()!r}). "
+                f"The pseudopotential approximation loses accuracy "
+                f"above q ~ 0.4.",
+                stacklevel=2,
+            )
         unstable = np.where(beta_sq <= 0)[0]
         if len(unstable) > 0:
             raise ValueError(
