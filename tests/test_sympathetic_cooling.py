@@ -382,3 +382,57 @@ class TestSimulationRunnerIntegration:
         rho0 = runner.sf.thermal_state(n_bar=[1.0])
         with pytest.raises(ValueError, match="coolant_indices"):
             runner.run_sympathetic_cooling(rho0, duration=1e-6)
+
+    def test_zero_rate_mode_skipped(self):
+        """A mode with rate=0 is skipped; only the other cools."""
+        hs = HilbertSpace(n_ions=1, n_modes=2, n_fock=15)
+        ops = OperatorFactory(hs)
+        sf = StateFactory(hs)
+        rho0 = sf.thermal_state(n_bar=[3.0, 3.0])
+        n1_before = qutip.expect(ops.number(1), rho0)
+        rates = np.array([TWO_PI * 1e5, 0.0])
+        targets = np.array([0.1, 0.1])
+        rho_cooled = apply_sympathetic_cooling(
+            rho0, ops, rates, targets, duration=50e-6
+        )
+        n0 = qutip.expect(ops.number(0), rho_cooled)
+        n1 = qutip.expect(ops.number(1), rho_cooled)
+        assert n0 < n1
+        assert n1 == pytest.approx(n1_before, rel=0.01)
+
+    def test_all_zero_rates_returns_unchanged(self):
+        """All-zero cooling rates return the state unchanged."""
+        hs = HilbertSpace(n_ions=1, n_modes=1, n_fock=10)
+        ops = OperatorFactory(hs)
+        sf = StateFactory(hs)
+        rho0 = sf.thermal_state(n_bar=[3.0])
+        rates = np.array([0.0])
+        targets = np.array([0.1])
+        rho_out = apply_sympathetic_cooling(
+            rho0, ops, rates, targets, duration=1e-6
+        )
+        assert (rho_out - rho0).norm() < 1e-12
+
+    def test_wrong_length_heating_rates_raises(self, ca40, ca40_trap):
+        """heating_rates with wrong length raises ValueError."""
+        with pytest.raises(ValueError, match="heating_rates length"):
+            SimulationConfig(
+                species=ca40,
+                trap=ca40_trap,
+                n_ions=1,
+                n_modes=2,
+                heating_rates=[100.0],
+            )
+
+    def test_wrong_length_nbar_per_mode_raises(self, ca40, ca40_trap):
+        """n_bar_initial_per_mode with wrong length raises."""
+        with pytest.raises(
+            ValueError, match="n_bar_initial_per_mode"
+        ):
+            SimulationConfig(
+                species=ca40,
+                trap=ca40_trap,
+                n_ions=1,
+                n_modes=2,
+                n_bar_initial_per_mode=[1.0],
+            )
