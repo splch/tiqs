@@ -131,20 +131,30 @@ def normal_modes(
     r"""Compute all normal modes of an N-ion crystal.
 
     Constructs the mass-weighted dynamical matrix
-    $D = M^{-1/2}\,V\,M^{-1/2}$ and diagonalizes it. Axial modes
-    are computed identically for all trap types; transverse modes
-    use trap-specific physics.
+    $D = M^{-1/2}\,V\,M^{-1/2}$ of the total potential (harmonic
+    trap + Coulomb) evaluated at the equilibrium positions, then
+    diagonalizes it to find mode frequencies and participation
+    vectors. For single-species chains this is equivalent to
+    the standard Hessian $H = V/m$. Axial modes are computed
+    identically for all trap types; transverse modes use
+    trap-specific physics (radial pseudopotential for Paul traps,
+    per-ion cyclotron/magnetron frequencies for Penning traps).
 
     Parameters
     ----------
     n_ions : int
         Number of ions.
     trap : PaulTrap or PenningTrap
-        Trap configuration.
+        Trap configuration. ``trap.species`` serves as the
+        reference species for electrode-derived quantities
+        (axial spring constant, Mathieu parameters).
     masses : np.ndarray or None, optional
         Per-ion masses in kg, shape ``(n_ions,)``. When ``None``
-        (default), all ions use ``trap.species.mass_kg``.
-        Ordering matches sorted equilibrium positions.
+        (default), all ions use ``trap.species.mass_kg``. For
+        mixed-species chains, pass an array with different masses
+        (e.g. ``np.array([m_Be, m_Ca])``). Ordering matches
+        the sorted equilibrium positions: ``masses[0]`` is the
+        leftmost ion, ``masses[-1]`` the rightmost.
 
     Returns
     -------

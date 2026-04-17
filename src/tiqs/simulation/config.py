@@ -17,8 +17,11 @@ class SimulationConfig:
     ----------
     species : Species or list[Species]
         Trapped particle species. A single ``Species`` applies to
-        all ions; a list provides per-ion species. ``trap.species``
-        is the reference species for electrode-derived quantities.
+        all ions. A list provides per-ion species for mixed-species
+        chains (e.g. ``[get_species("Be9"), get_species("Ca40")]``).
+        ``trap.species`` is the reference species for
+        electrode-derived quantities (spring constant, Mathieu
+        parameters).
     trap : Trap
         Trap configuration.
     n_ions : int
