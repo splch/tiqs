@@ -92,6 +92,8 @@ class SimulationConfig:
         if self.coolant_indices is not None:
             if not self.coolant_indices:
                 raise ValueError("coolant_indices must not be empty")
+            if len(set(self.coolant_indices)) != len(self.coolant_indices):
+                raise ValueError("coolant_indices contains duplicates")
             for idx in self.coolant_indices:
                 if idx < 0 or idx >= self.n_ions:
                     raise ValueError(

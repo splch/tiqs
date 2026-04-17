@@ -473,3 +473,13 @@ class TestSimulationRunnerIntegration:
                 n_ions=2,
                 coolant_indices=[5],
             )
+
+    def test_duplicate_coolant_indices_raises(self, ca40, ca40_trap):
+        """Duplicate coolant indices raises ValueError."""
+        with pytest.raises(ValueError, match="duplicates"):
+            SimulationConfig(
+                species=ca40,
+                trap=ca40_trap,
+                n_ions=2,
+                coolant_indices=[0, 0],
+            )
