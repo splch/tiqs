@@ -221,3 +221,183 @@ class TestLambDicke:
             0, 0
         ]
         assert eta_be > eta_yb
+
+
+class TestMixedSpeciesNormalModes:
+    """Mixed-species chain tests using the mass-weighted dynamical matrix."""
+
+    @pytest.fixture
+    def be9(self):
+        return get_species("Be9")
+
+    @pytest.fixture
+    def ca40(self):
+        return get_species("Ca40")
+
+    @pytest.fixture
+    def mixed_trap(self, ca40):
+        """Paul trap configured for Ca40 (reference species)."""
+        return PaulTrap(
+            v_rf=300.0,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1.0e6,
+            species=ca40,
+        )
+
+    def test_uniform_masses_matches_single_species(self, ca40, mixed_trap):
+        """Passing explicit uniform masses must reproduce the default."""
+        result_default = normal_modes(2, mixed_trap)
+        masses = np.array([ca40.mass_kg, ca40.mass_kg])
+        result_explicit = normal_modes(2, mixed_trap, masses=masses)
+
+        np.testing.assert_allclose(
+            result_explicit.modes["axial"].freqs,
+            result_default.modes["axial"].freqs,
+            rtol=1e-12,
+        )
+        np.testing.assert_allclose(
+            np.abs(result_explicit.modes["axial"].vectors),
+            np.abs(result_default.modes["axial"].vectors),
+            atol=1e-12,
+        )
+
+    def test_two_ion_analytical_frequencies(self, be9, ca40, mixed_trap):
+        r"""Verify against the analytical two-ion mixed-species formula.
+
+        For ions with masses $m_1$, $m_2$ sharing axial spring constant
+        $K = m_\mathrm{ref}\,\omega_{z,\mathrm{ref}}^2$, the mode
+        frequencies are (Home 2013, Sosnova 2021):
+
+        $$
+        \omega_\pm^2 = \omega_{z,1}^2 \,
+        \frac{1 + \mu \pm \sqrt{1 - \mu + \mu^2}}{\mu}
+        $$
+
+        where $\mu = m_2 / m_1$.
+        """
+        masses = np.array([be9.mass_kg, ca40.mass_kg])
+        result = normal_modes(2, mixed_trap, masses=masses)
+        axial_freqs = result.modes["axial"].freqs
+
+        K = ca40.mass_kg * mixed_trap.omega_axial**2
+        omega_z1 = np.sqrt(K / be9.mass_kg)
+        mu = ca40.mass_kg / be9.mass_kg
+
+        discriminant = np.sqrt(1 - mu + mu**2)
+        omega_ip_sq = omega_z1**2 * (1 + mu - discriminant) / mu
+        omega_op_sq = omega_z1**2 * (1 + mu + discriminant) / mu
+
+        assert axial_freqs[0] == pytest.approx(np.sqrt(omega_ip_sq), rel=1e-4)
+        assert axial_freqs[1] == pytest.approx(np.sqrt(omega_op_sq), rel=1e-4)
+
+    def test_eigenvectors_orthonormal_mixed(self, be9, ca40, mixed_trap):
+        """Mass-weighted eigenvectors satisfy e^T e = I."""
+        masses = np.array([be9.mass_kg, ca40.mass_kg])
+        result = normal_modes(2, mixed_trap, masses=masses)
+        V = result.modes["axial"].vectors
+        product = V.T @ V
+        np.testing.assert_allclose(product, np.eye(2), atol=1e-10)
+
+    def test_lighter_ion_larger_participation(self, be9, ca40, mixed_trap):
+        """In the out-of-phase mode, the lighter ion has the larger
+        mass-weighted eigenvector component."""
+        masses = np.array([be9.mass_kg, ca40.mass_kg])
+        result = normal_modes(2, mixed_trap, masses=masses)
+        v_op = result.modes["axial"].vectors[:, 1]
+        assert abs(v_op[0]) > abs(v_op[1])
+
+    def test_mixed_frequencies_differ_from_single_species(
+        self, be9, ca40, mixed_trap
+    ):
+        """Mixed-species mode frequencies must differ from single-species."""
+        result_single = normal_modes(2, mixed_trap)
+        masses = np.array([be9.mass_kg, ca40.mass_kg])
+        result_mixed = normal_modes(2, mixed_trap, masses=masses)
+
+        single_freqs = result_single.modes["axial"].freqs
+        mixed_freqs = result_mixed.modes["axial"].freqs
+        assert not np.allclose(single_freqs, mixed_freqs, rtol=1e-3)
+
+    def test_radial_modes_mixed_species(self, be9, ca40, mixed_trap):
+        """Per-ion Mathieu parameters produce radial modes that differ
+        from the single-species case."""
+        masses = np.array([be9.mass_kg, ca40.mass_kg])
+        result = normal_modes(2, mixed_trap, masses=masses)
+        radial = result.modes["radial_x"]
+
+        assert radial.freqs.shape == (2,)
+        assert radial.vectors.shape == (2, 2)
+        assert radial.freqs[0] > 0
+        assert radial.freqs[1] > radial.freqs[0]
+
+    def test_masses_wrong_length_raises(self, mixed_trap):
+        with pytest.raises(ValueError, match="masses must have shape"):
+            normal_modes(2, mixed_trap, masses=np.array([1.0, 2.0, 3.0]))
+
+    def test_penning_mixed_raises(self, be9, ca40):
+        from tiqs.trap import PenningTrap
+
+        trap = PenningTrap(
+            magnetic_field=7.0,
+            species=ca40,
+            d=5e-3,
+            omega_axial=TWO_PI * 0.5e6,
+        )
+        masses = np.array([be9.mass_kg, ca40.mass_kg])
+        with pytest.raises(NotImplementedError, match="Mixed-species"):
+            normal_modes(2, trap, masses=masses)
+
+
+class TestMixedSpeciesLambDicke:
+    """Lamb-Dicke parameters for mixed-species chains."""
+
+    @pytest.fixture
+    def be9(self):
+        return get_species("Be9")
+
+    @pytest.fixture
+    def ca40(self):
+        return get_species("Ca40")
+
+    @pytest.fixture
+    def mixed_trap(self, ca40):
+        return PaulTrap(
+            v_rf=300.0,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=TWO_PI * 1.0e6,
+            species=ca40,
+        )
+
+    def test_per_ion_mass_lighter_ion_larger_eta(self, be9, ca40, mixed_trap):
+        """Be9 (lighter) gets a larger Lamb-Dicke parameter than Ca40
+        on the out-of-phase mode, where the lighter ion dominates."""
+        masses = np.array([be9.mass_kg, ca40.mass_kg])
+        modes = normal_modes(2, mixed_trap, masses=masses)
+        k = TWO_PI / 400e-9
+        eta = lamb_dicke_parameters(modes, [be9, ca40], k, "axial")
+
+        assert eta.shape == (2, 2)
+        # On the out-of-phase (higher) mode, Be9 has larger eta
+        assert abs(eta[0, 1]) > abs(eta[1, 1])
+
+    def test_per_ion_k_eff(self, ca40, mixed_trap):
+        """Per-ion k_eff values produce different eta even for equal masses."""
+        modes = normal_modes(2, mixed_trap)
+        k1 = TWO_PI / 729e-9
+        k2 = TWO_PI / 400e-9
+        eta = lamb_dicke_parameters(modes, ca40, [k1, k2], "axial")
+
+        assert eta.shape == (2, 2)
+        assert not np.allclose(eta[0, :], eta[1, :])
+
+    def test_species_list_wrong_length_raises(self, be9, ca40, mixed_trap):
+        modes = normal_modes(2, mixed_trap)
+        with pytest.raises(ValueError, match="species list length"):
+            lamb_dicke_parameters(modes, [be9, ca40, be9], TWO_PI / 400e-9)
+
+    def test_k_eff_list_wrong_length_raises(self, ca40, mixed_trap):
+        modes = normal_modes(2, mixed_trap)
+        with pytest.raises(ValueError, match="k_eff list length"):
+            lamb_dicke_parameters(modes, ca40, [1.0, 2.0, 3.0])

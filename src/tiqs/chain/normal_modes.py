@@ -50,61 +50,92 @@ class NormalModeResult:
     modes: dict[str, ModeGroup]
 
 
-def _coulomb_hessian(
+def _dynamical_matrix(
     n_ions: int,
     pos: np.ndarray,
-    omega_diag: float,
-    mass_kg: float,
+    omega_diag: np.ndarray,
+    masses: np.ndarray,
     axial: bool,
 ) -> np.ndarray:
-    """Build the Coulomb-coupled Hessian matrix for one direction.
+    r"""Build the mass-weighted dynamical matrix for one direction.
 
-    H_ij = d^2 V / (m * dx_i dx_j)  where  C = e^2 / (4*pi*eps0*m).
+    Constructs $D = M^{-1/2}\,V\,M^{-1/2}$ where $V$ is the potential
+    energy Hessian and $M = \mathrm{diag}(m_1, \ldots, m_N)$.
+    Diagonalizing $D$ gives normal mode frequencies and mass-weighted
+    eigenvectors that satisfy $e^T e = I$.
 
     For axial modes (focusing Coulomb coupling):
-        Diagonal:     omega_z^2 + sum_{k!=i} 2C / |z_i - z_k|^3
-        Off-diagonal: -2C / |z_i - z_j|^3
+
+        $D_{ii} = \omega_{z,i}^2
+        + \sum_{k \neq i} \frac{2\,C}{m_i\,|z_i - z_k|^3}$
+
+        $D_{ij} = \frac{-2\,C}{\sqrt{m_i\,m_j}\,|z_i - z_j|^3}$
 
     For radial modes (defocusing Coulomb coupling):
-        Diagonal:     omega_r^2 - sum_{k!=i} C / |z_i - z_k|^3
-        Off-diagonal: +C / |z_i - z_j|^3
 
-    Note the sign difference: radial Coulomb coupling is
-    repulsive/defocusing.
+        $D_{ii} = \omega_{r,i}^2
+        - \sum_{k \neq i} \frac{C}{m_i\,|z_i - z_k|^3}$
+
+        $D_{ij} = \frac{+C}{\sqrt{m_i\,m_j}\,|z_i - z_j|^3}$
+
+    where $C = e^2/(4\pi\epsilon_0)$ is the mass-independent Coulomb
+    prefactor.
+
+    For single-species chains (all $m_i = m$, all
+    $\omega_{\mathrm{diag},i} = \omega$), this reduces to the standard
+    Hessian $H = V/m$.
+
+    Parameters
+    ----------
+    n_ions : int
+        Number of ions.
+    pos : np.ndarray
+        Equilibrium positions, shape (N,).
+    omega_diag : np.ndarray
+        Per-ion bare oscillation frequency, shape (N,).
+    masses : np.ndarray
+        Per-ion masses in kg, shape (N,).
+    axial : bool
+        ``True`` for axial modes, ``False`` for radial.
     """
-    C = _COULOMB_PREFACTOR / mass_kg
     sign = -1 if axial else +1
     factor = 2 if axial else 1
 
-    H = np.zeros((n_ions, n_ions))
+    D = np.zeros((n_ions, n_ions))
     for i in range(n_ions):
         coulomb_sum = 0.0
         for k in range(n_ions):
             if k != i:
                 d3 = abs(pos[i] - pos[k]) ** 3
-                coulomb_sum += factor * C / d3
-                # axial: -2C/d^3, radial: +C/d^3
-                H[i, k] = sign * factor * C / d3
+                coulomb_sum += factor * _COULOMB_PREFACTOR / (masses[i] * d3)
+                D[i, k] = (
+                    sign
+                    * factor
+                    * _COULOMB_PREFACTOR
+                    / (np.sqrt(masses[i] * masses[k]) * d3)
+                )
         if axial:
-            # omega_z^2 + sum 2C/|z_i - z_k|^3
-            H[i, i] = omega_diag**2 + coulomb_sum
+            D[i, i] = omega_diag[i] ** 2 + coulomb_sum
         else:
-            # omega_r^2 - sum C/|z_i - z_k|^3
-            H[i, i] = omega_diag**2 - coulomb_sum
+            D[i, i] = omega_diag[i] ** 2 - coulomb_sum
 
-    return H
+    return D
 
 
 def _diagonalize_to_modes(
-    n_ions: int, omega_single: float, H: np.ndarray | None
+    n_ions: int, omega_diag: np.ndarray, D: np.ndarray
 ) -> ModeGroup:
-    """Diagonalize a Hessian into a ModeGroup, or return single-ion result."""
+    """Diagonalize a dynamical matrix into a ModeGroup.
+
+    For a single ion, returns the bare frequency and trivial eigenvector
+    without diagonalization.
+    """
     if n_ions == 1:
         return ModeGroup(
-            freqs=np.array([omega_single]),
+            freqs=np.array([omega_diag[0]]),
             vectors=np.array([[1.0]]),
         )
-    eigenvalues, eigenvectors = np.linalg.eigh(H)
+    eigenvalues, eigenvectors = np.linalg.eigh(D)
     freqs = np.sqrt(np.maximum(eigenvalues, 0.0))
     return ModeGroup(freqs=freqs, vectors=eigenvectors)
 
@@ -132,14 +163,19 @@ def _penning_transverse_modes(
 
 
 def normal_modes(
-    n_ions: int, trap: PaulTrap | PenningTrap
+    n_ions: int,
+    trap: PaulTrap | PenningTrap,
+    masses: np.ndarray | None = None,
 ) -> NormalModeResult:
-    """Compute all normal modes of an N-ion crystal.
+    r"""Compute all normal modes of an N-ion crystal.
 
-    Constructs the Hessian matrix of the total potential (harmonic trap +
-    Coulomb) evaluated at the equilibrium positions, then diagonalizes it
-    to find mode frequencies and participation vectors. Axial modes are
-    computed identically for all trap types; transverse modes use
+    Constructs the mass-weighted dynamical matrix
+    $D = M^{-1/2}\,V\,M^{-1/2}$ of the total potential (harmonic
+    trap + Coulomb) evaluated at the equilibrium positions, then
+    diagonalizes it to find mode frequencies and participation
+    vectors. For single-species chains this is equivalent to
+    the standard Hessian approach. Axial modes are computed
+    identically for all trap types; transverse modes use
     trap-specific physics (radial pseudopotential for Paul traps,
     cyclotron/magnetron frequencies for Penning traps).
 
@@ -149,20 +185,52 @@ def normal_modes(
         Number of ions.
     trap : PaulTrap or PenningTrap
         Trap configuration.
+    masses : np.ndarray or None, optional
+        Per-ion masses in kg, shape ``(n_ions,)``. When ``None``
+        (default), all ions use ``trap.species.mass_kg``. For
+        mixed-species chains, pass an array with different masses
+        (e.g. ``np.array([m_Be, m_Ca])``).
 
     Returns
     -------
     NormalModeResult
         Equilibrium positions and mode groups keyed by physical name.
-    """
-    pos = equilibrium_positions(n_ions, trap)
-    m = trap.species.mass_kg
-    omega_z = trap.omega_axial
 
-    H_axial = _coulomb_hessian(n_ions, pos, omega_z, m, axial=True)
-    axial = _diagonalize_to_modes(n_ions, omega_z, H_axial)
+    Raises
+    ------
+    ValueError
+        If ``masses`` has the wrong shape or a species is radially
+        unstable.
+    NotImplementedError
+        If mixed masses are used with a ``PenningTrap``.
+    """
+    if masses is None:
+        masses = np.full(n_ions, trap.species.mass_kg)
+    else:
+        masses = np.asarray(masses, dtype=float)
+        if masses.shape != (n_ions,):
+            raise ValueError(
+                f"masses must have shape ({n_ions},), got {masses.shape}"
+            )
+
+    pos = equilibrium_positions(n_ions, trap)
+    is_mixed = not np.all(masses == masses[0])
+
+    # Axial spring constant K = m_ref * omega_z_ref^2 is mass-independent
+    # (K = kappa * e * U_dc / z_0^2 for DC confinement).
+    spring_constant = trap.species.mass_kg * trap.omega_axial**2
+    omega_z = np.sqrt(spring_constant / masses)
+
+    D_axial = _dynamical_matrix(n_ions, pos, omega_z, masses, axial=True)
+    axial = _diagonalize_to_modes(n_ions, omega_z, D_axial)
 
     if isinstance(trap, PenningTrap):
+        if is_mixed:
+            raise NotImplementedError(
+                "Mixed-species normal modes are not yet supported "
+                "for Penning traps. Penning transverse modes currently "
+                "use a single-particle approximation."
+            )
         modes = {
             "axial": axial,
             "modified_cyclotron": _penning_transverse_modes(
@@ -173,10 +241,26 @@ def normal_modes(
             ),
         }
     elif isinstance(trap, PaulTrap):
-        H_radial = _coulomb_hessian(
-            n_ions, pos, trap.omega_radial, m, axial=False
+        # Per-ion radial frequency from mass-dependent Mathieu parameters.
+        q = (
+            2
+            * ELECTRON_CHARGE
+            * trap.v_rf
+            / (masses * trap.omega_rf**2 * trap.r0**2)
         )
-        radial = _diagonalize_to_modes(n_ions, trap.omega_radial, H_radial)
+        a = -2 * omega_z**2 / trap.omega_rf**2
+        beta_sq = a + q**2 / 2
+        unstable = np.where(beta_sq <= 0)[0]
+        if len(unstable) > 0:
+            raise ValueError(
+                f"Radially unstable ions at indices {unstable.tolist()}: "
+                f"beta^2 <= 0. Lighter species may require different "
+                f"RF parameters."
+            )
+        omega_r = (trap.omega_rf / 2) * np.sqrt(beta_sq)
+
+        D_radial = _dynamical_matrix(n_ions, pos, omega_r, masses, axial=False)
+        radial = _diagonalize_to_modes(n_ions, omega_r, D_radial)
         modes = {
             "axial": axial,
             "radial_x": radial,
