@@ -1,45 +1,28 @@
-# TIQS Examples
+# Sympathetic Cooling of an Anharmonic Electron Mode
 
-Example scripts demonstrating TIQS applied to trapped-electron and hybrid electron-ion quantum systems, based on Osada et al. *Phys. Rev. Research* **4**, 033245 (2022).
+Simulates the Osada et al. (2022) electron-ion hybrid cooling scheme with full quantum dynamics, going beyond the harmonic rate-equation approximation.
 
-## Scripts
+An electron with Kerr anharmonicity is coupled to a laser-cooled Be9+ ion via a beam-splitter interaction. The anharmonicity detunes higher Fock-state transitions from the cooling drive, creating a population bottleneck that limits the achievable ground-state occupation.
 
-### `osada_reproduction.py` - Reproducing the Osada paper
+## What it computes
 
-Reproduces key results from Osada et al. (2022):
+1. **Coulomb couplings** at the Osada separation (10 um): optomechanical g0, beam-splitter g_bs, and Coulomb self-Kerr alpha_C
+2. **Cooling dynamics**: harmonic electron cools to nbar = 0.008 in 500 us; anharmonic (-30 kHz) only reaches 0.68
+3. **Cooling floor vs. anharmonicity**: from 1.4x the harmonic prediction at alpha = 5 kHz to 128x at 50 kHz
+4. **Fock-state populations**: |0> has 82% population but |2> through |9> each have 1-4%, revealing the bottleneck
 
-- **Table II** - Coulomb coupling parameters (g0, alpha_C) for the electron-ion hybrid system at various separations and frequencies
-- **Eq. 9** - Optomechanical Hamiltonian dynamics of the electron-ion system
-- **Sec. III.C** - Sympathetic cooling estimates showing ground-state cooling is feasible
-- **Sec. II.C.2** - Dispersive readout coupling zeta for the electron-cavity-transmon system
+## Why it matters
 
-### `penning_motional_qubit.py` - Motional-state qubit in a Penning trap
-
-Simulates a motional-state qubit (Fock states |0> and |1> of the axial mode) in an anharmonic electron Penning trap:
-
-- Anharmonic (Duffing/Kerr) energy spectrum vs. anharmonicity
-- Single-qubit pi-pulse gate fidelity and leakage to |2>
-- Gate fidelity vs. anharmonicity (the design tradeoff)
-- Decoherence from motional heating and voltage-noise dephasing
-- Dispersive readout via a coupled superconducting resonator
-
-### `anharmonic_cooling.py` - Cooling bottleneck from anharmonicity
-
-Simulates the full Lindblad master equation for an anharmonic electron mode sympathetically cooled via a Coulomb-coupled trapped ion. The Kerr anharmonicity detunes higher Fock-state transitions from the beam-splitter cooling drive, creating a population bottleneck that limits the achievable ground-state occupation.
-
-- Coulomb coupling parameters at the Osada separation (10 um)
-- Cooling dynamics: harmonic vs. anharmonic electron
-- Cooling floor vs. anharmonicity (up to 128x worse than harmonic)
-- Fock-state populations revealing the bottleneck mechanism
-
-This is the most computationally non-trivial example: the two-mode open quantum system (Kerr oscillator + damped harmonic mode + beam-splitter coupling + heating) has no closed-form steady state.
+The two-mode open quantum system (Kerr oscillator + damped harmonic mode + beam-splitter + heating) has no closed-form steady state. The harmonic rate equation predicts nbar = 0.006 regardless of anharmonicity. The full Lindblad simulation shows the actual cooling floor is 100x worse at alpha = 50 kHz.
 
 ## Running
 
 ```bash
-uv run python examples/osada_reproduction.py
-uv run python examples/penning_motional_qubit.py
 uv run python examples/anharmonic_cooling.py
 ```
 
-Each script runs in under 2 minutes and prints results to the terminal with `[check]` assertions verifying correctness.
+Runs in about 60 seconds.
+
+## Reference
+
+Osada, A. et al. "Feasibility study on ground-state cooling and single-phonon readout of trapped electrons using hybrid quantum systems." *Phys. Rev. Research* **4**, 033245 (2022).
