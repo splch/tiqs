@@ -8,7 +8,7 @@ Does the Kerr anharmonicity needed for a motional qubit prevent ground-state coo
 uv run python examples/anharmonic_cooling.py
 ```
 
-Takes about 60 seconds.
+Takes about 3 seconds.
 
 ## Output
 
