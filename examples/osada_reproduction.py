@@ -199,9 +199,8 @@ Gamma_s = 4 * g_max**2 / Gamma_i  # sympathetic cooling rate
 n_th = 1.0 / (np.exp(HBAR * omega_e / (BOLTZMANN * 0.3)) - 1)
 Gamma_th = TWO_PI * 10  # electron thermalization rate (conservative)
 
-# Eq. below Table II
-Gamma_th_prime = Gamma_th + Gamma_i
-n_bar_analytical = n_th * Gamma_th_prime / (Gamma_s + Gamma_th_prime)
+# Osada steady-state estimate: n_bar = n_th * Gamma_th / (Gamma_s + Gamma_th)
+n_bar_analytical = n_th * Gamma_th / (Gamma_s + Gamma_th)
 
 print("Analytical estimate:")
 print(f"  g_max/(2pi) = {g_max / TWO_PI / 1e3:.1f} kHz")

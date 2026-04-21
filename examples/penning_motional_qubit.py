@@ -275,6 +275,7 @@ g_er = TWO_PI * 100e3  # electron-resonator coupling
 Q_r = 1e7  # resonator quality factor (Tominaga 2025)
 kappa = omega_r / Q_r
 
+# alpha from section 4 (10 MHz); omega_01 from section 2
 Delta = omega_01 - omega_r
 
 # Dispersive shift for an anharmonic oscillator:

@@ -285,9 +285,8 @@ print("terms that are visible in the dressed spectrum above.")
 print("[check] All three mode shifts computed")
 
 
-# 4. Time evolution: energy exchange between modes
+# 4. Mode mixing in dressed eigenstates
 #
-# Start with one quantum in the axial mode and watch how the
 # The B2 coupling mixes the bare product states. The dressed
 # eigenstates are NOT exact product states -- each eigenstate
 # has admixtures from other modes. We quantify this by computing

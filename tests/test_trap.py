@@ -385,12 +385,47 @@ class TestMagneticBottle:
         s5 = bottle_trap.cyclotron_frequency_shift(n_axial=5)
         assert s5 > s0
 
+    def test_cyclotron_shift_per_axial_quantum(self, bottle_trap):
+        """Cyclotron shift per axial quantum matches formula."""
+        from tiqs.constants import HBAR
+
+        m = bottle_trap.species.mass_kg
+        omega_p = bottle_trap.omega_modified_cyclotron
+        omega_m = bottle_trap.omega_magnetron
+        B0 = bottle_trap.magnetic_field
+        expected = bottle_trap.b2 * HBAR * omega_p / (m * omega_m * B0)
+        actual = bottle_trap.cyclotron_frequency_shift(
+            n_axial=1, m_spin=0.0
+        ) - bottle_trap.cyclotron_frequency_shift(n_axial=0, m_spin=0.0)
+        assert actual == pytest.approx(expected, rel=1e-10)
+
     def test_magnetron_shift_opposite_sign(self, bottle_trap):
         """Magnetron axial term has opposite sign to cyclotron's.
         Test with m_spin=0 to isolate the axial contribution."""
         cyc = bottle_trap.cyclotron_frequency_shift(n_axial=1, m_spin=0.0)
         mag = bottle_trap.magnetron_frequency_shift(n_axial=1, m_spin=0.0)
         assert np.sign(cyc) != np.sign(mag)
+
+    def test_bottle_shift_scales_inversely_with_omega_z(self):
+        """delta is proportional to 1/omega_z."""
+        species = ElectronSpecies(magnetic_field=5.0)
+        trap1 = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.0e-3,
+            omega_axial=2 * np.pi * 200e6,
+            b2=1000,
+        )
+        trap2 = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.0e-3,
+            omega_axial=2 * np.pi * 100e6,
+            b2=1000,
+        )
+        assert trap2.bottle_shift / trap1.bottle_shift == pytest.approx(
+            2.0, rel=1e-10
+        )
 
     def test_axial_shift_includes_magnetron(self, bottle_trap):
         """Axial shift with magnetron quantum number differs from
