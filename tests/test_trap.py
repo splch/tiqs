@@ -367,15 +367,75 @@ class TestMagneticBottle:
             ELECTRON_G_FACTOR / 2, rel=1e-12
         )
 
-    def test_from_dc_voltage_preserves_b2(self):
-        """from_dc_voltage passes b2 through."""
+    def test_from_dc_voltage_preserves_b1_b2(self):
+        """from_dc_voltage passes b1 and b2 through."""
         species = ElectronSpecies(magnetic_field=5.0)
         trap = PenningTrap.from_dc_voltage(
             magnetic_field=5.0,
             species=species,
             d=3.0e-3,
             v_dc=100.0,
+            b1=50.0,
             b2=500.0,
         )
+        assert trap.b1 == 50.0
         assert trap.b2 == 500.0
         assert trap.bottle_shift > 0
+
+    def test_cyclotron_shift_proportional_to_n_axial(self, bottle_trap):
+        """Cyclotron shift increases with axial quantum number."""
+        s0 = bottle_trap.cyclotron_frequency_shift(n_axial=0)
+        s5 = bottle_trap.cyclotron_frequency_shift(n_axial=5)
+        assert s5 > s0
+
+    def test_magnetron_shift_opposite_sign(self, bottle_trap):
+        """Magnetron axial term has opposite sign to cyclotron's.
+        Test with m_spin=0 to isolate the axial contribution."""
+        cyc = bottle_trap.cyclotron_frequency_shift(n_axial=1, m_spin=0.0)
+        mag = bottle_trap.magnetron_frequency_shift(n_axial=1, m_spin=0.0)
+        assert np.sign(cyc) != np.sign(mag)
+
+    def test_axial_shift_includes_magnetron(self, bottle_trap):
+        """Axial shift with magnetron quantum number differs from
+        the shift without it."""
+        s_no_mag = bottle_trap.axial_frequency_shift(
+            n_cyclotron=0, m_spin=-0.5, n_magnetron=0
+        )
+        s_with_mag = bottle_trap.axial_frequency_shift(
+            n_cyclotron=0, m_spin=-0.5, n_magnetron=5
+        )
+        assert s_with_mag != pytest.approx(s_no_mag)
+
+    def test_b1_equilibrium_shift_positive(self, bottle_trap):
+        """B1 gradient displaces the equilibrium position."""
+        trap_b1 = PenningTrap(
+            magnetic_field=6.0,
+            species=ElectronSpecies(magnetic_field=6.0),
+            d=3.0e-3,
+            omega_axial=2 * np.pi * 200e6,
+            b1=100.0,
+            b2=9000.0,
+        )
+        assert trap_b1.b1_equilibrium_shift > 0
+
+    def test_b1_zero_gives_zero_shift(self):
+        """No B1 means no equilibrium displacement."""
+        trap = PenningTrap(
+            magnetic_field=5.0,
+            species=ElectronSpecies(magnetic_field=5.0),
+            d=3.0e-3,
+            omega_axial=2 * np.pi * 200e6,
+        )
+        assert trap.b1_equilibrium_shift == 0.0
+
+    def test_three_mode_shifts_zero_without_b2(self):
+        """All mode shifts are zero without a bottle."""
+        trap = PenningTrap(
+            magnetic_field=5.0,
+            species=ElectronSpecies(magnetic_field=5.0),
+            d=3.0e-3,
+            omega_axial=2 * np.pi * 200e6,
+        )
+        assert trap.cyclotron_frequency_shift(n_axial=5) == 0.0
+        assert trap.magnetron_frequency_shift(n_axial=5) == 0.0
+        assert trap.axial_frequency_shift(n_cyclotron=5) == 0.0

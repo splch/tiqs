@@ -9,7 +9,12 @@ from typing import Protocol
 
 import numpy as np
 
-from tiqs.constants import ELECTRON_CHARGE, ELECTRON_G_FACTOR, HBAR
+from tiqs.constants import (
+    BOHR_MAGNETON,
+    ELECTRON_CHARGE,
+    ELECTRON_G_FACTOR,
+    HBAR,
+)
 from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import IonSpecies
 from tiqs.species.protocol import Species
@@ -246,17 +251,23 @@ class PenningTrap:
         For a hyperbolic trap, $d^2 = (z_0^2 + r_0^2/2) / 2$.
     omega_axial : float
         Axial angular frequency in rad/s.
+    b1 : float
+        Linear magnetic field gradient in T/m. Shifts the
+        equilibrium position by an amount proportional to the
+        particle's magnetic moment. Does not produce first-order
+        frequency shifts but is an important error source.
     b2 : float
         Quadratic magnetic field gradient (magnetic bottle) in
         T/m^2. Couples the spin and cyclotron quantum numbers
-        to the axial frequency via the continuous Stern-Gerlach
-        effect.
+        to all three mode frequencies via the continuous
+        Stern-Gerlach effect.
     """
 
     magnetic_field: float
     species: IonSpecies | ElectronSpecies
     d: float
     omega_axial: float
+    b1: float = 0.0
     b2: float = 0.0
 
     def __post_init__(self):
@@ -277,6 +288,7 @@ class PenningTrap:
         species: IonSpecies | ElectronSpecies,
         d: float,
         v_dc: float,
+        b1: float = 0.0,
         b2: float = 0.0,
     ) -> PenningTrap:
         r"""Construct from DC trapping voltage instead of axial frequency.
@@ -295,6 +307,7 @@ class PenningTrap:
             species=species,
             d=d,
             omega_axial=omega_axial,
+            b1=b1,
             b2=b2,
         )
 
@@ -407,27 +420,188 @@ class PenningTrap:
         self,
         n_cyclotron: int = 0,
         m_spin: float = -0.5,
+        n_magnetron: int = 0,
     ) -> float:
-        r"""Axial frequency shift from the magnetic bottle for a
-        given cyclotron and spin state.
+        r"""Axial frequency shift from the magnetic bottle.
+
+        The B2 term shifts the axial frequency depending on the
+        cyclotron, magnetron, and spin quantum numbers:
 
         $$
-        \Delta\omega_z = \delta\bigl(n_c + \tfrac{1}{2}
+        \Delta\omega_z = \delta\bigl(
+          n_+ + \tfrac{1}{2}
+          + \tfrac{\omega_-}{\omega_+}(n_- + \tfrac{1}{2})
           + \tfrac{g}{2}\,m_s\bigr)
         $$
+
+        where $\delta = \hbar e B_2 / (m^2 \omega_z)$.
 
         Parameters
         ----------
         n_cyclotron : int
-            Cyclotron quantum number (0 = ground state).
+            Modified cyclotron quantum number (0 = ground state).
         m_spin : float
             Spin quantum number ($+1/2$ or $-1/2$).
+        n_magnetron : int
+            Magnetron quantum number (0 = ground state).
 
         Returns
         -------
         float
             Axial frequency shift in rad/s.
         """
+        if self.b2 == 0:
+            return 0.0
+        omega_p = self.omega_modified_cyclotron
+        omega_m = self.omega_magnetron
         return self.bottle_shift * (
-            n_cyclotron + 0.5 + (ELECTRON_G_FACTOR / 2) * m_spin
+            n_cyclotron
+            + 0.5
+            + (omega_m / omega_p) * (n_magnetron + 0.5)
+            + (ELECTRON_G_FACTOR / 2) * m_spin
+        )
+
+    def cyclotron_frequency_shift(
+        self,
+        n_axial: int = 0,
+        m_spin: float = -0.5,
+    ) -> float:
+        r"""Modified cyclotron frequency shift from the magnetic
+        bottle.
+
+        The B2 term shifts the modified cyclotron frequency
+        depending on the axial quantum number and spin:
+
+        $$
+        \Delta\omega_+ = \frac{B_2}{2 m \omega_- B_0}
+          \bigl[\hbar\omega_+(2 n_z + 1)\bigr]
+          + \frac{\hbar e\,g\,B_2}{4 m^2 \omega_+}\,m_s
+        $$
+
+        In the Penning trap frequency hierarchy
+        $\omega_- \ll \omega_z \ll \omega_+$, this simplifies to
+        a shift proportional to the axial quantum number.
+
+        Parameters
+        ----------
+        n_axial : int
+            Axial quantum number.
+        m_spin : float
+            Spin quantum number ($+1/2$ or $-1/2$).
+
+        Returns
+        -------
+        float
+            Modified cyclotron frequency shift in rad/s.
+        """
+        if self.b2 == 0:
+            return 0.0
+        m = self.species.mass_kg
+        omega_p = self.omega_modified_cyclotron
+        omega_m = self.omega_magnetron
+        B0 = self.magnetic_field
+        # Axial contribution
+        axial_term = (
+            self.b2
+            * HBAR
+            * omega_p
+            * (2 * n_axial + 1)
+            / (2 * m * omega_m * B0)
+        )
+        # Spin contribution
+        spin_term = (
+            HBAR
+            * ELECTRON_CHARGE
+            * ELECTRON_G_FACTOR
+            * self.b2
+            * m_spin
+            / (4 * m**2 * omega_p)
+        )
+        return axial_term + spin_term
+
+    def magnetron_frequency_shift(
+        self,
+        n_axial: int = 0,
+        m_spin: float = -0.5,
+    ) -> float:
+        r"""Magnetron frequency shift from the magnetic bottle.
+
+        The B2 term shifts the magnetron frequency depending on
+        the axial quantum number:
+
+        $$
+        \Delta\omega_- = -\frac{B_2}{2 m \omega_- B_0}
+          \bigl[\hbar\omega_-(2 n_z + 1)\bigr]
+          - \frac{\hbar e\,g\,B_2}{4 m^2 \omega_-}\,m_s
+        $$
+
+        Note the opposite sign compared to the cyclotron shift:
+        the magnetron mode softens where the cyclotron stiffens.
+
+        Parameters
+        ----------
+        n_axial : int
+            Axial quantum number.
+        m_spin : float
+            Spin quantum number ($+1/2$ or $-1/2$).
+
+        Returns
+        -------
+        float
+            Magnetron frequency shift in rad/s.
+        """
+        if self.b2 == 0:
+            return 0.0
+        m = self.species.mass_kg
+        omega_m = self.omega_magnetron
+        B0 = self.magnetic_field
+        # Axial contribution (opposite sign from cyclotron)
+        axial_term = (
+            -self.b2
+            * HBAR
+            * omega_m
+            * (2 * n_axial + 1)
+            / (2 * m * omega_m * B0)
+        )
+        # Spin contribution
+        spin_term = (
+            -HBAR
+            * ELECTRON_CHARGE
+            * ELECTRON_G_FACTOR
+            * self.b2
+            * m_spin
+            / (4 * m**2 * omega_m)
+        )
+        return axial_term + spin_term
+
+    @property
+    def b1_equilibrium_shift(self) -> float:
+        r"""Axial equilibrium position shift from B1 gradient.
+
+        A linear magnetic field gradient $B_1$ exerts a force
+        on the particle's magnetic moment, displacing the
+        equilibrium position by:
+
+        $$
+        \Delta z_0 = \frac{g\,\mu_B\,B_1}{2\,m\,\omega_z^2}
+        $$
+
+        for an electron with spin along the field. This shift
+        is important as an error source because it moves the
+        particle away from the electric field minimum, coupling
+        to electric anharmonicities.
+
+        Returns
+        -------
+        float
+            Equilibrium displacement in meters.
+        """
+        if self.b1 == 0:
+            return 0.0
+        m = self.species.mass_kg
+        return (
+            ELECTRON_G_FACTOR
+            * BOHR_MAGNETON
+            * self.b1
+            / (2 * m * self.omega_axial**2)
         )
