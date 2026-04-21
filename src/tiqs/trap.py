@@ -556,13 +556,7 @@ class PenningTrap:
         omega_m = self.omega_magnetron
         B0 = self.magnetic_field
         # Axial contribution (opposite sign from cyclotron)
-        axial_term = (
-            -self.b2
-            * HBAR
-            * omega_m
-            * (2 * n_axial + 1)
-            / (2 * m * omega_m * B0)
-        )
+        axial_term = -self.b2 * HBAR * (2 * n_axial + 1) / (2 * m * B0)
         # Spin contribution
         spin_term = (
             -HBAR

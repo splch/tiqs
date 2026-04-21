@@ -229,15 +229,12 @@ result = qutip.mesolve(
     plus,
     tlist,
     c_ops=c_ops,
+    e_ops=[proj_01, a.dag() * a],
     options={"nsteps": 50000},
 )
 
-coherence = np.array([
-    (proj_01 * result.states[i]).tr().real for i in range(len(tlist))
-])
-n_mean = np.array([
-    qutip.expect(a.dag() * a, result.states[i]) for i in range(len(tlist))
-])
+coherence = result.expect[0].real
+n_mean = result.expect[1].real
 
 # Estimate T2 from half-life of coherence
 half_idx = np.argmin(np.abs(coherence - coherence[0] / 2))
@@ -306,8 +303,7 @@ print(f"\nReadout regime: {regime} (chi/kappa = {abs(chi) / kappa:.1f})")
 
 assert t_readout < T2_est, "Readout must be faster than decoherence"
 print(
-    f"[check] Readout ({t_readout * 1e6:.1f} us)"
-    f" << T2 ({T2_est * 1e3:.0f} ms)"
+    f"[check] Readout ({t_readout * 1e6:.1f} us) << T2 ({T2_est * 1e3:.0f} ms)"
 )
 
 

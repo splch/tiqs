@@ -2,6 +2,7 @@
 import numpy as np
 import pytest
 
+from tiqs.constants import ELECTRON_G_FACTOR
 from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import get_species
 from tiqs.trap import PaulTrap, PenningTrap, Trap
@@ -338,8 +339,6 @@ class TestMagneticBottle:
         shift_up = bottle_trap.axial_frequency_shift(0, +0.5)
         shift_dn = bottle_trap.axial_frequency_shift(0, -0.5)
         spin_flip = shift_up - shift_dn
-        from tiqs.constants import ELECTRON_G_FACTOR
-
         assert spin_flip == pytest.approx(
             bottle_trap.bottle_shift * ELECTRON_G_FACTOR / 2,
             rel=1e-10,
@@ -355,8 +354,6 @@ class TestMagneticBottle:
 
     def test_g_over_2_from_shift_ratio(self, bottle_trap):
         """g/2 = spin_flip_shift / cyclotron_shift exactly."""
-        from tiqs.constants import ELECTRON_G_FACTOR
-
         spin_shift = bottle_trap.axial_frequency_shift(
             0, +0.5
         ) - bottle_trap.axial_frequency_shift(0, -0.5)
