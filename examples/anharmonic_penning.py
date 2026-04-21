@@ -24,7 +24,6 @@ Taniguchi, K., Noguchi, A. & Oka, T. arXiv:2502.17200 (2025).
 Van Dyck, R.S. Jr. et al. PRL 38, 310 (1977).
 """
 
-
 from tiqs import (
     ArbitraryPotential,
     DuffingPotential,
@@ -198,18 +197,15 @@ print()
 omega_01 = freqs_e[0]
 omega_12 = freqs_e[1]
 
-# Bottle shift per spin flip
+# Bottle shift per spin flip, computed from the trap's method
 delta_bottle = trap.bottle_shift
+shift_up = trap.axial_frequency_shift(n_cyclotron=0, m_spin=+0.5)
+shift_dn = trap.axial_frequency_shift(n_cyclotron=0, m_spin=-0.5)
 
 print("Qubit (0->1) transition with bottle shifts:")
 print(f"  Bare:           {omega_01 / TWO_PI / 1e6:.6f} MHz")
-print(
-    f"  Spin up (n_c=0):  {(omega_01 + delta_bottle) / TWO_PI / 1e6:.6f} MHz"
-)
-print(
-    f"  Spin dn (n_c=0):"
-    f"  {(omega_01 - 0.001 * delta_bottle) / TWO_PI / 1e6:.6f} MHz"
-)
+print(f"  Spin up (n_c=0):  {(omega_01 + shift_up) / TWO_PI / 1e6:.6f} MHz")
+print(f"  Spin dn (n_c=0):  {(omega_01 + shift_dn) / TWO_PI / 1e6:.6f} MHz")
 print()
 print("Leakage (1->2) transition with bottle shifts:")
 print(f"  Bare:           {omega_12 / TWO_PI / 1e6:.6f} MHz")

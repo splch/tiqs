@@ -87,14 +87,16 @@ heating_rate = 140.0
 nbar_init = 1.0
 
 
-def run_cooling(alpha, t_final, n_steps=40):
-    """Simulate beam-splitter cooling and return (times, nbar)."""
+def run_cooling(alpha, t_final, n_steps=40, return_state=False):
+    """Simulate beam-splitter cooling and return (times, nbar).
+
+    If return_state is True, also returns the final density matrix.
+    """
     pot = DuffingPotential(omega=omega_e, anharmonicity=alpha)
     hs = HilbertSpace(n_ions=0, n_modes=2, n_fock=[N_E, N_I])
     ops = OperatorFactory(hs)
     sf = StateFactory(hs)
 
-    # Interaction-picture H: Kerr correction + beam-splitter
     H_kerr = mode_hamiltonian(pot, ops, 0) - omega_e * ops.number(0)
     H_bs = g_eff * (
         ops.create(0) * ops.annihilate(1) + ops.annihilate(0) * ops.create(1)
@@ -108,14 +110,18 @@ def run_cooling(alpha, t_final, n_steps=40):
 
     rho0 = sf.thermal_state(n_bar=[nbar_init, 0.0])
     tlist = np.linspace(0, t_final, n_steps)
+    e_ops = [] if return_state else [ops.number(0)]
     result = qutip.mesolve(
         H,
         rho0,
         tlist,
         c_ops=c_ops,
-        e_ops=[ops.number(0)],
+        e_ops=e_ops,
         options={"nsteps": 10000},
     )
+    if return_state:
+        nbar = [qutip.expect(ops.number(0), s) for s in result.states]
+        return tlist, np.array(nbar), result.states[-1]
     return tlist, result.expect[0]
 
 
@@ -209,34 +215,9 @@ for n in range(min(4, len(freqs))):
     det = (freqs[n] - freqs[0]) / TWO_PI / 1e3
     print(f"  |{n}> -> |{n + 1}>:  {det:+.1f} kHz from resonance")
 
-# Extract steady-state Fock populations
-hs_s = HilbertSpace(n_ions=0, n_modes=2, n_fock=[N_E, N_I])
-ops_s = OperatorFactory(hs_s)
-sf_s = StateFactory(hs_s)
-
-H_s = (
-    mode_hamiltonian(pot_show, ops_s, 0)
-    - omega_e * ops_s.number(0)
-    + g_eff
-    * (
-        ops_s.create(0) * ops_s.annihilate(1)
-        + ops_s.annihilate(0) * ops_s.create(1)
-    )
-)
-c_ops_s = [
-    np.sqrt(gamma_ion) * ops_s.annihilate(1),
-    *motional_heating_ops(ops_s, 0, heating_rate),
-]
-rho0_s = sf_s.thermal_state(n_bar=[nbar_init, 0.0])
-result_s = qutip.mesolve(
-    H_s,
-    rho0_s,
-    [0, t_cool],
-    c_ops=c_ops_s,
-    options={"nsteps": 10000},
-)
-
-rho_e = result_s.states[-1].ptrace(0)
+# Reuse run_cooling to get the final density matrix
+_, _, rho_final = run_cooling(alpha_show, t_cool, n_steps=2, return_state=True)
+rho_e = rho_final.ptrace(0)
 pops = [rho_e[n, n].real for n in range(N_E)]
 
 print()
