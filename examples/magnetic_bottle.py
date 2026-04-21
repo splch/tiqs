@@ -139,13 +139,31 @@ header("2. Magnetic bottle frequency shifts")
 B2_fan = 9000.0  # T/m^2
 omega_z_fan = TWO_PI * 200e6
 
-delta_fan = bottle_shift(B2_fan, ELECTRON_MASS, omega_z_fan)
+# Use PenningTrap's built-in bottle_shift property
+trap_fan = PenningTrap(
+    magnetic_field=6.0,
+    species=ElectronSpecies(magnetic_field=6.0),
+    d=3.0e-3,
+    omega_axial=omega_z_fan,
+    b2=B2_fan,
+)
+
+delta_fan = trap_fan.bottle_shift
 delta_nu_fan = delta_fan / TWO_PI
 
 print("Fan et al. (2025) magnetic bottle parameters:")
 print(f"  B2 = {B2_fan:.0f} T/m^2")
 print(f"  omega_z/(2pi) = {omega_z_fan / TWO_PI / 1e6:.0f} MHz")
 print(f"  delta/(2pi) = {delta_nu_fan:.1f} Hz")
+print()
+
+# Axial frequency shifts for specific quantum states
+shift_spin_up = trap_fan.axial_frequency_shift(n_cyclotron=0, m_spin=+0.5)
+shift_spin_dn = trap_fan.axial_frequency_shift(n_cyclotron=0, m_spin=-0.5)
+print(f"  Spin up (m_s=+1/2):  {shift_spin_up / TWO_PI:+.2f} Hz")
+print(f"  Spin down (m_s=-1/2): {shift_spin_dn / TWO_PI:+.2f} Hz")
+spin_flip = (shift_spin_up - shift_spin_dn) / TWO_PI
+print(f"  Spin flip shift:      {spin_flip:.2f} Hz")
 print()
 
 # Fan et al. report delta/(2pi) = 23 Hz

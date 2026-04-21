@@ -280,3 +280,104 @@ class TestPenningTrapFactory:
             v_dc=trap.v_dc,
         )
         assert trap2.omega_axial == pytest.approx(trap.omega_axial, rel=1e-10)
+
+
+class TestMagneticBottle:
+    """Tests for the magnetic bottle (B2) feature on PenningTrap."""
+
+    @pytest.fixture
+    def bottle_trap(self):
+        """Electron Penning trap with a magnetic bottle."""
+        return PenningTrap(
+            magnetic_field=6.0,
+            species=ElectronSpecies(magnetic_field=6.0),
+            d=3.0e-3,
+            omega_axial=2 * np.pi * 200e6,
+            b2=9000.0,
+        )
+
+    def test_bottle_shift_fan_2025(self, bottle_trap):
+        """Fan et al. PRA 111 (2025): B2=9000 T/m^2 at 200 MHz
+        gives delta/(2pi) ~ 23 Hz."""
+        delta_nu = bottle_trap.bottle_shift / (2 * np.pi)
+        assert delta_nu == pytest.approx(23, rel=0.05)
+
+    def test_bottle_shift_zero_without_b2(self):
+        """No bottle (b2=0) gives zero shift."""
+        trap = PenningTrap(
+            magnetic_field=5.0,
+            species=ElectronSpecies(magnetic_field=5.0),
+            d=3.0e-3,
+            omega_axial=2 * np.pi * 200e6,
+        )
+        assert trap.bottle_shift == 0.0
+
+    def test_bottle_shift_scales_linearly_with_b2(self):
+        """Bottle shift is proportional to B2."""
+        species = ElectronSpecies(magnetic_field=5.0)
+        trap1 = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.0e-3,
+            omega_axial=2 * np.pi * 200e6,
+            b2=1000,
+        )
+        trap2 = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.0e-3,
+            omega_axial=2 * np.pi * 200e6,
+            b2=3000,
+        )
+        assert trap2.bottle_shift / trap1.bottle_shift == pytest.approx(
+            3.0, rel=1e-10
+        )
+
+    def test_axial_frequency_shift_spin_flip(self, bottle_trap):
+        """Spin flip shift = delta * g/2 ~ delta * 1.001."""
+        shift_up = bottle_trap.axial_frequency_shift(0, +0.5)
+        shift_dn = bottle_trap.axial_frequency_shift(0, -0.5)
+        spin_flip = shift_up - shift_dn
+        from tiqs.constants import ELECTRON_G_FACTOR
+
+        assert spin_flip == pytest.approx(
+            bottle_trap.bottle_shift * ELECTRON_G_FACTOR / 2,
+            rel=1e-10,
+        )
+
+    def test_axial_frequency_shift_cyclotron_jump(self, bottle_trap):
+        """Cyclotron jump shift = delta."""
+        shift_n0 = bottle_trap.axial_frequency_shift(0, -0.5)
+        shift_n1 = bottle_trap.axial_frequency_shift(1, -0.5)
+        assert shift_n1 - shift_n0 == pytest.approx(
+            bottle_trap.bottle_shift, rel=1e-10
+        )
+
+    def test_g_over_2_from_shift_ratio(self, bottle_trap):
+        """g/2 = spin_flip_shift / cyclotron_shift exactly."""
+        from tiqs.constants import ELECTRON_G_FACTOR
+
+        spin_shift = bottle_trap.axial_frequency_shift(
+            0, +0.5
+        ) - bottle_trap.axial_frequency_shift(0, -0.5)
+        cyc_shift = bottle_trap.axial_frequency_shift(
+            1, -0.5
+        ) - bottle_trap.axial_frequency_shift(0, -0.5)
+        assert spin_shift / cyc_shift == pytest.approx(
+            ELECTRON_G_FACTOR / 2, rel=1e-12
+        )
+
+    def test_from_dc_voltage_preserves_b2(self):
+        """from_dc_voltage passes b1 and b2 through."""
+        species = ElectronSpecies(magnetic_field=5.0)
+        trap = PenningTrap.from_dc_voltage(
+            magnetic_field=5.0,
+            species=species,
+            d=3.0e-3,
+            v_dc=100.0,
+            b1=10.0,
+            b2=500.0,
+        )
+        assert trap.b1 == 10.0
+        assert trap.b2 == 500.0
+        assert trap.bottle_shift > 0
