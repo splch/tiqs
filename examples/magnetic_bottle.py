@@ -29,42 +29,13 @@ Fan, X., Noguchi, A. & Taniguchi, K. PRA 111, 032610 (2025).
 
 from tiqs import ElectronSpecies, PenningTrap
 from tiqs.constants import (
-    ELECTRON_CHARGE,
     ELECTRON_G_FACTOR,
-    ELECTRON_MASS,
-    HBAR,
     TWO_PI,
 )
 
 
 def header(title):
     print(f"\n{'=' * 65}\n{title}\n{'=' * 65}")
-
-
-def bottle_shift(B2, mass, omega_z):
-    """Axial frequency shift parameter delta from the magnetic
-    bottle B2.
-
-    delta = hbar * e * B2 / (m^2 * omega_z)
-
-    The axial frequency becomes:
-      omega_z(n_c, m_s) = omega_z0 + delta*(n_c + 1/2 + g/2*m_s)
-
-    Parameters
-    ----------
-    B2 : float
-        Magnetic bottle coefficient in T/m^2.
-    mass : float
-        Particle mass in kg.
-    omega_z : float
-        Axial angular frequency in rad/s.
-
-    Returns
-    -------
-    float
-        Bottle shift parameter delta in rad/s.
-    """
-    return HBAR * ELECTRON_CHARGE * B2 / (mass**2 * omega_z)
 
 
 # 1. Validate Penning trap eigenfrequencies (Hanneke 2008)
@@ -185,12 +156,22 @@ print(f"{'(T/m^2)':>12}  {'(Hz)':>10}  {'(Hz)':>10}  {'(Hz)':>10}")
 print("-" * 48)
 
 for B2 in [100, 300, 1000, 3000, 9000]:
-    delta = bottle_shift(B2, ELECTRON_MASS, omega_z_fan)
-    delta_nu = delta / TWO_PI
-    # Spin flip: delta_nu * g/2 ~ delta_nu * 1.001
-    spin_shift = delta_nu * ELECTRON_G_FACTOR / 2
-    # Cyclotron jump: delta_nu * 1
-    cyc_shift = delta_nu
+    trap_b = PenningTrap(
+        magnetic_field=6.0,
+        species=ElectronSpecies(magnetic_field=6.0),
+        d=3.0e-3,
+        omega_axial=omega_z_fan,
+        b2=B2,
+    )
+    delta_nu = trap_b.bottle_shift / TWO_PI
+    spin_shift = (
+        trap_b.axial_frequency_shift(0, +0.5)
+        - trap_b.axial_frequency_shift(0, -0.5)
+    ) / TWO_PI
+    cyc_shift = (
+        trap_b.axial_frequency_shift(1, -0.5)
+        - trap_b.axial_frequency_shift(0, -0.5)
+    ) / TWO_PI
 
     print(
         f"{B2:>12.0f}"
@@ -218,16 +199,22 @@ print("[check] Shifts scale linearly with B2")
 
 header("4. The g-2 measurement principle")
 
-delta = bottle_shift(9000, ELECTRON_MASS, omega_z_fan)
-delta_nu = delta / TWO_PI
-spin_shift = delta_nu * ELECTRON_G_FACTOR / 2
-cyc_shift = delta_nu
+# Extract g/2 from the ratio of shift per spin flip to shift
+# per cyclotron quantum, computed via PenningTrap methods.
+spin_shift_4 = (
+    trap_fan.axial_frequency_shift(0, +0.5)
+    - trap_fan.axial_frequency_shift(0, -0.5)
+) / TWO_PI
+cyc_shift_4 = (
+    trap_fan.axial_frequency_shift(1, -0.5)
+    - trap_fan.axial_frequency_shift(0, -0.5)
+) / TWO_PI
 
-g_over_2_measured = spin_shift / cyc_shift
+g_over_2_measured = spin_shift_4 / cyc_shift_4
 
 print("From the axial frequency shifts:")
-print(f"  Spin flip shift  = {spin_shift:.4f} Hz")
-print(f"  Cyclotron shift  = {cyc_shift:.4f} Hz")
+print(f"  Spin flip shift  = {spin_shift_4:.4f} Hz")
+print(f"  Cyclotron shift  = {cyc_shift_4:.4f} Hz")
 print(f"  Ratio (= g/2)    = {g_over_2_measured:.10f}")
 print(f"  CODATA g/2       = {ELECTRON_G_FACTOR / 2:.10f}")
 print()
@@ -268,11 +255,11 @@ for name, B0, nu_z_hz, B2, ref_delta in experiments:
         species=e_species,
         d=3.0e-3,
         omega_axial=omega_z,
+        b2=B2,
     )
     assert trap.is_stable()
 
-    delta = bottle_shift(B2, ELECTRON_MASS, omega_z)
-    delta_nu = delta / TWO_PI
+    delta_nu = trap.bottle_shift / TWO_PI
 
     check = ""
     if ref_delta is not None:

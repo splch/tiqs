@@ -368,16 +368,14 @@ class TestMagneticBottle:
         )
 
     def test_from_dc_voltage_preserves_b2(self):
-        """from_dc_voltage passes b1 and b2 through."""
+        """from_dc_voltage passes b2 through."""
         species = ElectronSpecies(magnetic_field=5.0)
         trap = PenningTrap.from_dc_voltage(
             magnetic_field=5.0,
             species=species,
             d=3.0e-3,
             v_dc=100.0,
-            b1=10.0,
             b2=500.0,
         )
-        assert trap.b1 == 10.0
         assert trap.b2 == 500.0
         assert trap.bottle_shift > 0

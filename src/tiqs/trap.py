@@ -9,7 +9,7 @@ from typing import Protocol
 
 import numpy as np
 
-from tiqs.constants import ELECTRON_CHARGE
+from tiqs.constants import ELECTRON_CHARGE, ELECTRON_G_FACTOR, HBAR
 from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import IonSpecies
 from tiqs.species.protocol import Species
@@ -246,10 +246,6 @@ class PenningTrap:
         For a hyperbolic trap, $d^2 = (z_0^2 + r_0^2/2) / 2$.
     omega_axial : float
         Axial angular frequency in rad/s.
-    b1 : float
-        Linear magnetic field gradient in T/m. Creates a force
-        on the particle proportional to its magnetic moment,
-        coupling spin to axial position.
     b2 : float
         Quadratic magnetic field gradient (magnetic bottle) in
         T/m^2. Couples the spin and cyclotron quantum numbers
@@ -261,7 +257,6 @@ class PenningTrap:
     species: IonSpecies | ElectronSpecies
     d: float
     omega_axial: float
-    b1: float = 0.0
     b2: float = 0.0
 
     def __post_init__(self):
@@ -282,7 +277,6 @@ class PenningTrap:
         species: IonSpecies | ElectronSpecies,
         d: float,
         v_dc: float,
-        b1: float = 0.0,
         b2: float = 0.0,
     ) -> PenningTrap:
         r"""Construct from DC trapping voltage instead of axial frequency.
@@ -301,7 +295,6 @@ class PenningTrap:
             species=species,
             d=d,
             omega_axial=omega_axial,
-            b1=b1,
             b2=b2,
         )
 
@@ -407,8 +400,6 @@ class PenningTrap:
         """
         if self.b2 == 0:
             return 0.0
-        from tiqs.constants import HBAR
-
         m = self.species.mass_kg
         return HBAR * ELECTRON_CHARGE * self.b2 / (m**2 * self.omega_axial)
 
@@ -437,8 +428,6 @@ class PenningTrap:
         float
             Axial frequency shift in rad/s.
         """
-        from tiqs.constants import ELECTRON_G_FACTOR
-
         return self.bottle_shift * (
             n_cyclotron + 0.5 + (ELECTRON_G_FACTOR / 2) * m_spin
         )

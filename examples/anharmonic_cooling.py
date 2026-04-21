@@ -183,10 +183,10 @@ print(f"{'alpha/(2pi)':>12}  {'nbar_sim':>10}  {'ratio':>8}")
 print("-" * 36)
 
 for a_khz in [0, 5, 10, 20, 30, 50]:
-    alpha = -TWO_PI * a_khz * 1e3 if a_khz > 0 else 0.0
+    alpha = -TWO_PI * a_khz * 1e3
     _, nbar_t = run_cooling(alpha, t_cool, n_steps=30)
     nbar_sim = nbar_t[-1]
-    ratio = nbar_sim / nbar_rate_eq if nbar_rate_eq > 0 else 0
+    ratio = nbar_sim / nbar_rate_eq
 
     print(f"{a_khz:>9} kHz  {nbar_sim:>10.4f}  {ratio:>6.1f}x")
 
