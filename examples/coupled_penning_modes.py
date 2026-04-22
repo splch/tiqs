@@ -12,8 +12,8 @@ motional modes + electron spin, including:
   - Magnetic bottle: B2 couples z^2 to spin and radial modes
   - Optional electrostatic anharmonicity on the axial mode
 
-This is what Markus asked for: "the three modes are not as
-independent as the textbook says."
+In real Penning traps, "the three modes are not as independent
+as the textbook says" -- this script quantifies that.
 
 This computes:
   1. The coupled 3-mode + spin Hamiltonian
