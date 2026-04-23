@@ -11,6 +11,7 @@ from typing import Protocol
 import numpy as np
 import qutip
 
+from tiqs.constants import ELECTRON_CHARGE, HBAR
 from tiqs.hilbert_space.operators import OperatorFactory
 
 
@@ -78,6 +79,45 @@ class DuffingPotential:
 
     omega: float
     anharmonicity: float
+
+    @classmethod
+    def from_c4(
+        cls,
+        omega: float,
+        c4: float,
+        mass: float,
+    ) -> DuffingPotential:
+        r"""Construct from the electrostatic C4 coefficient.
+
+        In a Penning trap, the quartic potential term
+        $V = q\,C_4\,z^4$ produces a Duffing anharmonicity:
+
+        $$
+        \alpha = \frac{3\,e\,\hbar\,C_4}{m^2\,\omega_z^2}
+        $$
+
+        where $C_4$ has units of $\mathrm{V/m^4}$ (voltage times
+        the geometric coefficient in $1/\mathrm{m}^4$). For the
+        cylindrical convention $\phi = V_r\,C_4\,z^4$, pass
+        ``c4 = V_r * C4_geometric``.
+
+        Parameters
+        ----------
+        omega : float
+            Axial angular frequency in rad/s.
+        c4 : float
+            Quartic electrostatic coefficient in V/m^4.
+            Negative C4 produces negative (softening)
+            anharmonicity.
+        mass : float
+            Particle mass in kg.
+
+        Returns
+        -------
+        DuffingPotential
+        """
+        alpha = 3 * ELECTRON_CHARGE * HBAR * c4 / (mass**2 * omega**2)
+        return cls(omega=omega, anharmonicity=alpha)
 
     def single_mode_hamiltonian(self, n_fock: int) -> qutip.Qobj:
         r"""Return the Duffing Hamiltonian truncated to ``n_fock`` levels."""

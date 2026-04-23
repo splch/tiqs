@@ -38,15 +38,24 @@ species = ElectronSpecies(magnetic_field=B0)
 C2 = -221119.0  # 1/m^2 (compensated at tuning ratio 0.881119)
 
 
-# 1. Axial frequency vs. ring voltage (reproducing Markus's plot)
+# 1. Eigenfrequencies vs. ring voltage (benchmarking against
+#    Markus's analytical calculations)
 
-header("1. Axial frequency vs. ring voltage")
+header("1. Eigenfrequencies vs. ring voltage")
 
 print(f"C2 = {C2:.0f} 1/m^2")
+print(f"B0 = {B0 * 1e3:.0f} mT")
+from tiqs.constants import ELECTRON_CHARGE, ELECTRON_MASS
+
+nu_c_header = ELECTRON_CHARGE * B0 / (TWO_PI * ELECTRON_MASS)
+print(f"nu_c = {nu_c_header / 1e9:.4f} GHz")
 print("Voltage range: 0 - 32 V (precision source)")
 print()
-print(f"{'V_ring':>8}  {'nu_z':>12}")
-print("-" * 24)
+print(
+    f"{'V_ring':>8}  {'nu_z (MHz)':>12}  {'nu_+ (GHz)':>12}"
+    f"  {'nu_- (MHz)':>12}  {'Stable':>7}"
+)
+print("-" * 60)
 
 for V in [1, 2, 5, 10, 15, 20, 25, 30, 32]:
     trap_v = PenningTrap.from_ring_voltage(
@@ -58,9 +67,36 @@ for V in [1, 2, 5, 10, 15, 20, 25, 30, 32]:
         b2=2.5,
     )
     nz = trap_v.omega_axial / TWO_PI
-    print(f"{V:>5.0f} V    {nz / 1e6:>8.2f} MHz")
+    stable = trap_v.is_stable()
+    if stable:
+        np_ = trap_v.omega_modified_cyclotron / TWO_PI
+        nm_ = trap_v.omega_magnetron / TWO_PI
+        print(
+            f"{V:>5.0f} V"
+            f"  {nz / 1e6:>9.2f}"
+            f"  {np_ / 1e9:>9.6f}"
+            f"  {nm_ / 1e6:>9.4f}"
+            f"  {'yes':>7}"
+        )
+    else:
+        print(f"{V:>5.0f} V  {nz / 1e6:>9.2f}{'':>38}  {'NO':>7}")
 
-print("\n[check] nu_z vs V_r computed from C2 coefficient")
+# Verify Brown-Gabrielse at 10 V
+trap_10 = PenningTrap.from_ring_voltage(
+    magnetic_field=B0,
+    species=species,
+    c2=C2,
+    v_ring=-10.0,
+    b1=70e-6,
+    b2=2.5,
+)
+nc = trap_10.omega_cyclotron / TWO_PI
+np_ = trap_10.omega_modified_cyclotron / TWO_PI
+nm_ = trap_10.omega_magnetron / TWO_PI
+nz = trap_10.omega_axial / TWO_PI
+bg_err = abs(np_**2 + nm_**2 + nz**2 - nc**2) / nc**2
+print(f"\nBrown-Gabrielse invariant at 10 V: error = {bg_err:.1e}")
+print("[check] All eigenfrequencies computed across voltage range")
 
 
 # 2. Test trap eigenfrequencies at typical operating point

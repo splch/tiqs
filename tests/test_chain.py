@@ -161,6 +161,28 @@ class TestNormalModes:
             assert group.freqs.shape == (2,)
             assert group.vectors.shape == (2, 2)
 
+    def test_paul_trap_positive_energy(self, ca40_trap):
+        """All Paul trap modes have positive energy."""
+        result = normal_modes(2, ca40_trap)
+        for group in result.modes.values():
+            assert group.negative_energy is False
+
+
+class TestPenningModeEnergy:
+    """Magnetron mode has negative energy in a Penning trap."""
+
+    def test_magnetron_negative_energy(self, penning_trap):
+        result = normal_modes(1, penning_trap)
+        assert result.modes["magnetron"].negative_energy is True
+
+    def test_axial_positive_energy(self, penning_trap):
+        result = normal_modes(1, penning_trap)
+        assert result.modes["axial"].negative_energy is False
+
+    def test_cyclotron_positive_energy(self, penning_trap):
+        result = normal_modes(1, penning_trap)
+        assert result.modes["modified_cyclotron"].negative_energy is False
+
 
 class TestLambDicke:
     def test_single_ion_single_mode(self, ca40_trap):

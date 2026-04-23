@@ -12,7 +12,6 @@ import numpy as np
 from tiqs.constants import (
     BOHR_MAGNETON,
     ELECTRON_CHARGE,
-    ELECTRON_G_FACTOR,
     HBAR,
 )
 from tiqs.species.electron import ElectronSpecies
@@ -524,7 +523,7 @@ class PenningTrap:
             n_cyclotron
             + 0.5
             + (omega_m / omega_p) * (n_magnetron + 0.5)
-            + (ELECTRON_G_FACTOR / 2) * m_spin
+            + (self.species.g_factor / 2) * m_spin
         )
 
     def cyclotron_frequency_shift(
@@ -578,7 +577,7 @@ class PenningTrap:
         spin_term = (
             HBAR
             * ELECTRON_CHARGE
-            * ELECTRON_G_FACTOR
+            * self.species.g_factor
             * self.b2
             * m_spin
             / (4 * m**2 * omega_p)
@@ -627,7 +626,7 @@ class PenningTrap:
         spin_term = (
             -HBAR
             * ELECTRON_CHARGE
-            * ELECTRON_G_FACTOR
+            * self.species.g_factor
             * self.b2
             * m_spin
             / (4 * m**2 * omega_m)
@@ -646,7 +645,7 @@ class PenningTrap:
         \Delta z_0 = \frac{g\,\mu_B\,B_1}{2\,m\,\omega_z^2}
         $$
 
-        for an electron with spin along the field. This shift
+        for a particle with spin along the field. This shift
         is important as an error source because it moves the
         particle away from the electric field minimum, coupling
         to electric anharmonicities.
@@ -660,7 +659,7 @@ class PenningTrap:
             return 0.0
         m = self.species.mass_kg
         return (
-            ELECTRON_G_FACTOR
+            self.species.g_factor
             * BOHR_MAGNETON
             * self.b1
             / (2 * m * self.omega_axial**2)

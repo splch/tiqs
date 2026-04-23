@@ -6,9 +6,10 @@ from typing import Protocol
 class Species(Protocol):
     """Structural interface for any trapped particle species.
 
-    Any class exposing ``mass_kg`` and ``qubit_frequency_hz`` as
-    read-only properties satisfies this protocol. ``IonSpecies`` and
-    ``ElectronSpecies`` conform without modification.
+    Any class exposing ``mass_kg``, ``qubit_frequency_hz``, and
+    ``g_factor`` as read-only properties satisfies this protocol.
+    ``IonSpecies`` and ``ElectronSpecies`` conform without
+    modification.
     """
 
     @property
@@ -16,3 +17,6 @@ class Species(Protocol):
 
     @property
     def qubit_frequency_hz(self) -> float: ...
+
+    @property
+    def g_factor(self) -> float: ...

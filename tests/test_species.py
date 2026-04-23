@@ -7,6 +7,7 @@ from tiqs.constants import TWO_PI
 from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import get_species
 from tiqs.species.protocol import Species
+from tiqs.species.proton import ProtonSpecies
 from tiqs.species.transitions import Transition
 
 
@@ -114,6 +115,12 @@ class TestIonSpecies:
             assert s.mass_amu > 0
             assert s.cooling_transition is not None
 
+    def test_ion_g_factor_default_zero(self):
+        """Standard QC ion species have g_factor = 0 (not used
+        for bottle shifts in Paul traps)."""
+        for name in ["Yb171", "Ca40", "Ca43", "Ba137", "Be9", "Sr88"]:
+            assert get_species(name).g_factor == 0.0
+
 
 class TestElectronSpecies:
     def test_mass(self):
@@ -132,6 +139,11 @@ class TestElectronSpecies:
             5.0, rel=1e-6
         )
 
+    def test_g_factor(self):
+        """Electron g-factor is CODATA 2018 value."""
+        e = ElectronSpecies(magnetic_field=0.1)
+        assert e.g_factor == pytest.approx(2.00231930436256, rel=1e-14)
+
 
 class TestSpeciesProtocol:
     """Smoke tests for protocol attribute access.
@@ -143,20 +155,34 @@ class TestSpeciesProtocol:
         """IonSpecies structurally satisfies Species protocol."""
         ion = get_species("Yb171")
 
-        def accepts_species(s: Species) -> tuple[float, float]:
-            return s.mass_kg, s.qubit_frequency_hz
+        def accepts_species(s: Species) -> tuple[float, float, float]:
+            return s.mass_kg, s.qubit_frequency_hz, s.g_factor
 
-        mass, freq = accepts_species(ion)
+        mass, freq, g = accepts_species(ion)
         assert mass > 0
         assert freq > 0
+        assert g >= 0
 
     def test_electron_satisfies_protocol(self):
         """ElectronSpecies structurally satisfies Species protocol."""
         electron = ElectronSpecies(magnetic_field=0.1)
 
-        def accepts_species(s: Species) -> tuple[float, float]:
-            return s.mass_kg, s.qubit_frequency_hz
+        def accepts_species(s: Species) -> tuple[float, float, float]:
+            return s.mass_kg, s.qubit_frequency_hz, s.g_factor
 
-        mass, freq = accepts_species(electron)
+        mass, freq, g = accepts_species(electron)
         assert mass > 0
         assert freq > 0
+        assert g > 0
+
+    def test_proton_satisfies_protocol(self):
+        """ProtonSpecies structurally satisfies Species protocol."""
+        proton = ProtonSpecies(magnetic_field=1.945)
+
+        def accepts_species(s: Species) -> tuple[float, float, float]:
+            return s.mass_kg, s.qubit_frequency_hz, s.g_factor
+
+        mass, freq, g = accepts_species(proton)
+        assert mass > 0
+        assert freq > 0
+        assert g > 0

@@ -7,6 +7,9 @@ from tiqs.constants import (
     ELECTRON_MASS,
     EPSILON_0,
     HBAR,
+    NUCLEAR_MAGNETON,
+    PROTON_G_FACTOR,
+    PROTON_MASS,
     SPEED_OF_LIGHT,
 )
 
@@ -45,3 +48,15 @@ def test_bohr_magneton_value():
 
 def test_electron_g_factor_value():
     assert abs(ELECTRON_G_FACTOR - 2.00231930436256) < 1e-14
+
+
+def test_proton_mass_value():
+    assert abs(PROTON_MASS - 1.67262192369e-27) < 1e-36
+
+
+def test_proton_g_factor_value():
+    assert abs(PROTON_G_FACTOR - 5.5856946893) < 1e-10
+
+
+def test_nuclear_magneton_value():
+    assert abs(NUCLEAR_MAGNETON - 5.0507837461e-27) < 1e-36

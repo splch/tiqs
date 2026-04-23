@@ -29,6 +29,15 @@ BOHR_MAGNETON = 9.2740100783e-24
 ELECTRON_G_FACTOR = 2.00231930436256
 """Electron spin g-factor."""
 
+PROTON_MASS = 1.67262192369e-27
+"""Proton mass in kg."""
+
+PROTON_G_FACTOR = 5.5856946893
+"""Proton spin g-factor."""
+
+NUCLEAR_MAGNETON = 5.0507837461e-27
+"""Nuclear magneton in J/T."""
+
 TWO_PI = 2.0 * np.pi
 """2 pi, used for angular frequency conversions."""
 

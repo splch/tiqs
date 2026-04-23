@@ -38,6 +38,7 @@ from tiqs.simulation.runner import SimulationRunner
 from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import IonSpecies, get_species
 from tiqs.species.protocol import Species
+from tiqs.species.proton import ProtonSpecies
 from tiqs.trap import PaulTrap, PenningTrap, Trap
 
 __all__ = [
@@ -53,6 +54,7 @@ __all__ = [
     "PaulTrap",
     "PenningTrap",
     "Potential",
+    "ProtonSpecies",
     "SimulationConfig",
     "SimulationRunner",
     "Species",

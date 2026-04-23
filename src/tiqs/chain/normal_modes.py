@@ -23,10 +23,17 @@ class ModeGroup:
         Mode eigenvectors, shape (N, N). Column m is the
         participation vector for mode m:
         vectors[i, m] = b_{i,m}.
+    negative_energy : bool
+        If ``True``, the mode energy is inverted
+        (``H = -omega * n``). This is the case for the
+        magnetron mode in a Penning trap, where excitation
+        *lowers* the total energy. Default ``False`` (normal
+        positive-energy oscillator).
     """
 
     freqs: np.ndarray
     vectors: np.ndarray
+    negative_energy: bool = False
 
 
 @dataclass
@@ -188,12 +195,14 @@ def normal_modes(
             )
         omega_plus = omega_c_half + np.sqrt(disc)
         omega_minus = omega_c_half - np.sqrt(disc)
+        magnetron = _penning_transverse_modes(n_ions, omega_minus)
+        magnetron.negative_energy = True
         modes = {
             "axial": axial,
             "modified_cyclotron": _penning_transverse_modes(
                 n_ions, omega_plus
             ),
-            "magnetron": _penning_transverse_modes(n_ions, omega_minus),
+            "magnetron": magnetron,
         }
     elif isinstance(trap, PaulTrap):
         # Per-ion radial frequency from mass-dependent Mathieu parameters.

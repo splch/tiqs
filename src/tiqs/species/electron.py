@@ -29,6 +29,11 @@ class ElectronSpecies:
         return ELECTRON_MASS
 
     @property
+    def g_factor(self) -> float:
+        """Electron spin g-factor (CODATA 2018)."""
+        return ELECTRON_G_FACTOR
+
+    @property
     def qubit_frequency_hz(self) -> float:
         r"""Zeeman splitting frequency in Hz.
 

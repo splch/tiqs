@@ -127,6 +127,58 @@ class TestDuffingPotential:
         )
 
 
+class TestFromC4:
+    """DuffingPotential.from_c4 converts electrostatic C4 to Duffing."""
+
+    def test_formula(self):
+        """alpha = 3 * e * hbar * C4 / (m^2 * omega^2)."""
+        from tiqs.constants import ELECTRON_CHARGE, ELECTRON_MASS, HBAR
+
+        omega = 2 * np.pi * 200e6
+        c4 = -1e12  # V/m^4
+        pot = DuffingPotential.from_c4(omega, c4, ELECTRON_MASS)
+        expected = (
+            3 * ELECTRON_CHARGE * HBAR * c4
+            / (ELECTRON_MASS**2 * omega**2)
+        )
+        assert pot.anharmonicity == pytest.approx(expected, rel=1e-10)
+        assert pot.omega == omega
+
+    def test_negative_c4_gives_negative_alpha(self):
+        """Negative C4 produces softening (transmon-like)."""
+        from tiqs.constants import ELECTRON_MASS
+
+        pot = DuffingPotential.from_c4(
+            2 * np.pi * 200e6, -1e12, ELECTRON_MASS
+        )
+        assert pot.anharmonicity < 0
+
+    def test_zero_c4_gives_harmonic(self):
+        """C4 = 0 produces zero anharmonicity."""
+        from tiqs.constants import ELECTRON_MASS
+
+        pot = DuffingPotential.from_c4(
+            2 * np.pi * 200e6, 0.0, ELECTRON_MASS
+        )
+        assert pot.anharmonicity == 0.0
+
+    def test_spectrum_matches_direct(self):
+        """from_c4 spectrum matches hand-constructed DuffingPotential."""
+        from tiqs.constants import ELECTRON_CHARGE, ELECTRON_MASS, HBAR
+
+        omega = 2 * np.pi * 200e6
+        c4 = -1e12
+        alpha = (
+            3 * ELECTRON_CHARGE * HBAR * c4
+            / (ELECTRON_MASS**2 * omega**2)
+        )
+        pot_c4 = DuffingPotential.from_c4(omega, c4, ELECTRON_MASS)
+        pot_direct = DuffingPotential(omega=omega, anharmonicity=alpha)
+        freqs_c4 = transition_frequencies(pot_c4, n_fock=10)
+        freqs_direct = transition_frequencies(pot_direct, n_fock=10)
+        np.testing.assert_allclose(freqs_c4, freqs_direct, rtol=1e-12)
+
+
 class TestArbitraryPotential:
     def test_harmonic_v_matches_harmonic_potential(self):
         """ArbitraryPotential with V(q) = omega/4 * q^2 should

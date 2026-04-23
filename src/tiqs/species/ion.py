@@ -56,6 +56,17 @@ class IonSpecies:
         """Atomic mass in kilograms."""
         return self.mass_amu * AMU
 
+    @property
+    def g_factor(self) -> float:
+        """Lande g-factor for magnetic bottle coupling.
+
+        Returns 0 for standard trapped-ion QC species where the
+        bottle coupling is not relevant. Override by subclassing
+        for ions in Penning traps where the nuclear or electronic
+        g-factor matters.
+        """
+        return 0.0
+
     def doppler_limit_temperature(self) -> float:
         r"""Doppler cooling limit temperature in Kelvin.
 

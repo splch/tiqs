@@ -17,33 +17,15 @@ Parameters:
   Spin-flip shift: 170 mHz on 630 kHz axial
 """
 
-from dataclasses import dataclass
-
-from tiqs import ElectronSpecies, PenningTrap
-from tiqs.constants import AMU, TWO_PI
+from tiqs import ElectronSpecies, PenningTrap, ProtonSpecies
+from tiqs.constants import TWO_PI
 
 
 def header(title):
     print(f"\n{'=' * 65}\n{title}\n{'=' * 65}")
 
 
-# Proton as a trapped particle (satisfies the Species protocol)
-@dataclass(frozen=True)
-class ProtonSpecies:
-    """Bare proton for Penning trap experiments."""
-
-    @property
-    def mass_kg(self) -> float:
-        return 1.007276466621 * AMU
-
-    @property
-    def qubit_frequency_hz(self) -> float:
-        # Proton spin-flip (Larmor) frequency depends on B field
-        # Not used by PenningTrap, but required by protocol
-        return 0.0
-
-
-proton = ProtonSpecies()
+proton = ProtonSpecies(magnetic_field=1.945)
 B0 = 1.945  # Tesla (BASE experiment)
 
 
@@ -120,16 +102,13 @@ delta = trap.bottle_shift / TWO_PI
 print(f"Bottle shift delta/(2pi) = {delta:.4f} Hz")
 print()
 
-# For protons, the spin magnetic moment is:
-#   mu_p = g_p * mu_N * m_s  where mu_N = e*hbar/(2*m_p)
-# The spin-dependent axial shift is:
-#   delta_nu_spin = delta * g_p / 2
-# where g_p = 5.5857 (proton g-factor)
-g_proton = 5.585694713
+# With species.g_factor = 5.5857, axial_frequency_shift now
+# uses the proton g-factor directly (no manual override needed).
+shift_up = trap.axial_frequency_shift(n_cyclotron=0, m_spin=+0.5)
+shift_dn = trap.axial_frequency_shift(n_cyclotron=0, m_spin=-0.5)
+spin_shift = (shift_up - shift_dn) / TWO_PI
+g_proton = proton.g_factor
 
-# The TIQS axial_frequency_shift uses ELECTRON_G_FACTOR internally,
-# which is wrong for protons. Compute the proton shift manually.
-spin_shift = delta * g_proton / 2
 print(f"Proton g-factor: {g_proton:.6f}")
 print(f"Spin-flip shift: {spin_shift * 1e3:.1f} mHz")
 print(f"On nu_z = {nu_z / 1e3:.0f} kHz")
@@ -150,13 +129,16 @@ print("[check] Spin-flip shift is O(170 mHz), correct order")
 
 header("4. Single cyclotron quantum shift")
 
-print(f"Cyclotron quantum shift = delta/(2pi) = {delta * 1e3:.1f} mHz")
+cyc_shift = (
+    trap.axial_frequency_shift(1, -0.5) - trap.axial_frequency_shift(0, -0.5)
+) / TWO_PI
+print(f"Cyclotron quantum shift = {cyc_shift * 1e3:.1f} mHz")
 print(f"Spin-flip shift = {spin_shift * 1e3:.1f} mHz")
-print(f"Ratio (spin/cyc) = g_p/2 = {spin_shift / delta:.4f}")
+print(f"Ratio (spin/cyc) = g_p/2 = {spin_shift / cyc_shift:.4f}")
 print()
 
 # The ratio of spin to cyclotron shift gives g_p/2 directly
-assert abs(spin_shift / delta - g_proton / 2) < 1e-6
+assert abs(spin_shift / cyc_shift - g_proton / 2) < 1e-6
 print("[check] g_p/2 extracted from shift ratio")
 
 
