@@ -379,6 +379,24 @@ class TestMagneticBottle:
         assert trap.b2 == 500.0
         assert trap.bottle_shift > 0
 
+    def test_from_ring_voltage(self):
+        """from_ring_voltage with C2 gives correct axial frequency."""
+        species = ElectronSpecies(magnetic_field=0.16)
+        c2 = -221119.0  # 1/m^2
+        trap = PenningTrap.from_ring_voltage(
+            magnetic_field=0.16,
+            species=species,
+            c2=c2,
+            v_ring=-10.0,  # negative V with negative C2
+        )
+        # nu_z = 1/(2pi) * sqrt(2*|C2|*e*|V_r|/m)
+        expected = np.sqrt(
+            2 * abs(c2) * 1.602176634e-19 * 10.0 / species.mass_kg
+        ) / (2 * np.pi)
+        assert trap.omega_axial / (2 * np.pi) == pytest.approx(
+            expected, rel=1e-6
+        )
+
     def test_cyclotron_shift_proportional_to_n_axial(self, bottle_trap):
         """Cyclotron shift increases with axial quantum number."""
         s0 = bottle_trap.cyclotron_frequency_shift(n_axial=0)

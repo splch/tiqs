@@ -311,6 +311,72 @@ class PenningTrap:
             b2=b2,
         )
 
+    @classmethod
+    def from_ring_voltage(
+        cls,
+        magnetic_field: float,
+        species: IonSpecies | ElectronSpecies,
+        c2: float,
+        v_ring: float,
+        d: float = 1.0,
+        b1: float = 0.0,
+        b2: float = 0.0,
+    ) -> PenningTrap:
+        r"""Construct from ring voltage and C2 coefficient.
+
+        For cylindrical Penning traps, the axial frequency is:
+
+        $$
+        \omega_z = \sqrt{\frac{2\,C_2\,e\,V_r}{m}}
+        $$
+
+        where $C_2$ has units of $1/\mathrm{m}^2$ and $V_r$ is
+        the ring electrode voltage. This convention (used in
+        cylindrical trap experiments) lets the ring voltage be
+        input directly, unlike the hyperbolic-trap convention
+        where geometry is folded into a dimensionless coefficient.
+
+        Parameters
+        ----------
+        magnetic_field : float
+            Axial magnetic field in Tesla.
+        species : IonSpecies or ElectronSpecies
+            The trapped particle.
+        c2 : float
+            Electrostatic coefficient in 1/m^2.
+        v_ring : float
+            Ring electrode voltage in volts.
+        d : float
+            Characteristic trap dimension in meters.
+        b1 : float
+            Linear magnetic gradient in T/m.
+        b2 : float
+            Magnetic bottle coefficient in T/m^2.
+
+        Returns
+        -------
+        PenningTrap
+        """
+        if v_ring < 0 and c2 < 0:
+            # Both negative: product is positive, omega_z is real
+            pass
+        elif v_ring * c2 < 0:
+            raise ValueError(
+                f"v_ring * c2 must be non-negative for real omega_z, "
+                f"got v_ring={v_ring}, c2={c2}"
+            )
+        omega_axial = np.sqrt(
+            2 * abs(c2) * ELECTRON_CHARGE * abs(v_ring) / species.mass_kg
+        )
+        return cls(
+            magnetic_field=magnetic_field,
+            species=species,
+            d=d,
+            omega_axial=omega_axial,
+            b1=b1,
+            b2=b2,
+        )
+
     @property
     def v_dc(self) -> float:
         r"""DC trapping voltage in volts, derived from omega_axial.

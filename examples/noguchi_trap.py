@@ -33,15 +33,45 @@ B0 = 0.160  # 160 mT permanent magnet
 species = ElectronSpecies(magnetic_field=B0)
 
 
-# 1. Test trap eigenfrequencies
+# Test trap electrostatic coefficient (cylindrical convention)
+# nu_z = 1/(2pi) * sqrt(2 * C2 * q * V_r / m)
+C2 = -221119.0  # 1/m^2 (compensated at tuning ratio 0.881119)
 
-header("1. Test trap (B0 = 160 mT, nu_z = 200 MHz)")
 
-trap = PenningTrap(
+# 1. Axial frequency vs. ring voltage (reproducing Markus's plot)
+
+header("1. Axial frequency vs. ring voltage")
+
+print(f"C2 = {C2:.0f} 1/m^2")
+print("Voltage range: 0 - 32 V (precision source)")
+print()
+print(f"{'V_ring':>8}  {'nu_z':>12}")
+print("-" * 24)
+
+for V in [1, 2, 5, 10, 15, 20, 25, 30, 32]:
+    trap_v = PenningTrap.from_ring_voltage(
+        magnetic_field=B0,
+        species=species,
+        c2=C2,
+        v_ring=-V,  # negative V with negative C2
+        b1=70e-6,
+        b2=2.5,
+    )
+    nz = trap_v.omega_axial / TWO_PI
+    print(f"{V:>5.0f} V    {nz / 1e6:>8.2f} MHz")
+
+print("\n[check] nu_z vs V_r computed from C2 coefficient")
+
+
+# 2. Test trap eigenfrequencies at typical operating point
+
+header("2. Test trap (B0 = 160 mT, V_r ~ 10 V)")
+
+trap = PenningTrap.from_ring_voltage(
     magnetic_field=B0,
     species=species,
-    d=3.5e-3,
-    omega_axial=TWO_PI * 200e6,
+    c2=C2,
+    v_ring=-10.0,
     b1=70e-6,
     b2=2.5,
 )
@@ -54,8 +84,8 @@ nu_z = trap.omega_axial / TWO_PI
 
 print(f"nu_c  (free cyclotron)     = {nu_c / 1e9:.4f} GHz")
 print(f"nu_+  (modified cyclotron) = {nu_p / 1e9:.4f} GHz")
-print(f"nu_z  (axial)              = {nu_z / 1e6:.1f} MHz")
-print(f"nu_-  (magnetron)          = {nu_m / 1e6:.2f} MHz")
+print(f"nu_z  (axial)              = {nu_z / 1e6:.2f} MHz")
+print(f"nu_-  (magnetron)          = {nu_m / 1e6:.4f} MHz")
 print()
 print(f"nu_c - nu_+ = {(nu_c - nu_p) / 1e6:.2f} MHz")
 
@@ -66,9 +96,9 @@ print(f"Brown-Gabrielse: error = {abs(lhs - rhs) / rhs:.1e}")
 print("\n[check] Test trap eigenfrequencies computed")
 
 
-# 2. Low-field effects: nu_c - nu_+ vs B
+# 3. Low-field effects: nu_c - nu_+ vs B
 
-header("2. Modified cyclotron correction vs. B field")
+header("3. Modified cyclotron correction vs. B field")
 
 print("At low fields, nu_c - nu_+ cannot be neglected:")
 print()
@@ -100,7 +130,7 @@ for B_mt in [100, 160, 300, 1000, 5000]:
 print("\n[check] Low-field correction grows as B decreases")
 
 
-# 3. Qubit trap stability scan
+# 4. Qubit trap stability scan
 
 header("3. Qubit trap stability (B0 = 160 mT)")
 
