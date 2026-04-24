@@ -105,71 +105,61 @@ for eps in epsilons:
         f"  {'yes':>7}"
     )
 
-print()
-print("nu_+ barely changes (< 0.1% shift at epsilon = 0.9)")
-print("nu_- drops dramatically, reaching zero at |epsilon| = 1")
-print("[check] Brown-Gabrielse holds at every epsilon")
-
-
-# 3. Qubit spectral gap vs. epsilon
-#
-# The 205 kHz anharmonicity gives a gap between the 0-1 and
-# 1-2 transitions that protects the qubit. But as epsilon
-# changes the mode frequencies, how does the gap hold up?
-#
-# For a Duffing oscillator the gap equals alpha regardless
-# of the base frequency. But in the real trap, the mode
-# structure changes: the two radial modes are no longer
-# degenerate, and the anharmonicity may couple differently
-# to each mode.
-
-header("3. Qubit spectral gap vs. ellipticity")
-
-print("The Duffing anharmonicity alpha is a property of the")
-print("potential, not the mode frequency. The spectral gap")
-print("(omega_01 - omega_12 = alpha) is preserved at every")
-print("epsilon -- but the BASE frequency it sits on shifts.\n")
-
-print(
-    f"{'epsilon':>8}  {'nu_+ (MHz)':>12}  {'gap_+ (kHz)':>12}"
-    f"  {'nu_- (MHz)':>12}  {'gap_- (kHz)':>12}"
-)
-print("-" * 65)
-
-alpha = -TWO_PI * alpha_radial  # negative = softening
-
-for eps in [0.0, 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 0.99]:
-    trap = PenningTrap(
+nu_p_0 = trap_circular.omega_modified_cyclotron / TWO_PI
+nu_p_9 = (
+    PenningTrap(
         magnetic_field=B0,
         species=species,
         d=3.5e-3,
         omega_axial=TWO_PI * nu_z,
-        epsilon=eps,
-    )
-    wp = trap.omega_modified_cyclotron / TWO_PI
-    wm = trap.omega_magnetron / TWO_PI
-
-    pot_p = DuffingPotential(omega=TWO_PI * wp, anharmonicity=alpha)
-    pot_m = DuffingPotential(omega=TWO_PI * wm, anharmonicity=alpha)
-
-    freqs_p = transition_frequencies(pot_p, n_fock=10)
-    freqs_m = transition_frequencies(pot_m, n_fock=10)
-
-    gap_p = (freqs_p[0] - freqs_p[1]) / TWO_PI / 1e3
-    gap_m = (freqs_m[0] - freqs_m[1]) / TWO_PI / 1e3
-
-    print(
-        f"{eps:>8.2f}"
-        f"  {wp / 1e6:>9.2f}"
-        f"  {gap_p:>9.1f}"
-        f"  {wm / 1e6:>9.2f}"
-        f"  {gap_m:>9.1f}"
-    )
+        epsilon=0.9,
+    ).omega_modified_cyclotron
+    / TWO_PI
+)
+shift_pct = abs(nu_p_9 - nu_p_0) / nu_p_0 * 100
 
 print()
-print("The Duffing gap is exactly alpha = 205 kHz at every epsilon")
-print("because H = omega*n + (alpha/2)*n*(n-1) is diagonal in n.")
-print("The gap protects the qubit regardless of ellipticity.")
+print(f"nu_+ shifts by {shift_pct:.1f}% at epsilon = 0.9 (less than nu_-,")
+print("  but not negligible at this near-instability operating point)")
+print("nu_- drops dramatically, reaching zero at |epsilon| = 1")
+print("[check] Brown-Gabrielse holds at every epsilon")
+
+
+# 3. Limitation: Duffing gap vs. epsilon
+#
+# The Duffing model H = omega*n + (alpha/2)*n*(n-1) has a gap
+# that is exactly alpha, independent of omega. This is a
+# mathematical identity: the gap is a property of alpha, not
+# the base frequency. So sweeping epsilon (which changes omega)
+# while holding alpha fixed will always show gap = alpha.
+#
+# The real question is whether alpha ITSELF changes with epsilon.
+# In the elliptical trap, the orbit shape parameters (xi, eta)
+# change with epsilon, so the particle samples the anharmonic
+# potential differently. The epsilon-dependent corrections to
+# alpha come from the Verdu (2011) frequency-shifts matrix
+# M_ijk, which is not yet implemented in TIQS.
+
+header("3. Limitation: Duffing gap is epsilon-independent")
+
+print("IMPORTANT: The Duffing model assumes a FIXED anharmonicity")
+print("alpha. In this model, the spectral gap (omega_01 - omega_12)")
+print("is exactly alpha regardless of the base frequency, so it")
+print("trivially does not depend on epsilon.\n")
+print("The physically meaningful question is whether the EFFECTIVE")
+print("alpha changes with epsilon due to the orbit shape sampling")
+print("the anharmonic potential differently. This requires the")
+print("Verdu (2011) frequency-shifts matrix M_ijk, which accounts")
+print("for how the elliptical orbit parameters (xi, eta) modify")
+print("the anharmonic coupling. That is not yet implemented.\n")
+print("For reference, the Duffing gap at the v3p4 parameters:")
+
+alpha = -TWO_PI * alpha_radial  # negative = softening
+pot = DuffingPotential(omega=TWO_PI * nu_p_0, anharmonicity=alpha)
+freqs = transition_frequencies(pot, n_fock=10)
+gap = (freqs[0] - freqs[1]) / TWO_PI / 1e3
+print(f"  alpha = {alpha_radial / 1e3:.0f} kHz -> gap = {gap:.0f} kHz")
+print("  (identical at all epsilon by construction)")
 
 
 # 4. The real question: where does the qubit become unusable?
@@ -223,24 +213,26 @@ print("[check] 205 kHz anharmonicity is safe across all epsilon")
 
 header("5. Summary")
 
-print("At B = 140 mT, nu_z = 2623 MHz (v3p4 targets):\n")
+print("What this script establishes (Kretzschmar eigenfrequencies):\n")
 print("- The circular-case (epsilon = 0) frequencies match the")
 print("  v3p4 targets to < 0.01 MHz.")
 print("- Brown-Gabrielse holds exactly at all epsilon values.")
-print("- nu_+ changes < 0.1% even at epsilon = 0.9.")
-print("- nu_- drops with epsilon (goes to zero at |epsilon| = 1).")
-print("- The 205 kHz Duffing gap is preserved at all epsilon")
-print("  because it is a property of the potential, not the")
-print("  mode frequency.")
-print("- alpha / nu_- stays below 0.003 even at epsilon = 0.99,")
-print("  so no resonance between the anharmonic splitting and")
-print("  the magnetron frequency.")
+print(f"- nu_+ shifts by {shift_pct:.1f}% at epsilon = 0.9.")
+print("- nu_- drops from 1328 MHz to 167 MHz at epsilon = 0.99.")
+print("- alpha / nu_- stays below 0.003 (no resonance risk).")
 print()
-print("The Duffing model captures the diagonal (number-conserving)")
-print("part of the anharmonicity. The full treatment requires the")
-print("Verdu frequency-shifts matrix M_ijk which includes the")
-print("off-diagonal (epsilon-dependent) corrections from the")
-print("elliptical orbit shape parameters.")
+print("What this script does NOT establish:\n")
+print("- Whether the effective anharmonicity alpha changes with")
+print("  epsilon. The orbit shape parameters (xi, eta) modify how")
+print("  the particle samples the anharmonic potential, which can")
+print("  shift alpha. This requires the Verdu M_ijk frequency-")
+print("  shifts matrix (not yet implemented).")
+print("- Mode-coupling corrections from off-diagonal M_ijk elements")
+print("  that mix axial and radial motion in the elliptical case.")
+print()
+print("To compute epsilon from the chip trap geometry, provide")
+print("the C_200, C_020, C_002 coefficients from the electrostatic")
+print("simulation: epsilon = (C_200 - C_020) / C_002.")
 
 
 header("All checks passed.")
