@@ -15,6 +15,12 @@ from tiqs.cooling.sympathetic import (
     sympathetic_doppler_nbar,
     sympathetic_sideband_nbar,
 )
+from tiqs.elliptical import (
+    AnharmonicCoeffs,
+    OrbitParams,
+    frequency_shifts_matrix,
+    orbit_params,
+)
 from tiqs.hilbert_space.builder import HilbertSpace
 from tiqs.hilbert_space.operators import OperatorFactory
 from tiqs.hilbert_space.states import StateFactory
@@ -42,6 +48,7 @@ from tiqs.species.proton import ProtonSpecies
 from tiqs.trap import PaulTrap, PenningTrap, Trap
 
 __all__ = [
+    "AnharmonicCoeffs",
     "ArbitraryPotential",
     "DuffingPotential",
     "ElectronSpecies",
@@ -51,6 +58,7 @@ __all__ = [
     "ModeGroup",
     "NormalModeResult",
     "OperatorFactory",
+    "OrbitParams",
     "PaulTrap",
     "PenningTrap",
     "Potential",
@@ -67,11 +75,13 @@ __all__ = [
     "coulomb_self_kerr",
     "energy_levels",
     "equilibrium_positions",
+    "frequency_shifts_matrix",
     "get_species",
     "lamb_dicke_parameters",
     "mode_hamiltonian",
     "normal_modes",
     "optomechanical_coupling",
+    "orbit_params",
     "sympathetic_cooling_rate",
     "sympathetic_doppler_nbar",
     "sympathetic_sideband_nbar",
