@@ -288,6 +288,14 @@ def frequency_shifts_matrix(
         a31 = nu_m / (2 * vm2_half) * (term1 + term2)
 
         # a_{1,3} (B.11)
+        # NOTE: Verdu (2011) Eq. B.11 has a likely typographic
+        # error -- the outer prefactor is 1/(2*(nu_m^2-nu_z^2/2))
+        # but dimensional analysis requires nu_p in the numerator
+        # to give dimensions 1/Hz^2 (matching a_{1,1} and a_{3,1}).
+        # Without nu_p the ratio a_{3,1}/a_{1,3} = nu_m instead
+        # of the universal nu_m/nu_p seen in all other sub-matrices
+        # (B.2-B.7, B.13-B.15). The corrected prefactor is
+        # nu_p/(2*(nu_m^2-nu_z^2/2)).
         term1_13 = (
             xp**2
             * (
@@ -309,19 +317,27 @@ def frequency_shifts_matrix(
             )
             / ((4 * vm2 - vp2) * (2 * vm2 - vz2))
         )
-        a13 = 1 / (2 * vm2_half) * (term1_13 + term2_13)
+        a13 = nu_p / (2 * vm2_half) * (term1_13 + term2_13)
 
         # a_{3,3} (B.12)
-        a33_inner = nu_m * xm**2 * gp * nu_p * (2 * vm2 - vz2)
-        a33_numer = a33_inner * (
+        # NOTE: Verdu (2011) Eq. B.12 has a typographic error --
+        # the factor (2*nu_m^2 - nu_z^2) appears in the numerator
+        # but dimensional analysis requires it in the denominator
+        # cubed. The corrected form has dimensions 1/Hz^2 (matching
+        # all other a_{i,j} and b_{i,j} elements), whereas the
+        # published form gives Hz^6. See also the analogous b_{3,3}
+        # (Eq. B.15), which has (nu_z^2 - 2*nu_m^2)^3 in the
+        # denominator.
+        tvm = 2 * vm2 - vz2
+        a33_poly = (
             2
             * em**2
             * vp2
             * (2 * xp**2 * (vz2 - 2 * vm2) + 3 * xm**2 * gp * (4 * vm2 - vp2))
-            + 8 * em * nu_m * xm * ep * nu_p * xp * (2 * vm2 - vz2)
-            + xm**2 * ep**2 * (8 * vm2 - 3 * vp2) * (2 * vm2 - vz2)
+            + 8 * em * nu_m * xm * ep * nu_p * xp * tvm
+            + xm**2 * ep**2 * (8 * vm2 - 3 * vp2) * tvm
         )
-        a33 = a33_numer / (vp2 - 4 * vm2)
+        a33 = nu_m * xm**2 * gp * nu_p * a33_poly / ((vp2 - 4 * vm2) * tvm**3)
 
         M[0, 0] += pf * a11
         M[0, 2] += pf * a13
