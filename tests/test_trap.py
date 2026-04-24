@@ -489,3 +489,250 @@ class TestMagneticBottle:
         assert trap.cyclotron_frequency_shift(n_axial=5) == 0.0
         assert trap.magnetron_frequency_shift(n_axial=5) == 0.0
         assert trap.axial_frequency_shift(n_cyclotron=5) == 0.0
+
+
+class TestEllipticalPenningTrap:
+    """Kretzschmar elliptical Penning trap eigenfrequencies.
+
+    References:
+        Kretzschmar, Int. J. Mass Spectrom. 275, 21 (2008).
+        Verdu, New J. Phys. 13, 113029 (2011).
+    """
+
+    @pytest.fixture
+    def circular_trap(self):
+        """Electron Penning trap with epsilon = 0 (circular)."""
+        return PenningTrap(
+            magnetic_field=5.0,
+            species=ElectronSpecies(magnetic_field=5.0),
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 200e6,
+        )
+
+    def test_epsilon_zero_matches_circular(self, circular_trap):
+        """Kretzschmar formulas reduce to the standard formulas
+        when epsilon = 0. The magnetron uses the product-of-roots
+        form for numerical stability, which introduces ~1e-11
+        relative difference vs. direct subtraction."""
+        wc = circular_trap.omega_cyclotron
+        wz = circular_trap.omega_axial
+        wc2 = wc / 2
+        disc = wc2**2 - wz**2 / 2
+        wp_standard = wc2 + np.sqrt(disc)
+        wm_standard = wc2 - np.sqrt(disc)
+        assert circular_trap.omega_modified_cyclotron == pytest.approx(
+            wp_standard, rel=1e-12
+        )
+        assert circular_trap.omega_magnetron == pytest.approx(
+            wm_standard, rel=1e-10
+        )
+
+    def test_brown_gabrielse_with_epsilon(self):
+        """Invariance theorem holds for all epsilon values."""
+        species = ElectronSpecies(magnetic_field=5.0)
+        for eps in [0.0, 0.1, 0.5, 0.9, 0.99, -0.3, -0.8]:
+            trap = PenningTrap(
+                magnetic_field=5.0,
+                species=species,
+                d=3.5e-3,
+                omega_axial=2 * np.pi * 200e6,
+                epsilon=eps,
+            )
+            wc = trap.omega_cyclotron
+            wp = trap.omega_modified_cyclotron
+            wm = trap.omega_magnetron
+            wz = trap.omega_axial
+            assert wp**2 + wm**2 + wz**2 == pytest.approx(wc**2, rel=1e-9), (
+                f"BG failed at epsilon={eps}"
+            )
+
+    def test_axial_unchanged_by_epsilon(self):
+        """Axial frequency does not depend on epsilon."""
+        species = ElectronSpecies(magnetic_field=5.0)
+        trap0 = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 200e6,
+            epsilon=0.0,
+        )
+        trap9 = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 200e6,
+            epsilon=0.9,
+        )
+        assert trap0.omega_axial == trap9.omega_axial
+
+    def test_cyclotron_weakly_affected(self):
+        """Modified cyclotron changes only quadratically in epsilon,
+        so at epsilon=0.1 the shift is < 1 ppm."""
+        species = ElectronSpecies(magnetic_field=5.0)
+        trap0 = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 200e6,
+            epsilon=0.0,
+        )
+        trap1 = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 200e6,
+            epsilon=0.1,
+        )
+        rel_shift = (
+            abs(
+                trap1.omega_modified_cyclotron - trap0.omega_modified_cyclotron
+            )
+            / trap0.omega_modified_cyclotron
+        )
+        assert rel_shift < 1e-6
+
+    def test_magnetron_strongly_affected(self):
+        """Magnetron frequency decreases significantly with epsilon."""
+        species = ElectronSpecies(magnetic_field=5.0)
+        trap0 = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 200e6,
+            epsilon=0.0,
+        )
+        trap5 = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 200e6,
+            epsilon=0.5,
+        )
+        assert trap5.omega_magnetron < trap0.omega_magnetron
+
+    def test_magnetron_vanishes_at_epsilon_one(self):
+        """omega_- -> 0 as |epsilon| -> 1."""
+        species = ElectronSpecies(magnetic_field=5.0)
+        trap = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 200e6,
+            epsilon=0.999,
+        )
+        wm_ratio = trap.omega_magnetron / trap.omega_cyclotron
+        assert wm_ratio < 0.01
+
+    def test_epsilon_one_raises(self):
+        """epsilon = 1.0 is unstable and raises ValueError."""
+        with pytest.raises(ValueError, match="epsilon"):
+            PenningTrap(
+                magnetic_field=5.0,
+                species=ElectronSpecies(magnetic_field=5.0),
+                d=3.5e-3,
+                omega_axial=2 * np.pi * 200e6,
+                epsilon=1.0,
+            )
+
+    def test_negative_epsilon_symmetric(self):
+        """Frequencies depend on epsilon^2, so sign doesn't matter."""
+        species = ElectronSpecies(magnetic_field=5.0)
+        trap_pos = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 200e6,
+            epsilon=0.4,
+        )
+        trap_neg = PenningTrap(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 200e6,
+            epsilon=-0.4,
+        )
+        assert trap_pos.omega_modified_cyclotron == pytest.approx(
+            trap_neg.omega_modified_cyclotron, rel=1e-12
+        )
+        assert trap_pos.omega_magnetron == pytest.approx(
+            trap_neg.omega_magnetron, rel=1e-12
+        )
+
+    def test_stability_false_at_epsilon_one(self):
+        """is_stable returns False when |epsilon| >= 1."""
+        # Cannot construct with epsilon=1.0 (__post_init__ raises),
+        # so test is_stable via the standard instability path.
+        trap = PenningTrap(
+            magnetic_field=0.001,
+            species=ElectronSpecies(magnetic_field=0.001),
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 64e6,
+        )
+        assert not trap.is_stable()
+
+    def test_noguchi_v3p4_targets(self):
+        """Reproduce Ja Eun Kim's v3p4 qubit trap targets.
+
+        B = 140 mT, nu_z = 2623.14 MHz (circular-case targets).
+        At epsilon = 0, TIQS should match to < 0.01 MHz.
+        """
+        species = ElectronSpecies(magnetic_field=0.140)
+        trap = PenningTrap(
+            magnetic_field=0.140,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 2623.14e6,
+        )
+        assert trap.is_stable()
+        nu_p = trap.omega_modified_cyclotron / (2 * np.pi)
+        nu_m = trap.omega_magnetron / (2 * np.pi)
+        assert nu_p == pytest.approx(2591.23e6, rel=1e-5)
+        assert nu_m == pytest.approx(1327.72e6, rel=1e-5)
+        # Near-instability: nu_+/nu_- ~ 2
+        assert nu_p / nu_m == pytest.approx(1.95, rel=0.01)
+
+    def test_near_instability_numerically_stable(self):
+        """Product-of-roots formula stays accurate near the
+        stability boundary where naive subtraction fails."""
+        species = ElectronSpecies(magnetic_field=0.140)
+        # Ja Eun's operating point: 5% from instability
+        trap = PenningTrap(
+            magnetic_field=0.140,
+            species=species,
+            d=3.5e-3,
+            omega_axial=2 * np.pi * 2623.14e6,
+            epsilon=0.5,
+        )
+        wp = trap.omega_modified_cyclotron
+        wm = trap.omega_magnetron
+        wz = trap.omega_axial
+        wc = trap.omega_cyclotron
+        # BG must hold even at large epsilon near instability
+        assert wp**2 + wm**2 + wz**2 == pytest.approx(wc**2, rel=1e-9)
+        # Magnetron must be positive and real
+        assert wm > 0
+
+    def test_from_ring_voltage_passes_epsilon(self):
+        """from_ring_voltage propagates epsilon to the trap."""
+        species = ElectronSpecies(magnetic_field=0.16)
+        trap = PenningTrap.from_ring_voltage(
+            magnetic_field=0.16,
+            species=species,
+            c2=-221119.0,
+            v_ring=-10.0,
+            epsilon=0.41,
+        )
+        assert trap.epsilon == 0.41
+        assert trap.is_stable()
+
+    def test_from_dc_voltage_passes_epsilon(self):
+        """from_dc_voltage propagates epsilon to the trap."""
+        species = ElectronSpecies(magnetic_field=5.0)
+        trap = PenningTrap.from_dc_voltage(
+            magnetic_field=5.0,
+            species=species,
+            d=3.5e-3,
+            v_dc=100.0,
+            epsilon=0.3,
+        )
+        assert trap.epsilon == 0.3

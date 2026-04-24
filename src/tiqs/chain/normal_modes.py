@@ -184,17 +184,22 @@ def normal_modes(
     if isinstance(trap, PenningTrap):
         # Per-ion cyclotron frequency: omega_c_i = eB / m_i.
         omega_c = ELECTRON_CHARGE * trap.magnetic_field / masses
-        omega_c_half = omega_c / 2
-        disc = omega_c_half**2 - omega_z**2 / 2
-        unstable = np.where(disc < 0)[0]
+        omega_1_sq = omega_c**2 - 2 * omega_z**2
+        unstable = np.where(omega_1_sq < 0)[0]
         if len(unstable) > 0:
             raise ValueError(
                 f"Penning-unstable ions at indices {unstable.tolist()}: "
                 f"omega_c < sqrt(2)*omega_z. Heavier species may "
                 f"require a stronger magnetic field."
             )
-        omega_plus = omega_c_half + np.sqrt(disc)
-        omega_minus = omega_c_half - np.sqrt(disc)
+        # Kretzschmar elliptical eigenfrequencies (reduces to
+        # the standard formulas when epsilon = 0).
+        eps = trap.epsilon
+        disc = omega_c**2 * omega_1_sq + eps**2 * omega_z**4
+        half_sum = 0.5 * (omega_c**2 - omega_z**2)
+        omega_plus = np.sqrt(half_sum + 0.5 * np.sqrt(disc))
+        # Product-of-roots form for numerical stability
+        omega_minus = np.sqrt(omega_z**4 * (1 - eps**2) / (4 * omega_plus**2))
         magnetron = _penning_transverse_modes(n_ions, omega_minus)
         magnetron.negative_energy = True
         modes = {

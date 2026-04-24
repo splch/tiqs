@@ -239,6 +239,11 @@ class PenningTrap:
     Construct directly with ``omega_axial``, or use
     ``PenningTrap.from_dc_voltage()`` if the DC voltage is known instead.
 
+    For traps with broken radial symmetry (chip/planar traps), set
+    ``epsilon`` to the ellipticity parameter. The radial
+    eigenfrequencies then follow from Kretzschmar's theory of the
+    elliptical Penning trap.
+
     Attributes
     ----------
     magnetic_field : float
@@ -251,15 +256,19 @@ class PenningTrap:
     omega_axial : float
         Axial angular frequency in rad/s.
     b1 : float
-        Linear magnetic field gradient in T/m. Shifts the
-        equilibrium position by an amount proportional to the
-        particle's magnetic moment. Does not produce first-order
-        frequency shifts but is an important error source.
+        Linear magnetic field gradient in T/m.
     b2 : float
         Quadratic magnetic field gradient (magnetic bottle) in
-        T/m^2. Couples the spin and cyclotron quantum numbers
-        to all three mode frequencies via the continuous
-        Stern-Gerlach effect.
+        T/m^2.
+    epsilon : float
+        Ellipticity parameter $(C_{200} - C_{020}) / C_{002}$.
+        Zero for cylindrically symmetric traps (default).
+        Must satisfy $|\epsilon| < 1$ for stability.
+
+    References
+    ----------
+    Kretzschmar, M. Int. J. Mass Spectrom. 275, 21 (2008).
+    Verdu, J. New J. Phys. 13, 113029 (2011).
     """
 
     magnetic_field: float
@@ -268,6 +277,7 @@ class PenningTrap:
     omega_axial: float
     b1: float = 0.0
     b2: float = 0.0
+    epsilon: float = 0.0
 
     def __post_init__(self):
         if (
@@ -279,6 +289,10 @@ class PenningTrap:
                 f"must match species.magnetic_field "
                 f"({self.species.magnetic_field})"
             )
+        if abs(self.epsilon) >= 1:
+            raise ValueError(
+                f"epsilon must satisfy |epsilon| < 1, got {self.epsilon}"
+            )
 
     @classmethod
     def from_dc_voltage(
@@ -289,6 +303,7 @@ class PenningTrap:
         v_dc: float,
         b1: float = 0.0,
         b2: float = 0.0,
+        epsilon: float = 0.0,
     ) -> PenningTrap:
         r"""Construct from DC trapping voltage instead of axial frequency.
 
@@ -308,6 +323,7 @@ class PenningTrap:
             omega_axial=omega_axial,
             b1=b1,
             b2=b2,
+            epsilon=epsilon,
         )
 
     @classmethod
@@ -320,6 +336,7 @@ class PenningTrap:
         d: float = 1.0,
         b1: float = 0.0,
         b2: float = 0.0,
+        epsilon: float = 0.0,
     ) -> PenningTrap:
         r"""Construct from ring voltage and C2 coefficient.
 
@@ -374,6 +391,7 @@ class PenningTrap:
             omega_axial=omega_axial,
             b1=b1,
             b2=b2,
+            epsilon=epsilon,
         )
 
     @property
@@ -401,51 +419,83 @@ class PenningTrap:
         """
         return ELECTRON_CHARGE * self.magnetic_field / self.species.mass_kg
 
-    def _transverse_discriminant(self) -> float:
-        """Shared discriminant for modified cyclotron and magnetron."""
-        wc2 = self.omega_cyclotron / 2
-        discriminant = wc2**2 - self.omega_axial**2 / 2
-        if discriminant < 0:
+    def _elliptical_discriminant(self) -> float:
+        r"""Kretzschmar discriminant for the elliptical Penning trap.
+
+        $$
+        D = \omega_c^2\,\omega_1^2
+          + \varepsilon^2\,\omega_z^4
+        $$
+
+        where $\omega_1^2 = \omega_c^2 - 2\,\omega_z^2$. Reduces
+        to $\omega_c^2\,\omega_1^2$ when $\varepsilon = 0$.
+        """
+        wc = self.omega_cyclotron
+        wz = self.omega_axial
+        omega_1_sq = wc**2 - 2 * wz**2
+        if omega_1_sq < 0:
             raise ValueError(
                 "Trap is unstable: omega_c < sqrt(2)*omega_z. "
-                "Check is_stable() before accessing transverse frequencies."
+                "Check is_stable() before accessing transverse "
+                "frequencies."
             )
-        return discriminant
+        return wc**2 * omega_1_sq + self.epsilon**2 * wz**4
 
     @property
     def omega_modified_cyclotron(self) -> float:
-        r"""Modified cyclotron angular frequency.
+        r"""Modified cyclotron angular frequency (Kretzschmar).
 
         $$
-        \omega_+ = \frac{\omega_c}{2}
-        + \sqrt{\left(\frac{\omega_c}{2}\right)^2
-        - \frac{\omega_z^2}{2}}
+        \tilde\omega_+^2 = \tfrac{1}{2}(\omega_c^2 - \omega_z^2)
+          + \tfrac{1}{2}\sqrt{\omega_c^2\,\omega_1^2
+          + \varepsilon^2\,\omega_z^4}
         $$
+
+        Reduces to the standard formula when $\varepsilon = 0$.
         """
-        wc2 = self.omega_cyclotron / 2
-        return wc2 + np.sqrt(self._transverse_discriminant())
+        wc = self.omega_cyclotron
+        wz = self.omega_axial
+        half_sum = 0.5 * (wc**2 - wz**2)
+        disc = self._elliptical_discriminant()
+        return np.sqrt(half_sum + 0.5 * np.sqrt(disc))
 
     @property
     def omega_magnetron(self) -> float:
-        r"""Magnetron angular frequency.
+        r"""Magnetron angular frequency (Kretzschmar).
 
         $$
-        \omega_- = \frac{\omega_c}{2}
-        - \sqrt{\left(\frac{\omega_c}{2}\right)^2
-        - \frac{\omega_z^2}{2}}
+        \tilde\omega_-^2 = \tfrac{1}{2}(\omega_c^2 - \omega_z^2)
+          - \tfrac{1}{2}\sqrt{\omega_c^2\,\omega_1^2
+          + \varepsilon^2\,\omega_z^4}
         $$
+
+        For numerical stability near $|\varepsilon| \to 1$, this
+        is computed via the product of roots:
+
+        $$
+        \tilde\omega_-^2
+          = \frac{\omega_z^4\,(1 - \varepsilon^2)}
+                 {4\,\tilde\omega_+^2}
+        $$
+
+        Reduces to the standard formula when $\varepsilon = 0$.
         """
-        wc2 = self.omega_cyclotron / 2
-        return wc2 - np.sqrt(self._transverse_discriminant())
+        wz = self.omega_axial
+        wp = self.omega_modified_cyclotron
+        # Product-of-roots form avoids catastrophic cancellation
+        # when epsilon is large (near-instability regime).
+        return np.sqrt(wz**4 * (1 - self.epsilon**2) / (4 * wp**2))
 
     def is_stable(self) -> bool:
-        r"""Check Penning stability: $\omega_c > \sqrt{2}\,\omega_z$.
+        r"""Check Penning stability.
 
-        When this condition is violated the discriminant
-        $(\omega_c/2)^2 - \omega_z^2/2$ becomes negative and the
-        modified cyclotron and magnetron frequencies are no longer real,
-        meaning radial confinement is lost.
+        Requires both $\omega_c > \sqrt{2}\,\omega_z$ (so
+        $\omega_1$ is real) and $|\varepsilon| < 1$ (so the
+        magnetron frequency is real). When either condition is
+        violated, radial confinement is lost.
         """
+        if abs(self.epsilon) >= 1:
+            return False
         return self.omega_cyclotron > np.sqrt(2) * self.omega_axial
 
     @property
