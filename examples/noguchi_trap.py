@@ -22,7 +22,7 @@ from tiqs import (
     PenningTrap,
     transition_frequencies,
 )
-from tiqs.constants import TWO_PI
+from tiqs.constants import ELECTRON_CHARGE, ELECTRON_MASS, TWO_PI
 
 
 def header(title):
@@ -39,14 +39,12 @@ C2 = -221119.0  # 1/m^2 (compensated at tuning ratio 0.881119)
 
 
 # 1. Eigenfrequencies vs. ring voltage (benchmarking against
-#    Markus's analytical calculations)
+#    analytical calculations from the trap design)
 
 header("1. Eigenfrequencies vs. ring voltage")
 
 print(f"C2 = {C2:.0f} 1/m^2")
 print(f"B0 = {B0 * 1e3:.0f} mT")
-from tiqs.constants import ELECTRON_CHARGE, ELECTRON_MASS
-
 nu_c_header = ELECTRON_CHARGE * B0 / (TWO_PI * ELECTRON_MASS)
 print(f"nu_c = {nu_c_header / 1e9:.4f} GHz")
 print("Voltage range: 0 - 32 V (precision source)")
