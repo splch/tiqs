@@ -217,3 +217,93 @@ class TestFrequencyShiftsMatrix:
             nu_p, nu_z, nu_m, orb, c_400, ELECTRON_MASS
         )
         np.testing.assert_allclose(M_both, M_004 + M_400, rtol=1e-10)
+
+
+class TestM400AnalyticalIdentities:
+    """Independent action-angle perturbation theory check for M^400.
+
+    With H' = q C_400 x^4 and the Kretzschmar elliptical orbit
+    x(t) = xi_+ A_+ cos(omega_+ t) + xi_- A_- cos(omega_- t),
+    A_pm^2 = 2 E_pm / (m (omega_pm^2 - omega_z^2/2)), first-order
+    canonical perturbation theory gives Delta omega_pm =
+    omega_pm * d<H'>/dE_pm. Expanding <x^4> with cos^4 average 3/8
+    yields:
+
+        M_00 = 3 q C_400 xi_+^4 omega_+ /
+                  (2 pi m^2 (omega_+^2 - omega_z^2/2)^2)
+        M_22 = 3 q C_400 xi_-^4 omega_- /
+                  (2 pi m^2 (omega_-^2 - omega_z^2/2)^2)
+
+    These tests verify the TIQS Verdu B.5 implementation against this
+    derivation. At epsilon=0 the ratio collapses to omega_+/omega_-.
+    """
+
+    @pytest.mark.parametrize("epsilon", [0.0, 0.1, 0.3, 0.5, 0.7, 0.9])
+    def test_m00_matches_action_angle(self, epsilon):
+        """M_00 from TIQS equals the closed-form action-angle PT result."""
+        species = ElectronSpecies(magnetic_field=0.140)
+        trap = PenningTrap(
+            magnetic_field=0.140,
+            species=species,
+            d=3.5e-3,
+            omega_axial=TWO_PI * 2623.14e6,
+            epsilon=epsilon,
+        )
+        wp = trap.omega_modified_cyclotron
+        wm = trap.omega_magnetron
+        wz = trap.omega_axial
+        orb = orbit_params(trap.omega_cyclotron, wz, wp, epsilon)
+        c400 = 1e15
+        coeffs = AnharmonicCoeffs(c002=1.0, c400=c400)
+        M = frequency_shifts_matrix(
+            wp / TWO_PI, wz / TWO_PI, wm / TWO_PI, orb, coeffs, ELECTRON_MASS
+        )
+        m00_analytic = (
+            3
+            * ELECTRON_CHARGE
+            * c400
+            * orb.xi_p**4
+            * wp
+            / (TWO_PI * ELECTRON_MASS**2 * (wp**2 - wz**2 / 2) ** 2)
+        )
+        m22_analytic = (
+            3
+            * ELECTRON_CHARGE
+            * c400
+            * orb.xi_m**4
+            * wm
+            / (TWO_PI * ELECTRON_MASS**2 * (wm**2 - wz**2 / 2) ** 2)
+        )
+        assert M[0, 0] == pytest.approx(m00_analytic, rel=1e-10)
+        assert M[2, 2] == pytest.approx(m22_analytic, rel=1e-10)
+
+    def test_m00_over_m22_equals_omega_ratio_at_eps_zero(self):
+        """At epsilon=0 the cyclotron/magnetron self-shift ratio
+        is exactly omega_+/omega_-, independent of C_400, mass, etc.
+
+        Algebra: at epsilon=0, xi_-^2 = omega_-/omega_+ and
+        omega_pm^2 - omega_z^2/2 = +/- omega_pm (omega_+ - omega_-),
+        so (xi_+/xi_-)^4 (omega_+/omega_-) (denom ratio)^2 reduces
+        to omega_+/omega_-.
+        """
+        species = ElectronSpecies(magnetic_field=0.140)
+        trap = PenningTrap(
+            magnetic_field=0.140,
+            species=species,
+            d=3.5e-3,
+            omega_axial=TWO_PI * 2623.14e6,
+            epsilon=0.0,
+        )
+        wp = trap.omega_modified_cyclotron
+        wm = trap.omega_magnetron
+        orb = orbit_params(trap.omega_cyclotron, trap.omega_axial, wp, 0.0)
+        coeffs = AnharmonicCoeffs(c002=1.0, c400=1e15)
+        M = frequency_shifts_matrix(
+            wp / TWO_PI,
+            trap.omega_axial / TWO_PI,
+            wm / TWO_PI,
+            orb,
+            coeffs,
+            ELECTRON_MASS,
+        )
+        assert M[0, 0] / M[2, 2] == pytest.approx(wp / wm, rel=1e-10)
