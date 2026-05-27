@@ -138,8 +138,7 @@ class TestFromC4:
         c4 = -1e12  # V/m^4
         pot = DuffingPotential.from_c4(omega, c4, ELECTRON_MASS)
         expected = (
-            3 * ELECTRON_CHARGE * HBAR * c4
-            / (ELECTRON_MASS**2 * omega**2)
+            3 * ELECTRON_CHARGE * HBAR * c4 / (ELECTRON_MASS**2 * omega**2)
         )
         assert pot.anharmonicity == pytest.approx(expected, rel=1e-10)
         assert pot.omega == omega
@@ -148,18 +147,14 @@ class TestFromC4:
         """Negative C4 produces softening (transmon-like)."""
         from tiqs.constants import ELECTRON_MASS
 
-        pot = DuffingPotential.from_c4(
-            2 * np.pi * 200e6, -1e12, ELECTRON_MASS
-        )
+        pot = DuffingPotential.from_c4(2 * np.pi * 200e6, -1e12, ELECTRON_MASS)
         assert pot.anharmonicity < 0
 
     def test_zero_c4_gives_harmonic(self):
         """C4 = 0 produces zero anharmonicity."""
         from tiqs.constants import ELECTRON_MASS
 
-        pot = DuffingPotential.from_c4(
-            2 * np.pi * 200e6, 0.0, ELECTRON_MASS
-        )
+        pot = DuffingPotential.from_c4(2 * np.pi * 200e6, 0.0, ELECTRON_MASS)
         assert pot.anharmonicity == 0.0
 
     def test_spectrum_matches_direct(self):
@@ -168,10 +163,7 @@ class TestFromC4:
 
         omega = 2 * np.pi * 200e6
         c4 = -1e12
-        alpha = (
-            3 * ELECTRON_CHARGE * HBAR * c4
-            / (ELECTRON_MASS**2 * omega**2)
-        )
+        alpha = 3 * ELECTRON_CHARGE * HBAR * c4 / (ELECTRON_MASS**2 * omega**2)
         pot_c4 = DuffingPotential.from_c4(omega, c4, ELECTRON_MASS)
         pot_direct = DuffingPotential(omega=omega, anharmonicity=alpha)
         freqs_c4 = transition_frequencies(pot_c4, n_fock=10)

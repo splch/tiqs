@@ -5,12 +5,10 @@ Science 2017, Borchert et al. Nature 2022) and cross-checks
 mass/frequency scaling against electrons.
 """
 
-import numpy as np
 import pytest
 
 from tiqs.chain.equilibrium import equilibrium_positions
 from tiqs.constants import (
-    COULOMB_CONSTANT,
     ELECTRON_MASS,
     NUCLEAR_MAGNETON,
     PROTON_G_FACTOR,
@@ -41,7 +39,9 @@ class TestProtonSpecies:
         p = ProtonSpecies(magnetic_field=1.945)
         nu_L = p.qubit_frequency_hz
         expected = (
-            PROTON_G_FACTOR * NUCLEAR_MAGNETON * 1.945
+            PROTON_G_FACTOR
+            * NUCLEAR_MAGNETON
+            * 1.945
             / (1.054571817e-34 * TWO_PI)
         )
         assert nu_L == pytest.approx(expected, rel=1e-10)
@@ -102,17 +102,13 @@ class TestProtonPenningTrap:
 
     def test_g_over_2_from_shift_ratio(self, base_trap):
         """Ratio of spin-flip to cyclotron shift gives g_p/2."""
-        spin = (
-            base_trap.axial_frequency_shift(0, +0.5)
-            - base_trap.axial_frequency_shift(0, -0.5)
-        )
-        cyc = (
-            base_trap.axial_frequency_shift(1, -0.5)
-            - base_trap.axial_frequency_shift(0, -0.5)
-        )
-        assert spin / cyc == pytest.approx(
-            PROTON_G_FACTOR / 2, rel=1e-12
-        )
+        spin = base_trap.axial_frequency_shift(
+            0, +0.5
+        ) - base_trap.axial_frequency_shift(0, -0.5)
+        cyc = base_trap.axial_frequency_shift(
+            1, -0.5
+        ) - base_trap.axial_frequency_shift(0, -0.5)
+        assert spin / cyc == pytest.approx(PROTON_G_FACTOR / 2, rel=1e-12)
 
 
 class TestProtonVsElectronScaling:
