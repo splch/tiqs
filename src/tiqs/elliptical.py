@@ -147,6 +147,34 @@ def frequency_shifts_matrix(
     All frequencies are in Hz (not angular). Energies are in
     joules. The matrix elements have units of Hz/J.
 
+    .. warning::
+
+       **The cross-mode entries** $M[\alpha,\beta]$ for
+       $\alpha\neq\beta$ **of this routine, transcribed faithfully
+       from Verdú (2011) Eqs. B.2-B.15, disagree with direct
+       numerical Fock-basis diagonalization** by factors ranging
+       from 4x to over $10^3$x. This was discovered when validating
+       :py:func:`tiqs.multipole.shift_matrix_general` (the
+       generalized successor) against ground-truth numerical
+       diagonalization. The diagonal entries match to machine
+       precision in the Brown-Gabrielse cylindrical limit
+       ($\varepsilon = 0$); they begin to diverge from numerical
+       around $\varepsilon \gtrsim 0.1$.
+
+       The error appears to originate in the orbit-shape
+       prefactors of Eqs. B.2-B.15 themselves; the existing test
+       suite for this module only validates the diagonal
+       $M^{400}$ entries against an action-angle PT derivation,
+       which is a self-consistency check rather than an
+       independent ground-truth comparison.
+
+       **Use** :py:func:`tiqs.multipole.shift_matrix_general`
+       **for any cross-mode quantity** -- it has been validated
+       against direct Fock diagonalization to better than $10^{-3}$
+       relative precision across nine independent parameter
+       regimes (see ``scripts/validate_radial_bgnf_sweep.py``
+       in the repository).
+
     Parameters
     ----------
     nu_p, nu_z, nu_m : float

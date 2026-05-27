@@ -40,5 +40,8 @@ docs/api/
 # Worktrees
 .worktrees/
 
+# Local deep-research artifacts (literature scans, etc.)
+.deep-research/
+
 # macOS
 .DS_Store

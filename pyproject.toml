@@ -29,6 +29,10 @@ addopts = ["-x", "--tb=short"]
 [tool.ruff]
 target-version = "py314"
 line-length = 79 # https://peps.python.org/pep-0008/#maximum-line-length
+# `scripts/` contains one-off numerical-validation diagnostic scripts;
+# they're checked in for reproducibility but not held to the same
+# style/lint standard as `src/` and `tests/`.
+extend-exclude = ["scripts/"]
 
 [tool.ruff.format]
 docstring-code-format = true
@@ -52,6 +56,12 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["RUF059"]  # unused unpacked vars in test fixtures
+# multipole.py and its tests use Greek letters (α, β, ω, etc.) and
+# Unicode minus (−) in mathematical comments and docstrings as a
+# stylistic choice matching the physics literature they mirror. The
+# RUF002/003 warnings are not actionable for these files.
+"src/tiqs/multipole.py" = ["RUF002", "RUF003"]
+"tests/test_multipole.py" = ["RUF002", "RUF003", "RUF059"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["tiqs"]
