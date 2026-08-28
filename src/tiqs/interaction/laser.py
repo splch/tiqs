@@ -7,7 +7,7 @@ from tiqs.constants import TWO_PI
 
 @dataclass(frozen=True)
 class LaserBeam:
-    """A laser beam interacting with trapped ions.
+    r"""A laser beam interacting with trapped ions.
 
     Parameters
     ----------
@@ -16,9 +16,12 @@ class LaserBeam:
     rabi_frequency : float
         Single-photon Rabi frequency (angular) in rad/s.
     detuning : float
-        Detuning from qubit resonance in rad/s.
+        Detuning from qubit resonance in rad/s, $\delta = \omega_L -
+        \omega_0$ (the convention used throughout
+        `tiqs.interaction.hamiltonian`): negative is red-detuned.
     phase : float
-        Optical phase in radians.
+        Optical phase in radians, carried by the excitation operator
+        as $e^{+i\phi}$.
     """
 
     wavelength: float

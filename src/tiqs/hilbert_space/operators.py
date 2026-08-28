@@ -114,7 +114,13 @@ class OperatorFactory:
         return self._full_operator(qutip.sigmaz(), self._ion_index(ion))
 
     def sigma_plus(self, ion: int) -> qutip.Qobj:
-        r"""Raising operator $\sigma_+ = |0\rangle\langle 1|$ on the given ion.
+        r"""De-excitation operator $\sigma_+ = |0\rangle\langle 1|$.
+
+        This is `qutip.sigmap`, the spin-*raising* operator in the
+        matrix convention. TIQS takes ``basis(2, 0)`` $= |0\rangle$ as
+        the qubit ground state, so $|0\rangle\langle 1|$ lowers the
+        energy: it de-excites the ion and is the jump operator for
+        spontaneous decay. Use `sigma_minus` to excite.
 
         Parameters
         ----------
@@ -124,14 +130,19 @@ class OperatorFactory:
         Returns
         -------
         qutip.Qobj
-            Raising operator on ion ``ion``, tensored with identities on all
-            other subsystems.
+            De-excitation operator on ion ``ion``, tensored with
+            identities on all other subsystems.
         """
         return self._full_operator(qutip.sigmap(), self._ion_index(ion))
 
     def sigma_minus(self, ion: int) -> qutip.Qobj:
-        r"""Lowering operator
-        $\sigma_- = |1\rangle\langle 0|$ on the given ion.
+        r"""Excitation operator $\sigma_- = |1\rangle\langle 0|$.
+
+        This is `qutip.sigmam`, the spin-*lowering* operator in the
+        matrix convention. With ``basis(2, 0)`` $= |0\rangle$ the
+        ground state, $|1\rangle\langle 0|$ raises the energy, so this
+        is the operator that carries the drive phase $e^{+i\phi}$ in
+        the interaction Hamiltonians. Use `sigma_plus` to de-excite.
 
         Parameters
         ----------
@@ -141,8 +152,8 @@ class OperatorFactory:
         Returns
         -------
         qutip.Qobj
-            Lowering operator on ion ``ion``, tensored with identities on all
-            other subsystems.
+            Excitation operator on ion ``ion``, tensored with
+            identities on all other subsystems.
         """
         return self._full_operator(qutip.sigmam(), self._ion_index(ion))
 
@@ -202,8 +213,18 @@ class OperatorFactory:
         return self._full_operator(qutip.num(dim), idx)
 
     def position(self, mode: int) -> qutip.Qobj:
-        r"""Dimensionless position quadrature
-        $(a + a^\dagger)/\sqrt{2}$ for the given mode.
+        r"""Unit-commutator position quadrature
+        $x = (a + a^\dagger)/\sqrt{2}$ for the given mode.
+
+        Normalized so that $[x, p] = i$ together with `momentum`, i.e.
+        $\langle x^2\rangle = 1/2$ in the vacuum;
+        `tiqs.analysis.phase_space_trajectory` uses the same scaling.
+        Beware the other common dimensionless coordinate,
+        $q = a + a^\dagger = \sqrt{2}\,x$, which is what
+        `tiqs.potential.ArbitraryPotential` calls the dimensionless
+        position operator. A potential written in $q$ is therefore
+        *not* the same function of this ``x``: a quadratic term picks
+        up a factor 2.
 
         Parameters
         ----------
@@ -220,8 +241,14 @@ class OperatorFactory:
         return (a + a.dag()) / 2**0.5
 
     def momentum(self, mode: int) -> qutip.Qobj:
-        r"""Dimensionless momentum quadrature
-        $i(a^\dagger - a)/\sqrt{2}$ for the given mode.
+        r"""Unit-commutator momentum quadrature
+        $p = i(a^\dagger - a)/\sqrt{2}$ for the given mode.
+
+        Conjugate to `position` with $[x, p] = i$ ($\hbar = 1$). In the
+        $q = a + a^\dagger = \sqrt{2}\,x$ convention of
+        `tiqs.potential.ArbitraryPotential` the companion momentum is
+        $p_q = i(a^\dagger - a) = \sqrt{2}\,p$, for which
+        $[q, p_q] = 2i$.
 
         Parameters
         ----------
