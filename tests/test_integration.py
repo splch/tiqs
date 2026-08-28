@@ -192,9 +192,10 @@ class TestNoiseEffects:
         assert late_amplitude < early_amplitude
 
     def test_spontaneous_decay_reduces_ms_fidelity(self):
-        """[Benhelm2008] Ca-40 D5/2 decay (T1=1.168 s) should slightly
-        reduce MS gate Bell fidelity. The gate is fast (~50 us) vs T1,
-        so the reduction should be small."""
+        """[Barton2000] Ca-40 D5/2 decay should slightly reduce MS gate
+        Bell fidelity. The gate is fast (~50 us) vs T1 = 1.168(9) s
+        (Barton et al., Phys. Rev. A 62, 032503 (2000)), so the
+        reduction should be small."""
         hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=20)
         ops = OperatorFactory(hs)
         sf = StateFactory(hs)
@@ -227,8 +228,11 @@ class TestNoiseEffects:
         assert fid_noisy > 0.98
 
     def test_combined_noise_reduces_ms_fidelity_further(self):
-        """[Benhelm2008] Adding heating + dephasing + spontaneous decay
-        should reduce MS gate fidelity more than any single source."""
+        """Adding heating + dephasing + spontaneous decay (the latter
+        at the Barton et al. 2000 D5/2 lifetime) should reduce MS gate
+        fidelity more than any single source. The 99.3% two-qubit
+        benchmark of Benhelm et al., Nature Physics 4, 463 (2008) is
+        the target this budget is measured against."""
         hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=20)
         ops = OperatorFactory(hs)
         sf = StateFactory(hs)
@@ -286,7 +290,18 @@ class TestFullSimulationRunner:
         runner = SimulationRunner(config)
         result = runner.run_ms_gate(ions=[0, 1], mode=0)
         rho_spin = result.states[-1].ptrace([0, 1])
-        # The runner uses its own calibrated Rabi frequency;
-        # check that the reduced state has purity < 0.9 (entangled)
-        purity = (rho_spin * rho_spin).tr()
-        assert purity < 0.9 or bell_state_fidelity(rho_spin) > 0.80
+
+        # The runner calibrates its own Rabi frequency and duration, so
+        # all three signatures of a closed phase-space loop must hold
+        # together. Each catches a different failure: the Bell fidelity
+        # catches a wrong geometric phase, the single-qubit purity
+        # catches a non-maximally-entangling one, and <n> catches an
+        # unclosed loop. The two-qubit purity is NOT an entanglement
+        # witness here - it equals 1 for a correct gate (sesolve keeps
+        # the global state pure and the motion factorises), and drops
+        # only when the gate fails.
+        assert bell_state_fidelity(rho_spin) > 0.99
+        rho_single = rho_spin.ptrace(0)
+        assert (rho_single**2).tr().real == pytest.approx(0.5, abs=0.02)
+        n_mode = qutip.expect(runner.ops.number(0), result.states[-1])
+        assert n_mode == pytest.approx(0.0, abs=0.01)

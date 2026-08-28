@@ -7,10 +7,17 @@ naturally produces a sigma_z-dependent force (light-shift / ZZ
 gate), not a sigma_x force (MS / XX gate). An MS gate requires
 additional microwave dressing to rotate the spin basis.
 
-TestElectronAnalyticalExactness validates electron-specific formulas
-against known results and published values from Huang et al.
-arXiv:2503.12379 (2025), Yu et al. PRA 105 022420 (2022), and
-Mikhailovskii et al. arXiv:2508.16407 (2025).
+The gradient Lamb-Dicke parameter comes from
+`tiqs.chain.lamb_dicke.gradient_lamb_dicke_parameters`, whose per-mode
+wavevector k_eff = g mu_B (dB/dz) / (hbar omega_m) is the position
+gradient of the qubit frequency divided by the MODE frequency (Mintert
+and Wunderlich, PRL 87, 257904 (2001)). The bias field B_0 does not
+appear in the coupling Hamiltonian and therefore cannot appear in eta.
+
+TestElectronAnalyticalExactness validates electron-specific physics
+against published values from Huang et al. arXiv:2503.12379 (2025),
+Yu et al. PRA 105 022420 (2022), Mikhailovskii et al.
+arXiv:2508.16407 (2025) and Weidt et al. PRL 117 220501 (2016).
 """
 
 import numpy as np
@@ -18,16 +25,16 @@ import pytest
 import qutip
 
 from tiqs.chain.equilibrium import equilibrium_positions
-from tiqs.chain.lamb_dicke import lamb_dicke_parameters
+from tiqs.chain.lamb_dicke import (
+    gradient_lamb_dicke_parameters,
+    lamb_dicke_parameters,
+)
 from tiqs.chain.normal_modes import normal_modes
 from tiqs.constants import (
     BOHR_MAGNETON,
-    BOLTZMANN,
     COULOMB_CONSTANT,
-    ELECTRON_CHARGE,
     ELECTRON_G_FACTOR,
     ELECTRON_MASS,
-    EPSILON_0,
     HBAR,
     TWO_PI,
 )
@@ -42,16 +49,8 @@ from tiqs.species.electron import ElectronSpecies
 from tiqs.species.ion import get_species
 from tiqs.trap import PaulTrap
 
-
-def _gradient_k_eff(gradient: float, magnetic_field: float) -> float:
-    r"""Effective wavevector from magnetic gradient coupling.
-
-    The gradient couples spin to motion via
-    $H = g_e \mu_B (dB/dz) \hat{z} \sigma_z / 2$.
-    This is equivalent to $k_\text{eff} = (dB/dz) / B$
-    in the standard Lamb-Dicke formula.
-    """
-    return gradient / magnetic_field
+GRADIENT = 120.0
+"""Magnetic field gradient in T/m used by the gradient gate tests."""
 
 
 @pytest.fixture
@@ -95,13 +94,135 @@ class TestElectronTrap:
         assert ratio == pytest.approx(np.sqrt(3), rel=1e-4)
 
     def test_gradient_lamb_dicke(self, electron_trap):
-        """Magnetic gradient of 120 T/m should give useful eta."""
+        """A 120 T/m gradient gives eta ~ 0.062 on a 30 MHz mode.
+
+        eta is the frequency-modulation index of the qubit: the Zeeman
+        frequency swings by g_e mu_B (dB/dz) x_zpf / hbar as the
+        electron moves over its zero-point spread, measured in units
+        of the mode frequency. Values of order 0.01-0.1 are what makes
+        a MAGIC gate practical; the (dB/dz)/B_0 parametrisation this
+        file used previously returns 6.6e-4, 93x too small.
+        """
         modes = normal_modes(1, electron_trap)
         species = electron_trap.species
-        k_eff = _gradient_k_eff(120.0, species.magnetic_field)
-        eta = lamb_dicke_parameters(modes, species, k_eff, "axial")
+        eta = gradient_lamb_dicke_parameters(modes, species, GRADIENT, "axial")
         assert eta.shape == (1, 1)
-        assert 0.0001 < abs(eta[0, 0]) < 1.0
+        assert eta[0, 0] == pytest.approx(0.0621, rel=0.01)
+
+
+class TestGradientCoupling:
+    """The magnetic-gradient Lamb-Dicke parameter, anchored two ways.
+
+    Both anchors are independent of the implementation: one is the
+    exact dynamics of the spin-motion Hamiltonian written directly in
+    SI units, the other a published experimental value.
+    """
+
+    def test_eta_equals_max_displacement_of_spin_dependent_force(
+        self, electron_trap
+    ):
+        r"""eta is fixed by the dynamics of H = (g mu_B/2)(dB/dz) z sz.
+
+        For H/hbar = omega a^dag a + (eta omega / 2)(a + a^dag) sigma_z
+        the branch with spin eigenvalue s is a displaced oscillator
+        whose ground state sits at alpha = -s eta / 2. Vacuum therefore
+        circles that centre at radius eta/2 and reaches
+        |alpha| = eta after half a trap period, so
+
+            <n>(pi / omega) = eta^2   exactly.
+
+        The Hamiltonian here is built from raw QuTiP operators and SI
+        constants using the coupling of docs/theory/species.md,
+        H_int = (g_e mu_B / 2) (dB/dz) z sigma_z with z = b x_zpf
+        (a + a^dag), so nothing in the reference depends on
+        `gradient_lamb_dicke_parameters` except the eta being tested.
+        The old (dB/dz)/B_0 convention fails this by a factor 8724.
+        """
+        modes = normal_modes(1, electron_trap)
+        species = electron_trap.species
+        eta = float(
+            gradient_lamb_dicke_parameters(modes, species, GRADIENT, "axial")[
+                0, 0
+            ]
+        )
+        omega = modes.modes["axial"].freqs[0]
+        x_zpf = np.sqrt(HBAR / (2 * ELECTRON_MASS * omega))
+
+        n_fock = 12
+        a = qutip.destroy(n_fock)
+        number = qutip.tensor(qutip.qeye(2), a.dag() * a)
+        coupling = ELECTRON_G_FACTOR * BOHR_MAGNETON * GRADIENT / (2 * HBAR)
+        H = omega * number + coupling * qutip.tensor(
+            qutip.sigmaz(), x_zpf * (a + a.dag())
+        )
+
+        psi0 = qutip.tensor(qutip.basis(2, 0), qutip.basis(n_fock, 0))
+        result = qutip.sesolve(
+            H,
+            psi0,
+            [0.0, np.pi / omega],
+            e_ops=[number],
+            options={"atol": 1e-14, "rtol": 1e-12},
+        )
+        assert result.expect[0][-1] == pytest.approx(eta**2, rel=1e-6)
+
+    def test_eta_is_independent_of_the_bias_field(self):
+        """eta must not depend on B_0 at fixed gradient and frequency.
+
+        The spin-motion coupling (g_e mu_B / 2)(dB/dz) z sigma_z
+        contains no reference to the bias field, so changing B_0 while
+        holding dB/dz and the mode frequency fixed cannot change eta.
+        The (dB/dz)/B_0 parametrisation scales as 1/B_0 and fails this
+        by the field ratio.
+        """
+        etas = []
+        for magnetic_field in (0.01, 0.1, 1.0):
+            trap = PaulTrap(
+                v_rf=7.8,
+                omega_rf=TWO_PI * 1.6e9,
+                r0=300e-6,
+                omega_axial=TWO_PI * 30e6,
+                species=ElectronSpecies(magnetic_field=magnetic_field),
+            )
+            modes = normal_modes(1, trap)
+            etas.append(
+                float(
+                    gradient_lamb_dicke_parameters(
+                        modes, trap.species, GRADIENT, "axial"
+                    )[0, 0]
+                )
+            )
+        assert etas[1] == pytest.approx(etas[0], rel=1e-12)
+        assert etas[2] == pytest.approx(etas[0], rel=1e-12)
+
+    def test_weidt_magic_gate_eta(self):
+        """Weidt et al., PRL 117, 220501 (2016), p. 3.
+
+        Two Yb-171 ions, dB/dz = 23.6 T/m, stretch mode
+        nu_s = sqrt(3) nu_z = 2pi x 459.34 kHz: they quote
+        z_0 = sqrt(hbar / 2 m nu_s) = 8.021 nm and
+        eta_eff = z_0 mu_B (dB/dz) / (sqrt(2) hbar nu_s) = 0.0041.
+        Their differential magnetic moment is one Bohr magneton
+        (microwave-dressed hyperfine states, not a free electron), so
+        the comparison uses ``g_factor=1``; the 1/sqrt(2) is the
+        stretch-mode participation b = 1/sqrt(2), which the helper
+        supplies from the eigenvector.
+        """
+        yb = get_species("Yb171")
+        nu_s = TWO_PI * 459.34e3
+        trap = PaulTrap(
+            v_rf=300.0,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=nu_s / np.sqrt(3),
+            species=yb,
+        )
+        modes = normal_modes(2, trap)
+        assert modes.modes["axial"].freqs[1] == pytest.approx(nu_s, rel=1e-6)
+        eta = gradient_lamb_dicke_parameters(
+            modes, yb, 23.6, "axial", g_factor=1.0
+        )
+        assert abs(eta[0, 1]) == pytest.approx(0.0041, rel=0.01)
 
 
 class TestElectronGradientGate:
@@ -113,17 +234,23 @@ class TestElectronGradientGate:
 
     def test_zz_gate_entangles(self, electron_trap):
         """Light-shift gate from gradient coupling should entangle
-        |+,+> into a state with ZZ correlations.
+        |+,+> into a maximally entangled state with ZZ correlations.
 
         The gradient Hamiltonian is sigma_z-dependent, so sigma_z
         eigenstates (|0>, |1>) are displaced in opposite directions
         in phase space. Starting from sigma_x eigenstates (|+>, |->)
-        produces entanglement.
+        produces entanglement. sigma_x sigma_x commutes with the
+        generator, so <sx sx> = 1 must survive the gate exactly - a
+        check that the interaction is a pure ZZ force.
         """
         modes = normal_modes(2, electron_trap)
         species = electron_trap.species
-        k_eff = _gradient_k_eff(120.0, species.magnetic_field)
-        eta_matrix = lamb_dicke_parameters(modes, species, k_eff, "axial")
+        eta_matrix = gradient_lamb_dicke_parameters(
+            modes, species, GRADIENT, "axial"
+        )
+        # COM mode: equal participation, eta ~ 0.0439 at 120 T/m.
+        assert eta_matrix[0, 0] == pytest.approx(eta_matrix[1, 0], rel=1e-12)
+        assert abs(eta_matrix[0, 0]) == pytest.approx(0.0439, rel=0.01)
 
         hs = HilbertSpace(n_ions=2, n_modes=1, n_fock=15)
         ops = OperatorFactory(hs)
@@ -153,11 +280,15 @@ class TestElectronGradientGate:
             options={"max_step": tau / 100},
         )
 
-        # Entanglement: reduced single-qubit state is mixed
+        # Maximally entangled: single-qubit state is maximally mixed
+        # while the two-qubit block stays pure (motion disentangled).
         rho_spin = result.states[-1].ptrace([0, 1])
         rho_single = rho_spin.ptrace(0)
-        purity = (rho_single * rho_single).tr().real
-        assert purity < 0.7
+        assert (rho_single**2).tr().real == pytest.approx(0.5, abs=1e-4)
+        assert (rho_spin**2).tr().real == pytest.approx(1.0, abs=1e-4)
+        assert qutip.expect(
+            ops.sigma_x(0) * ops.sigma_x(1), result.states[-1]
+        ) == pytest.approx(1.0, abs=1e-4)
 
     def test_zz_gate_motional_closure(self, electron_trap):
         """After a complete ZZ gate, the motion should return to
@@ -187,7 +318,7 @@ class TestElectronGradientGate:
             options={"max_step": tau / 100},
         )
         n_final = qutip.expect(ops.number(0), r.states[-1])
-        assert n_final == pytest.approx(0.0, abs=0.05)
+        assert n_final == pytest.approx(0.0, abs=1e-4)
 
     def test_dephasing_degrades_fidelity(self, electron_trap):
         """Magnetic field noise (qubit dephasing) should reduce
@@ -220,9 +351,10 @@ class TestElectronGradientGate:
         )
         purity_clean = (r_clean.states[-1].ptrace([0, 1]) ** 2).tr().real
 
+        t2 = 100e-6
         c_ops = [
-            qubit_dephasing_op(ops, 0, t2=100e-6),
-            qubit_dephasing_op(ops, 1, t2=100e-6),
+            qubit_dephasing_op(ops, 0, t2=t2),
+            qubit_dephasing_op(ops, 1, t2=t2),
         ]
         r_noisy = qutip.mesolve(
             H,
@@ -234,75 +366,97 @@ class TestElectronGradientGate:
         purity_noisy = (r_noisy.states[-1].ptrace([0, 1]) ** 2).tr().real
 
         assert purity_noisy < purity_clean
+        # The collapse operators commute with the light-shift
+        # generator, so dephasing acts on the ideal output exactly.
+        # All 16 elements of the maximally entangled spin block have
+        # magnitude 1/4; a coherence between computational states
+        # differing in one qubit decays at 1/T2 and one differing in
+        # both at 2/T2, so
+        #   Tr(rho^2) = 1/4 + exp(-4 tau/T2)/4 + exp(-2 tau/T2)/2.
+        expected = (
+            0.25 + 0.25 * np.exp(-4 * tau / t2) + 0.5 * np.exp(-2 * tau / t2)
+        )
+        assert purity_noisy == pytest.approx(expected, rel=1e-3)
 
 
 class TestElectronAnalyticalExactness:
     """Tight numerical checks against known analytical results for
     trapped electrons.
 
-    Every assertion uses tight tolerances (rel=0.001 or better).
-    Tests only electron-specific physics; universal spin/Lindblad
-    mechanics are already validated for ions in test_end_to_end.py.
+    Every test drives library code: trap properties, equilibrium
+    positions, normal modes, Lamb-Dicke parameters or a solver run.
+    Pure arithmetic over `tiqs.constants` belongs in
+    tests/test_constants.py, and the Penning-trap electron frequencies
+    are covered by tests/test_penning.py.
 
-    References: CODATA 2018, Leibfried et al. RMP 75 281 (2003),
+    References: CODATA 2022, Leibfried et al. RMP 75 281 (2003),
     Huang et al. arXiv:2503.12379 (2025), Yu et al. PRA 105 022420
     (2022), Mikhailovskii et al. arXiv:2508.16407 (2025).
     """
 
-    def test_gyromagnetic_ratio(self):
-        """Electron gyromagnetic ratio: g_e * mu_B / h ~ 28.025 GHz/T."""
-        gamma_hz_per_T = ELECTRON_G_FACTOR * BOHR_MAGNETON / (HBAR * TWO_PI)
-        assert gamma_hz_per_T == pytest.approx(28.025e9, rel=1e-4)
+    def test_mathieu_q_scaling(self):
+        """q = 2 e V_rf / (m Omega_rf^2 r0^2) - check the exponents.
 
-    def test_mathieu_q_formula(self):
-        """q = 2*e*V_rf / (m_e * Omega_rf^2 * r0^2) for electron trap."""
-        e = ElectronSpecies(0.1)
-        omega_rf = TWO_PI * 1.6e9
-        r0 = 300e-6
-        V_rf = 7.8
-        trap = PaulTrap(
-            v_rf=V_rf,
-            omega_rf=omega_rf,
-            r0=r0,
-            omega_axial=TWO_PI * 30e6,
-            species=e,
-        )
-        q_hand = (
-            2 * ELECTRON_CHARGE * V_rf / (ELECTRON_MASS * omega_rf**2 * r0**2)
-        )
-        assert trap.mathieu_q == pytest.approx(q_hand, rel=1e-10)
+        Restating the formula cannot detect a wrong exponent, so this
+        varies one factor at a time: q is linear in V_rf, quadratic in
+        1/Omega_rf, quadratic in 1/r0, and linear in 1/m (the last via
+        the electron/Ca-40 mass ratio at identical geometry).
+        """
 
-    def test_pseudopotential_depth(self):
-        """Trap depth = q * V_rf / 8 in eV."""
-        e = ElectronSpecies(0.1)
-        trap = PaulTrap(
-            v_rf=7.8,
+        def make(species, v_rf=7.8, f_rf=1.6e9, r0=300e-6):
+            return PaulTrap(
+                v_rf=v_rf,
+                omega_rf=TWO_PI * f_rf,
+                r0=r0,
+                omega_axial=TWO_PI * 30e6,
+                species=species,
+            )
+
+        electron = ElectronSpecies(0.1)
+        base = make(electron).mathieu_q
+        assert make(electron, v_rf=15.6).mathieu_q == pytest.approx(
+            2 * base, rel=1e-12
+        )
+        assert make(electron, f_rf=3.2e9).mathieu_q == pytest.approx(
+            base / 4, rel=1e-12
+        )
+        assert make(electron, r0=600e-6).mathieu_q == pytest.approx(
+            base / 4, rel=1e-12
+        )
+
+        ca = get_species("Ca40")
+        heavy = make(ca, v_rf=7.8, f_rf=1.6e9)
+        assert base / heavy.mathieu_q == pytest.approx(
+            ca.mass_kg / ELECTRON_MASS, rel=1e-12
+        )
+
+    def test_pseudopotential_depth(self, electron_trap):
+        """Trap depth = q V_rf / 8, so it grows as V_rf^2.
+
+        The 7.8 V electron trap is 0.294 eV deep, i.e. ~3400 K - deep
+        compared with a 4 K cryostat but a factor ~30 shallower than a
+        typical ion trap, which is why electron traps run at GHz RF.
+        """
+        assert electron_trap.pseudopotential_depth_eV == pytest.approx(
+            0.294, rel=0.01
+        )
+        deeper = PaulTrap(
+            v_rf=15.6,
             omega_rf=TWO_PI * 1.6e9,
             r0=300e-6,
             omega_axial=TWO_PI * 30e6,
-            species=e,
+            species=ElectronSpecies(0.1),
         )
-        depth_from_q = trap.mathieu_q * trap.v_rf / 8
-        assert trap.pseudopotential_depth_eV == pytest.approx(
-            depth_from_q, rel=1e-6
+        assert deeper.pseudopotential_depth_eV == pytest.approx(
+            4 * electron_trap.pseudopotential_depth_eV, rel=1e-12
         )
 
-    def test_two_electron_spacing_analytical(self):
+    def test_two_electron_spacing_analytical(self, electron_trap):
         """Two-particle spacing: d = 2 * (1/2)^(2/3) * l_0 where
         l_0 = (e^2 / (4*pi*eps0 * m_e * omega_z^2))^(1/3)."""
-        e = ElectronSpecies(0.1)
-        omega_z = TWO_PI * 30e6
-        trap = PaulTrap(
-            v_rf=7.8,
-            omega_rf=TWO_PI * 1.6e9,
-            r0=300e-6,
-            omega_axial=omega_z,
-            species=e,
-        )
-        pos = equilibrium_positions(2, trap)
-        l_scale = (
-            COULOMB_CONSTANT / (ELECTRON_MASS * omega_z**2)
-        ) ** (1 / 3)
+        omega_z = electron_trap.omega_axial
+        pos = equilibrium_positions(2, electron_trap)
+        l_scale = (COULOMB_CONSTANT / (ELECTRON_MASS * omega_z**2)) ** (1 / 3)
         d_analytical = 2 * (1 / 2) ** (2 / 3) * l_scale
         d_measured = pos[1] - pos[0]
         assert d_measured == pytest.approx(d_analytical, rel=0.001)
@@ -333,94 +487,90 @@ class TestElectronAnalyticalExactness:
         mass_ratio = (ca.mass_kg / ELECTRON_MASS) ** (1 / 3)
         assert spacing_ratio == pytest.approx(mass_ratio, rel=0.001)
 
-    def test_gradient_eta_formula(self):
-        """eta = g_e * mu_B * (dB/dz) * x_zpf / (hbar * omega_q)
-        must match the simulator's k_eff path for dB/dz = 120 T/m,
-        B = 0.1 T, omega_z/2pi = 30 MHz."""
-        gradient = 120.0  # T/m
-        B = 0.1
-        omega_z = TWO_PI * 30e6
-        omega_q = ELECTRON_G_FACTOR * BOHR_MAGNETON * B / HBAR
-        x_zpf = np.sqrt(HBAR / (2 * ELECTRON_MASS * omega_z))
-        eta_hand = (
-            ELECTRON_G_FACTOR
-            * BOHR_MAGNETON
-            * gradient
-            * x_zpf
-            / (HBAR * omega_q)
+    def test_huang_zero_point_spread(self):
+        """x_zpf from Huang et al. arXiv:2503.12379 (2025): 554 nm at
+        30 MHz and 175 nm at 300 MHz for a single electron.
+
+        `lamb_dicke_parameters` with k_eff = 1 rad/m returns
+        b * x_zpf, and b = 1 for a single particle, so this reads the
+        library's zero-point spread directly. Two frequencies pin the
+        omega^(-1/2) exponent as well as the prefactor.
+        """
+        cases = [
+            (TWO_PI * 30e6, 7.8, TWO_PI * 1.6e9, 300e-6, 554e-9),
+            (TWO_PI * 300e6, 7.1, TWO_PI * 10e9, 45.8e-6, 175e-9),
+        ]
+        for omega_axial, v_rf, omega_rf, r0, x_ref in cases:
+            trap = PaulTrap(
+                v_rf=v_rf,
+                omega_rf=omega_rf,
+                r0=r0,
+                omega_axial=omega_axial,
+                species=ElectronSpecies(0.1),
+            )
+            modes = normal_modes(1, trap)
+            x_zpf = lamb_dicke_parameters(modes, trap.species, 1.0, "axial")
+            assert x_zpf[0, 0] == pytest.approx(x_ref, rel=0.005)
+
+    def test_zero_point_spread_vs_ions(self):
+        """x_zpf scales as m^(-1/2): electron/Ca-40 = 269.9 at equal
+        frequency, read out of `lamb_dicke_parameters` (k_eff = 1)."""
+        ca = get_species("Ca40")
+        omega = TWO_PI * 1e6
+        trap_ca = PaulTrap(
+            v_rf=300,
+            omega_rf=TWO_PI * 30e6,
+            r0=0.5e-3,
+            omega_axial=omega,
+            species=ca,
         )
-        e = ElectronSpecies(B)
-        trap = PaulTrap(
+        trap_e = PaulTrap(
             v_rf=7.8,
             omega_rf=TWO_PI * 1.6e9,
             r0=300e-6,
-            omega_axial=omega_z,
-            species=e,
+            omega_axial=omega,
+            species=ElectronSpecies(0.1),
         )
-        modes = normal_modes(1, trap)
-        k_eff = _gradient_k_eff(gradient, B)
-        eta_sim = lamb_dicke_parameters(modes, e, k_eff, "axial")
-        assert eta_sim[0, 0] == pytest.approx(eta_hand, rel=1e-6)
-
-    def test_gradient_keff_simplification(self):
-        """The full gradient coupling k_eff = g_e*mu_B*(dB/dz)/(hbar*omega_q)
-        simplifies to (dB/dz)/B since omega_q = g_e*mu_B*B/hbar."""
-        gradient = 120.0
-        B = 0.1
-        omega_q = ELECTRON_G_FACTOR * BOHR_MAGNETON * B / HBAR
-        k_full = (
-            ELECTRON_G_FACTOR * BOHR_MAGNETON * gradient / (HBAR * omega_q)
+        x_ca = lamb_dicke_parameters(
+            normal_modes(1, trap_ca), ca, 1.0, "axial"
+        )[0, 0]
+        x_e = lamb_dicke_parameters(
+            normal_modes(1, trap_e), trap_e.species, 1.0, "axial"
+        )[0, 0]
+        assert x_e / x_ca == pytest.approx(
+            np.sqrt(ca.mass_kg / ELECTRON_MASS), rel=1e-9
         )
-        k_simple = gradient / B
-        assert k_full == pytest.approx(k_simple, rel=1e-10)
+        assert x_e / x_ca == pytest.approx(269.9, rel=0.01)
 
-    def test_thermal_nbar_bose_einstein(self):
-        """Resistive cooling limit: nbar = 1 / (exp(hbar*omega/k_B*T) - 1).
-        At T = 4 K, omega/2pi = 300 MHz: nbar ~ 278.
-        At T = 0.4 K: nbar ~ 27.3.
-        At T = 0.4 K, omega/2pi = 2 GHz: nbar ~ 3.7."""
-        omega = TWO_PI * 300e6
-        nbar_4K = 1.0 / (np.exp(HBAR * omega / (BOLTZMANN * 4.0)) - 1)
-        assert nbar_4K == pytest.approx(278, rel=0.01)
-        nbar_04K = 1.0 / (np.exp(HBAR * omega / (BOLTZMANN * 0.4)) - 1)
-        assert nbar_04K == pytest.approx(27.3, rel=0.01)
-        omega_rad = TWO_PI * 2e9
-        nbar_rad = 1.0 / (np.exp(HBAR * omega_rad / (BOLTZMANN * 0.4)) - 1)
-        assert nbar_rad == pytest.approx(3.69, rel=0.01)
+    def test_huang_coulomb_length_scale(self):
+        """l_0 from Huang et al. arXiv:2503.12379 (2025): 19.25 um at
+        30 MHz and 4.15 um at 300 MHz.
 
-    def test_zpf_scaling_vs_ions(self):
-        """Zero-point motion scales as sqrt(m_ion/m_e) at same frequency.
-        For Ca-40: sqrt(m_Ca/m_e) ~ 270."""
-        ca = get_species("Ca40")
-        omega = TWO_PI * 1e6
-        x_zpf_e = np.sqrt(HBAR / (2 * ELECTRON_MASS * omega))
-        x_zpf_ca = np.sqrt(HBAR / (2 * ca.mass_kg * omega))
-        ratio = x_zpf_e / x_zpf_ca
-        expected = np.sqrt(ca.mass_kg / ELECTRON_MASS)
-        assert ratio == pytest.approx(expected, rel=1e-6)
-        assert ratio == pytest.approx(269.9, rel=0.01)
-
-    def test_length_scale_at_multiple_frequencies(self):
-        """Coulomb length scale l_0 = (e^2/(4*pi*eps0*m*omega^2))^(1/3)
-        evaluated at frequencies from Huang et al. 2025."""
-        for freq_mhz, l0_um in [(30, 19.25), (300, 4.15)]:
-            omega = TWO_PI * freq_mhz * 1e6
-            l0 = (
-                COULOMB_CONSTANT / (ELECTRON_MASS * omega**2)
-            ) ** (1 / 3)
-            assert l0 == pytest.approx(l0_um * 1e-6, rel=0.01)
-
-    def test_zpf_at_multiple_frequencies(self):
-        """x_zpf values at frequencies from Huang et al. 2025 and
-        Yu et al. 2022."""
-        for freq_mhz, zpf_nm in [(30, 554), (300, 175), (2000, 67.9)]:
-            omega = TWO_PI * freq_mhz * 1e6
-            x_zpf = np.sqrt(HBAR / (2 * ELECTRON_MASS * omega))
-            assert x_zpf == pytest.approx(zpf_nm * 1e-9, rel=0.01)
+        Recovered from the two-electron equilibrium separation,
+        d = 2 (1/2)^(2/3) l_0, so this exercises
+        `equilibrium_positions` rather than restating
+        l_0 = (e^2 / 4 pi eps0 m omega^2)^(1/3). Two frequencies pin
+        the omega^(-2/3) exponent.
+        """
+        cases = [
+            (TWO_PI * 30e6, 7.8, TWO_PI * 1.6e9, 300e-6, 19.25e-6),
+            (TWO_PI * 300e6, 7.1, TWO_PI * 10e9, 45.8e-6, 4.15e-6),
+        ]
+        for omega_axial, v_rf, omega_rf, r0, l0_ref in cases:
+            trap = PaulTrap(
+                v_rf=v_rf,
+                omega_rf=omega_rf,
+                r0=r0,
+                omega_axial=omega_axial,
+                species=ElectronSpecies(0.1),
+            )
+            pos = equilibrium_positions(2, trap)
+            l0 = (pos[1] - pos[0]) / (2 * (1 / 2) ** (2 / 3))
+            assert l0 == pytest.approx(l0_ref, rel=0.005)
 
     def test_zz_gate_fidelity_and_motional_closure(self):
-        """ZZ gate from gradient coupling must produce entanglement
-        with F > 0.999 and return motion to vacuum.
+        """ZZ gate from gradient coupling must produce a maximally
+        entangled state and return the motion to vacuum.
 
         Uses the light-shift Hamiltonian (sigma_z force) which is the
         native interaction from magnetic gradient coupling."""
@@ -452,13 +602,13 @@ class TestElectronAnalyticalExactness:
 
         # Motion returns to vacuum
         n_final = qutip.expect(ops.number(0), r.states[-1])
-        assert n_final == pytest.approx(0.0, abs=0.01)
+        assert n_final == pytest.approx(0.0, abs=1e-4)
 
-        # Spin state is entangled: single-qubit purity ~ 0.5
+        # Spin state is maximally entangled: single-qubit purity 0.5
         rho_spin = r.states[-1].ptrace([0, 1])
         rho_single = rho_spin.ptrace(0)
         purity = (rho_single * rho_single).tr().real
-        assert purity < 0.55
+        assert purity == pytest.approx(0.5, abs=1e-4)
 
     def test_carrier_rabi_exact(self):
         """sigma_z = cos(Omega*t) for microwave carrier drive on
@@ -478,26 +628,26 @@ class TestElectronAnalyticalExactness:
         expected = np.cos(Omega * tlist)
         np.testing.assert_allclose(result.expect[0], expected, atol=0.01)
 
-    def test_hanneke_cyclotron_frequency(self):
-        """Hanneke et al. PRL 100, 120801 (2008): free cyclotron
-        frequency at B = 5.36 T is ~150 GHz.
-
-        nu_c = eB / (2*pi*m_e). Validates ELECTRON_MASS and
-        ELECTRON_CHARGE against the most precise single-particle
-        measurement ever performed."""
-        B = 5.36  # Tesla
-        nu_c = ELECTRON_CHARGE * B / (TWO_PI * ELECTRON_MASS)
-        assert nu_c == pytest.approx(150.0e9, rel=0.001)
-
     def test_yu_hahn_radial_frequency(self):
-        """Yu et al. PRA 105, 022420 (2022): trap with V_rf = 14 V,
-        Omega_rf/(2pi) = 10.6 GHz, q = 0.53 should give
-        omega_r/(2pi) ~ 2 GHz.
+        """Yu et al. PRA 105, 022420 (2022): V_rf = 14 V,
+        Omega_rf/(2pi) = 10.6 GHz, q = 0.53, omega_r/(2pi) ~ 2 GHz.
 
-        Our pseudopotential (with DC axial correction) gives 1.97 GHz.
-        The ~1.5% difference from the stated 2 GHz is the Mathieu a
-        parameter correction from the 300 MHz axial confinement,
-        which our simulator correctly includes."""
+        r0 = 45.8 um is reverse-fitted to their quoted q, not taken
+        from the paper (their 2 GHz implies q ~ 0.534, which also
+        rounds to 0.53), so this is a consistency check against a
+        design study, not a measurement.
+
+        The pseudopotential returns 1.9721 GHz, 1.39% below their
+        2 GHz. Only 0.57 percentage points of that come from the
+        Mathieu a term of the 300 MHz axial confinement (dropping a
+        gives 1.9835 GHz); the rest is the fitted r0. Neither is the
+        dominant error: beta ~= sqrt(a + q^2/2) drops a +25 q^4/128
+        term (Leibfried RMP 75, 281 (2003) Eqs. 11-15), and at
+        q = 0.53 the exact Floquet solution is beta = 0.396315, i.e.
+        2.1005 GHz. The pseudopotential is therefore 6.1% LOW against
+        exact Mathieu, and agrees with the paper only because their
+        2 GHz is itself a pseudopotential estimate.
+        """
         trap = PaulTrap(
             v_rf=14.0,
             omega_rf=TWO_PI * 10.6e9,
@@ -506,15 +656,30 @@ class TestElectronAnalyticalExactness:
             species=ElectronSpecies(magnetic_field=0.0036),
         )
         assert trap.mathieu_q == pytest.approx(0.53, rel=0.01)
-        assert trap.omega_radial == pytest.approx(TWO_PI * 2e9, rel=0.02)
+        assert trap.omega_radial / TWO_PI == pytest.approx(1.9721e9, rel=1e-3)
+        # The a term is worth -0.57%, not the whole -1.39% gap.
+        omega_no_a = (trap.omega_rf / 2) * np.sqrt(trap.mathieu_q**2 / 2)
+        assert trap.omega_radial / omega_no_a == pytest.approx(
+            1 - 0.00574, rel=0.01
+        )
+        # Exact Floquet beta at this (a, q) is 0.396315.
+        omega_exact = 0.396315 * trap.omega_rf / 2
+        assert trap.omega_radial / omega_exact == pytest.approx(
+            1 - 0.0611, rel=0.01
+        )
 
     def test_mikhailovskii_pseudopotential_vs_measurement(self):
-        """Mikhailovskii et al. arXiv:2508.16407 (2025): measured electron
-        radial frequency 72 MHz at q = 0.11, Omega_rf = 1.6 GHz.
+        """Mikhailovskii et al. arXiv:2508.16407 (2025): measured
+        electron radial frequency 72 MHz at q = 0.11,
+        Omega_rf = 1.6 GHz.
 
-        Pseudopotential predicts 59 MHz - the 18% discrepancy is
-        expected because their PCB slot geometry is not an ideal
-        quadrupole. This test documents the known limitation."""
+        The pseudopotential predicts 59.4 MHz, so the measurement is
+        21% ABOVE the prediction. Their PCB slot geometry is not an
+        ideal quadrupole, and higher-order multipoles stiffen the real
+        well, so the ideal-quadrupole pseudopotential is a lower bound
+        here. The 59.4 MHz figure is a regression pin on TIQS, not a
+        published value; only the 72 MHz comparison is from the paper.
+        """
         trap = PaulTrap(
             v_rf=6.4,
             omega_rf=TWO_PI * 1.6e9,
@@ -523,28 +688,7 @@ class TestElectronAnalyticalExactness:
             species=ElectronSpecies(magnetic_field=0.1),
         )
         assert trap.mathieu_q == pytest.approx(0.11, rel=0.01)
-        # Pseudopotential prediction
+        # Regression pin, not a published value.
         omega_r_pseudo = trap.omega_radial / TWO_PI
-        assert omega_r_pseudo == pytest.approx(59e6, rel=0.02)
-        # Measured value is 72 MHz - 18% higher due to non-ideal
-        # geometry. The pseudopotential is a lower bound for real
-        # traps with higher-order multipole contributions.
-        assert omega_r_pseudo < 72e6
-
-    def test_yu_resistive_cooling_time(self):
-        """Yu et al. PRA 105, 022420 (2022): resistive cooling time
-        tau_c = m_e * d_eff^2 / (e^2 * Re(Z)) ~ 4 us.
-
-        Tank circuit: L = 250 nH, C = 1 pF, Q = 1000,
-        d_eff = 254 um, Re(Z) = Q * sqrt(L/C) = 500 kOhm."""
-        L = 250e-9
-        C = 1e-12
-        Q = 1000
-        d_eff = 254e-6
-        ReZ = Q * np.sqrt(L / C)
-        assert ReZ == pytest.approx(500e3, rel=0.01)
-        tau_c = ELECTRON_MASS * d_eff**2 / (ELECTRON_CHARGE**2 * ReZ)
-        assert tau_c == pytest.approx(4.6e-6, rel=0.01)
-        # Yu/Huang report ~4 us; the 15% difference is within their
-        # stated approximation (neglects frequency-dependent coupling)
-        assert 3e-6 < tau_c < 6e-6
+        assert omega_r_pseudo == pytest.approx(59.45e6, rel=0.01)
+        assert 72e6 / omega_r_pseudo == pytest.approx(1.21, rel=0.02)
