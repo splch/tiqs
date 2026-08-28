@@ -24,7 +24,11 @@ docs = [
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = ["slow: marks tests as slow (skip with -m 'not slow')"]
-addopts = ["-x", "--tb=short"]
+# No "-x": it caps maxfail at 1, so a branch that breaks many tests
+# reports only the first. Pass -x explicitly when bisecting locally.
+# --strict-markers turns a mistyped @pytest.mark into an error instead
+# of a silently inert decorator.
+addopts = ["--tb=short", "--strict-markers"]
 
 [tool.ruff]
 target-version = "py314"

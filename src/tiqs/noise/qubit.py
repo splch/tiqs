@@ -21,8 +21,17 @@ def qubit_dephasing_op(
     $$
 
     $\gamma_\phi = 1/T_2 - 1/(2 T_1)$. For hyperfine qubits with
-    $T_1 \to \infty$: $\gamma_\phi = 1/T_2$.
-    Causes exponential decay of off-diagonal density matrix elements.
+    $T_1 \to \infty$: $\gamma_\phi = 1/T_2$. Coherences decay as
+    $e^{-\gamma_\phi t}$, so combined with
+    `spontaneous_emission_op` the total coherence decay is $1/T_2$.
+
+    Model scope: this is one independent Markovian dephasing channel
+    per ion. Magnetic-field noise on a chain is largely common-mode,
+    which instead gives collective dephasing
+    ($L \propto \sum_i \sigma_z^{(i)}$, leaving the
+    $|01\rangle$--$|10\rangle$ decoherence-free subspace intact), and
+    slow $1/f$ field noise gives Gaussian rather than exponential
+    decay. Neither is modeled here.
 
     Parameters
     ----------
@@ -40,7 +49,17 @@ def qubit_dephasing_op(
     -------
     qutip.Qobj
         Collapse operator for qubit dephasing.
+
+    Raises
+    ------
+    ValueError
+        If ``t2`` or ``t1`` is non-positive, or if $T_2 > 2 T_1$
+        (which would require a negative pure-dephasing rate).
     """
+    if t2 <= 0:
+        raise ValueError(f"t2 must be positive, got {t2}")
+    if t1 <= 0:
+        raise ValueError(f"t1 must be positive, got {t1}")
     gamma_phi = 1.0 / t2 - 1.0 / (2 * t1)
     if gamma_phi < 0:
         raise ValueError(
@@ -65,8 +84,11 @@ def spontaneous_emission_op(
     $|0\rangle$, implementing decay from the excited state to the
     ground state.
 
-    Relevant for optical qubits (Ca-40 $D_{5/2}$ lifetime ~1.17 s)
-    and off-resonant decay during Raman gates.
+    Excited-state population decays as $e^{-t/T_1}$ and coherences
+    at $1/(2 T_1)$. Relevant for optical qubits (Ca-40 $D_{5/2}$
+    lifetime ~1.17 s) and off-resonant decay during Raman gates.
+    Decay into states outside the qubit manifold (leakage) is not
+    modeled.
 
     Parameters
     ----------
@@ -81,5 +103,12 @@ def spontaneous_emission_op(
     -------
     qutip.Qobj
         Collapse operator for spontaneous emission.
+
+    Raises
+    ------
+    ValueError
+        If ``t1`` is non-positive.
     """
+    if t1 <= 0:
+        raise ValueError(f"t1 must be positive, got {t1}")
     return np.sqrt(1.0 / t1) * ops.sigma_plus(ion)

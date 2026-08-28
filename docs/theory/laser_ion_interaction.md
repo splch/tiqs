@@ -30,6 +30,10 @@ $$
 \eta = k\sqrt{\frac{\hbar}{2m\omega_z}} = \sqrt{\frac{E_\text{recoil}}{\hbar\omega_z}}
 $$
 
+This is the sign convention `full_interaction_hamiltonian` implements: its
+`detuning` argument is $\delta = \omega_L - \omega_0$, so a *negative*
+`detuning` is a red-detuned laser.
+
 ### Lamb-Dicke Regime
 
 In the Lamb-Dicke regime ($\eta\sqrt{2\bar{n}+1} \ll 1$), the exponential
@@ -71,15 +75,59 @@ $\eta\Omega\sqrt{n+1}$.
 **TIQS convention**: The Hamiltonians above use the textbook convention
 $\sigma_+ = |e\rangle\langle g|$. In the TIQS code (following QuTiP),
 $|0\rangle$ is the ground state and $|1\rangle$ the excited state, so
-$\sigma_+ = |0\rangle\langle 1|$ acts as de-excitation. The code therefore
-uses $\sigma_-$ for excitation: the red sideband coupling is
-$a\,\sigma_- + \text{h.c.}$ and the blue sideband coupling is
-$a^\dagger\sigma_- + \text{h.c.}$
+`ops.sigma_plus` $= \sigma_+^\text{QuTiP} = |0\rangle\langle 1|$ acts as
+de-excitation. The code therefore uses `ops.sigma_minus`
+$= |1\rangle\langle 0|$ for excitation, and that is the operator carrying
+$e^{+i\phi_L}$ throughout: the red sideband coupling is
+$a\,\sigma_-^\text{QuTiP} + \text{h.c.}$ and the blue sideband coupling is
+$a^\dagger\sigma_-^\text{QuTiP} + \text{h.c.}$ In other words, the textbook
+$\sigma_+$ above is the code's `sigma_minus`.
+
+**Where the factor $i$ goes**: the first-order term of the expansion above
+carries an explicit $i$ (and the $s$-th order carries $i^{|s|}$), which is
+the $\pi/2$-per-order coupling phase of ref. 2, Eq. (23). The three
+resonant forms above have absorbed it into $\phi_L$, so their laser phase
+is offset by $\pi/2$ from the carrier's. TIQS's standalone
+`red_sideband_hamiltonian` and `blue_sideband_hamiltonian` follow that
+convention. `full_interaction_hamiltonian` cannot, because there carrier
+and sidebands share one phase reference, so it keeps the $i$ explicit:
+
+$$
+\begin{aligned}
+H_\text{car} &= \tfrac{\Omega}{2}\bigl[\sigma_- e^{i\phi} e^{-i\delta t} + \text{h.c.}\bigr] \\
+H_\text{rsb} &= \tfrac{i\eta\Omega}{2}\bigl[a\,\sigma_- e^{i\phi} e^{-i(\delta + \omega_z)t} + \text{h.c.}\bigr] \\
+H_\text{bsb} &= \tfrac{i\eta\Omega}{2}\bigl[a^\dagger\sigma_- e^{i\phi} e^{-i(\delta - \omega_z)t} + \text{h.c.}\bigr]
+\end{aligned}
+$$
+
+with $\sigma_-$ here the code's excitation operator.
+
+### Second Order in $\eta$
+
+Carried to $\eta^2$, the expansion adds three more terms, all of which
+`full_interaction_hamiltonian(..., lamb_dicke_order=2)` returns:
+
+$$
+\begin{aligned}
+H_\text{dw} &= -\tfrac{\eta^2\Omega}{2}\bigl(a^\dagger a + \tfrac{1}{2}\bigr)\bigl[\sigma_- e^{i\phi} e^{-i\delta t} + \text{h.c.}\bigr] \\
+H_\text{2rsb} &= -\tfrac{\eta^2\Omega}{4}\bigl[a^2\sigma_- e^{i\phi} e^{-i(\delta + 2\omega_z)t} + \text{h.c.}\bigr] \\
+H_\text{2bsb} &= -\tfrac{\eta^2\Omega}{4}\bigl[(a^\dagger)^2\sigma_- e^{i\phi} e^{-i(\delta - 2\omega_z)t} + \text{h.c.}\bigr]
+\end{aligned}
+$$
+
+$H_\text{dw}$ is the Debye-Waller reduction of the carrier Rabi frequency
+quoted above, $\Omega_n \approx \Omega[1 - \eta^2(2n+1)/2]$; the other two
+are the second red and second blue sidebands, resonant at
+$\delta = -2\omega_z$ and $\delta = +2\omega_z$. No rotating-wave
+approximation is applied on top of the expansion, so every off-resonant
+term (and hence its AC Stark shift) is retained in the returned
+time-dependent Hamiltonian.
 
 ### Exact Rabi Frequencies
 
-Beyond the Lamb-Dicke approximation, the exact Rabi frequency for the $s$-th
-order sideband transition $|g, n\rangle \leftrightarrow |e, n{+}s\rangle$ is:
+*Reference only: not implemented in TIQS.* Beyond the Lamb-Dicke
+approximation, the exact Rabi frequency for the $s$-th order sideband
+transition $|g, n\rangle \leftrightarrow |e, n{+}s\rangle$ is:
 
 $$
 \Omega_{n,n+s} = \Omega\, e^{-\eta^2/2}\, \eta^{|s|}
@@ -87,12 +135,15 @@ $$
 $$
 
 where $n_< = \min(n, n{+}s)$, $n_> = \max(n, n{+}s)$, and $L_n^\alpha(x)$ is
-the generalized Laguerre polynomial.
+the generalized Laguerre polynomial. TIQS truncates the expansion at
+$\eta^1$ or $\eta^2$ instead (see above), so it reproduces only the leading
+terms of this expression.
 
 ### Multi-Ion, Multi-Mode Hamiltonian
 
-For $N$ ions coupled to $M$ motional modes, the interaction picture Hamiltonian
-in the Lamb-Dicke regime is:
+*Reference only: not implemented in TIQS.* For $N$ ions coupled to $M$
+motional modes, the interaction picture Hamiltonian in the Lamb-Dicke regime
+is:
 
 $$
 H_I(t) = \sum_{j=1}^{N} \frac{\hbar\Omega_j}{2}\, \sigma_+^{(j)}\, e^{i(-\delta_j t + \phi_j)} \left[1 + i\sum_{p=1}^{M} \eta_{j,p}\bigl(a_p\, e^{-i\omega_p t} + a_p^\dagger e^{i\omega_p t}\bigr)\right] + \text{h.c.}
@@ -100,6 +151,11 @@ $$
 
 where $\eta_{j,p} = k\, b_{j,p}\sqrt{\hbar/(2m\omega_p)}$ encodes both the
 mode participation of ion $j$ in mode $p$ and the zero-point motion.
+`full_interaction_hamiltonian` takes a scalar `ion` and a scalar `mode`, so
+it realises one term of this double sum; callers who need several
+ion-mode pairs must build and concatenate the lists themselves.
+`tiqs.chain.lamb_dicke.lamb_dicke_parameters` computes the full
+$\eta_{j,p}$ matrix.
 
 ### Stimulated Raman Transitions
 
@@ -112,10 +168,47 @@ $$
 \eta_{j,p}^\text{Raman} = |\Delta k|\, b_{j,p}\, z_{0,p}
 $$
 
+$\Omega_\text{eff}$ is **signed**: it inherits the sign of $\Delta$
+(ref. 2, Eq. (40)), so tuning the beams to the other side of the
+intermediate state reverses it, which is equivalent to a $\pi$ shift of the
+drive phase; the flopping rate is $|\Omega_\text{eff}|$. The differential
+AC Stark shift from the same elimination is
+$\Delta_\text{AC} = (\Omega_1^2 - \Omega_2^2)/(4\Delta)$ (ref. 2,
+Eq. (41)), which vanishes for balanced beams.
+
 Beam geometry controls the coupling:
 
 - **Co-propagating** ($|\Delta k| \approx 0$): Pure carrier for single-qubit gates
 - **Counter-propagating** ($|\Delta k| \approx 2k$): Maximum motional coupling for entangling gates
+
+### Model Scope and Approximations
+
+The Hamiltonians on this page are two-level, single-ion, single-mode
+idealisations. What TIQS's implementations leave out:
+
+- **Spectator modes and the multi-mode Debye-Waller product.** A real ion
+  sits in $3N$ modes at once, and the carrier Rabi frequency is reduced by
+  $\prod_q e^{-\eta_q^2(2n_q+1)/2}$ over *all* of them. TIQS's
+  Debye-Waller term covers only the one mode passed in.
+- **Third levels.** Ions are strictly two-level, so there is no shelving,
+  no auxiliary level, no leakage out of the qubit manifold, and no
+  branching to metastable states even though `tiqs.species` carries the
+  relevant transition data.
+- **Light shifts from levels outside the qubit.** The Raman AC Stark shift
+  is available as `tiqs.interaction.raman.RamanPair.ac_stark_shift` but is
+  not added to any Hamiltonian this module builds.
+- **Spontaneous emission and laser noise** are collapse operators and
+  Hamiltonian terms in `tiqs.noise`, not part of these coherent
+  Hamiltonians.
+- **Micromotion.** The RF drive of a Paul trap modulates $kz$ and produces
+  micromotion sidebands; none of the Hamiltonians here depends on
+  $\Omega_\text{RF}$.
+- **Beam geometry** enters only through the scalar $k$ (or $|\Delta k|$)
+  used to build $\eta$; there is no beam-pointing, beam-waist, or
+  polarisation model, and no crosstalk term (see `tiqs.noise.crosstalk`
+  for a separate phenomenological one).
+- **Exact (all-order) Rabi frequencies** and the multi-ion, multi-mode sum
+  above are documented for reference and are not implemented.
 
 ### References
 
