@@ -11,7 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v7
-      - run: uv run --extra dev ruff format --check src
-      - run: uv run --extra dev ruff check src
-      - run: uv run --extra dev ty check src
-      - run: uv run --extra dev pytest --cov=tiqs --cov-fail-under=95
+      # src and tests both: pyproject already carries a tests-specific
+      # ruff ignore, and test-only lint/type errors are real errors.
+      # Not "." - that pulls in docs/build_docs.py, whose pdoc import
+      # is unresolvable without the "docs" extra.
+      - run: uv run --extra dev ruff format --check src tests
+      - run: uv run --extra dev ruff check src tests
+      - run: uv run --extra dev ty check src tests
+      # --no-cov-on-fail: without it, a failing run also reports
+      # "coverage 0.00% < 95%", burying the actual failure.
+      - run: uv run --extra dev pytest --cov=tiqs --cov-fail-under=95 --no-cov-on-fail
